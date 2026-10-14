@@ -1,0 +1,2 @@
+# submanager
+Subscriptions Manager
