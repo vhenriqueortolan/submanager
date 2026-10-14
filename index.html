@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SubManager - SaaS MVP</title>
+    <!-- Favicon inline via SVG Data URI -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='120' fill='%23000000'/%3E%3Cpath d='M160 110h192v64H224v64h96a64 64 0 0 1 64 64v64a64 64 0 0 1-64 64H160v-64h128v-64H192a64 64 0 0 1-64-64v-64a64 64 0 0 1 64-64z' fill='%23ffffff'/%3E%3C/svg%3E">
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: #0a0a0a;
+            --surface-hover: #141414;
+            --border: #222222;
+            --border-focus: #444444;
+            --text: #ffffff;
+            --text-muted: #888888;
+            --primary: #ffffff;
+            --primary-invert: #000000;
+            --accent: #0070f3;
+            --warning: #f5a623;
+            --danger: #ff3333;
+            --radius: 16px;
+            --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); scrollbar-width: none; }
+        *::-webkit-scrollbar { display: none; }
+        
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        body { background: var(--bg); color: var(--text); padding-bottom: 90px; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+
+        h1, h2, h3 { font-weight: 600; letter-spacing: -0.04em; }
+        .text-muted { color: var(--text-muted); font-size: 0.9rem; }
+        .flex { display: flex; align-items: center; }
+        .space-between { justify-content: space-between; }
+        .mt-1 { margin-top: 0.5rem; } .mt-2 { margin-top: 1rem; } .mb-2 { margin-bottom: 1rem; }
+
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; display: none; }
+        .container.active { display: block; animation: fadeIn 0.3s ease; }
+
+        .spinner { width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Brand / Logo Header */
+        .app-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .app-logo-svg { width: 32px; height: 32px; }
+
+        .hero-card { background: linear-gradient(145deg, #111 0%, #000 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
+        .hero-title { font-size: 1rem; color: var(--text-muted); margin-bottom: 4px; }
+        .hero-count { font-size: 3.5rem; letter-spacing: -2px; line-height: 1; margin-bottom: 16px; }
+        .hero-logos-flex { display: flex; gap: -10px; margin-left: 10px; }
+        .hero-logo-item { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #000; object-fit: cover; margin-left: -10px; background: #222; }
+
+        .budget-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 30px; }
+        .budget-bar-bg { background: rgba(255,255,255,0.1); height: 4px; border-radius: 2px; margin-top: 12px; overflow: hidden; }
+        .budget-bar-fill { background: var(--primary); height: 100%; width: 0%; transition: width 0.5s ease; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 12px 20px 24px; z-index: 100; }
+        .nav-item { color: var(--text-muted); font-size: 0.8rem; font-weight: 500; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: 0.2s; }
+        .nav-item.active { color: var(--text); }
+        .nav-icon { font-size: 1.4rem; }
+
+        .section-title { font-size: 1.1rem; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: baseline; }
+        .sub-card { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); padding: 14px; border-radius: 14px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; }
+        .sub-card:hover { border-color: var(--border-focus); transform: translateY(-1px); }
+        .sub-logo { width: 40px; height: 40px; border-radius: 10px; background: #111; margin-right: 14px; object-fit: cover; }
+        .sub-info { flex: 1; }
+        .sub-title { font-size: 1rem; font-weight: 500; }
+        .badge { background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; color: var(--text-muted); }
+        
+        .search-box { position: sticky; top: 10px; z-index: 10; margin-bottom: 20px; }
+        .search-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 16px; border-radius: 16px; font-size: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); outline: none; transition: 0.2s; }
+        .search-input:focus { border-color: var(--text); }
+        
+        .pill-scroll { overflow-x: auto; white-space: nowrap; margin-bottom: 16px; padding-bottom: 8px; -webkit-overflow-scrolling: touch; }
+        .category-pill { display: inline-block; padding: 8px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; font-size: 0.85rem; margin: 0 6px 10px 0; cursor: pointer; }
+        .category-pill.active { background: var(--text); color: var(--bg); }
+
+        .quick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin-bottom: 20px; text-align: center; }
+        .quick-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 6px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; }
+        .quick-item:hover { border-color: var(--border-focus); background: var(--surface-hover); }
+        .quick-logo { width: 36px; height: 36px; border-radius: 8px; margin-bottom: 8px; }
+
+        #onboarding-fs { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg); z-index: 300; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; overflow-y: auto; }
+        .obs-step { display: none; width: 100%; max-width: 500px; animation: fadeIn 0.4s ease; }
+        .obs-step.active { display: block; }
+        .obs-title { font-size: 2.2rem; margin-bottom: 10px; }
+        .obs-input { background: transparent; border: none; border-bottom: 2px solid var(--border); border-radius: 0; padding: 10px 0; font-size: 2rem; text-align: center; color: var(--text); margin-bottom: 40px; width: 100%; outline: none; }
+        .obs-input:focus { border-color: var(--text); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal { background: var(--bg); border: 1px solid var(--border-focus); border-radius: 24px; padding: 24px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
+        .modal.active { display: block; animation: fadeIn 0.2s ease; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
+        input, select { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 14px; border-radius: 12px; outline: none; }
+        input:focus, select:focus { border-color: var(--text); }
+        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: var(--primary-invert); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 10px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <!-- Onboarding Flow -->
+    <div id="onboarding-fs">
+        <div class="obs-step active" id="step-1">
+            <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                <svg class="app-logo-svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#000"/><path d="M160 110h192v64H224v64h96a64 64 0 0 1 64 64v64a64 64 0 0 1-64 64H160v-64h128v-64H192a64 64 0 0 1-64-64v-64a64 64 0 0 1 64-64z" fill="#fff"/></svg>
+            </div>
+            <h1 class="obs-title">Bem-vindo.</h1>
+            <p class="text-muted mb-2">Como prefere ser chamado?</p>
+            <input type="text" id="setup-name" class="obs-input" placeholder="O seu nome">
+            <button class="btn btn-primary" onclick="nextStep(2)">Continuar</button>
+        </div>
+        <div class="obs-step" id="step-2">
+            <h1 class="obs-title">Orçamento.</h1>
+            <p class="text-muted mb-2">Qual o seu teto máximo mensal? (R$)</p>
+            <input type="number" id="setup-budget" class="obs-input" placeholder="0.00">
+            <button class="btn btn-primary" onclick="nextStep(3)">Continuar</button>
+        </div>
+        <div class="obs-step" id="step-3">
+            <h1 class="obs-title">Interesses.</h1>
+            <p class="text-muted mb-2">Quais categorias de apps você costuma assinar?</p>
+            <div style="margin-bottom: 30px;">
+                <span class="category-pill" onclick="toggleSetupPill(this, 'IA')">IA</span>
+                <span class="category-pill" onclick="toggleSetupPill(this, 'Streaming')">Streaming</span>
+                <span class="category-pill" onclick="toggleSetupPill(this, 'Dev')">Cloud & Dev</span>
+                <span class="category-pill" onclick="toggleSetupPill(this, 'Produtividade')">Produtividade</span>
+                <span class="category-pill" onclick="toggleSetupPill(this, 'Games')">Games</span>
+                <span class="category-pill" onclick="toggleSetupPill(this, 'Dia a Dia')">Dia a Dia</span>
+            </div>
+            <button class="btn btn-primary" onclick="finishOnboarding()">Ir para o App</button>
+        </div>
+    </div>
+
+    <!-- Home View -->
+    <div class="container active" id="view-home">
+        <div class="app-brand">
+            <svg class="app-logo-svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#000"/><path d="M160 110h192v64H224v64h96a64 64 0 0 1 64 64v64a64 64 0 0 1-64 64H160v-64h128v-64H192a64 64 0 0 1-64-64v-64a64 64 0 0 1 64-64z" fill="#fff"/></svg>
+            <span style="font-weight: 600; letter-spacing: -0.02em;">SubManager</span>
+        </div>
+
+        <div class="hero-card">
+            <div class="hero-title" id="user-greeting">Seu Portfólio</div>
+            <div class="hero-count" id="hero-count">0</div>
+            <div class="hero-logos-flex" id="hero-logos"></div>
+        </div>
+
+        <div class="budget-card">
+            <div class="flex space-between">
+                <div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Gasto Mensal</div>
+                    <div style="font-size: 1.2rem; font-weight: 600;" id="total-month">R$ 0,00</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">Teto</div>
+                    <div style="font-size: 1.2rem; font-weight: 600;" id="budget-status">R$ 0,00</div>
+                </div>
+            </div>
+            <div class="budget-bar-bg"><div class="budget-bar-fill" id="budget-bar"></div></div>
+            <div id="budget-alert" style="font-size: 0.8rem; margin-top: 10px; display: none; color: var(--warning);"></div>
+        </div>
+
+        <div class="flex space-between mb-2">
+            <h3 class="section-title" style="margin: 0; border: none; padding: 0;">Assinaturas Ativas</h3>
+            <button style="background:transparent; border:none; color:var(--text); font-size:1.5rem; cursor:pointer;" onclick="openEmptyModal()">+</button>
+        </div>
+        <div id="subs-list"></div>
+    </div>
+
+    <!-- Discover View -->
+    <div class="container" id="view-discover">
+        <div class="app-brand">
+            <svg class="app-logo-svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#000"/><path d="M160 110h192v64H224v64h96a64 64 0 0 1 64 64v64a64 64 0 0 1-64 64H160v-64h128v-64H192a64 64 0 0 1-64-64v-64a64 64 0 0 1 64-64z" fill="#fff"/></svg>
+            <span style="font-weight: 600; letter-spacing: -0.02em;">Descobrir</span>
+        </div>
+
+        <div class="search-box">
+            <input type="text" class="search-input" id="search-api" placeholder="🔍 Buscar catálogo global..." oninput="debounceSearch('search-api', 'search-results', 'api-list', 'discover-categories')">
+        </div>
+        
+        <div id="search-results" style="margin-bottom: 24px; display: none;">
+            <h3 class="section-title">Resultados da Busca</h3>
+            <div id="api-list"></div>
+        </div>
+
+        <div id="discover-categories">
+            <div class="pill-scroll">
+                <span class="category-pill active" onclick="filterDiscover('Todos', this)">Todos</span>
+                <span class="category-pill" onclick="filterDiscover('IA', this)">IAs</span>
+                <span class="category-pill" onclick="filterDiscover('Streaming', this)">Streaming</span>
+                <span class="category-pill" onclick="filterDiscover('Dev', this)">Cloud & Dev</span>
+                <span class="category-pill" onclick="filterDiscover('Produtividade', this)">Produtividade</span>
+                <span class="category-pill" onclick="filterDiscover('Games', this)">Games</span>
+            </div>
+            <div id="discover-list"></div>
+        </div>
+    </div>
+
+    <!-- Profile View -->
+    <div class="container" id="view-profile">
+        <div class="app-brand">
+            <svg class="app-logo-svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="120" fill="#000"/><path d="M160 110h192v64H224v64h96a64 64 0 0 1 64 64v64a64 64 0 0 1-64 64H160v-64h128v-64H192a64 64 0 0 1-64-64v-64a64 64 0 0 1 64-64z" fill="#fff"/></svg>
+            <span style="font-weight: 600; letter-spacing: -0.02em;">Perfil</span>
+        </div>
+
+        <div class="form-group">
+            <label>Nome</label>
+            <input type="text" id="prof-name">
+        </div>
+        <div class="form-group">
+            <label>Teto de Gastos (R$)</label>
+            <input type="number" id="prof-budget">
+        </div>
+        <label>Interesses (Afeta as recomendações)</label>
+        <div style="margin-bottom: 20px;" id="prof-interests">
+            <span class="category-pill" data-val="IA" onclick="toggleProfPill(this)">IA</span>
+            <span class="category-pill" data-val="Streaming" onclick="toggleProfPill(this)">Streaming</span>
+            <span class="category-pill" data-val="Dev" onclick="toggleProfPill(this)">Cloud & Dev</span>
+            <span class="category-pill" data-val="Produtividade" onclick="toggleProfPill(this)">Produtividade</span>
+            <span class="category-pill" data-val="Games" onclick="toggleProfPill(this)">Games</span>
+            <span class="category-pill" data-val="Dia a Dia" onclick="toggleProfPill(this)">Dia a Dia</span>
+        </div>
+        <button class="btn btn-primary" onclick="saveProfile()">Salvar Configurações</button>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchView('home', this)">
+            <div class="nav-icon">📁</div><span>Portfólio</span>
+        </div>
+        <div class="nav-item" onclick="switchView('discover', this)">
+            <div class="nav-icon">🧭</div><span>Descobrir</span>
+        </div>
+        <div class="nav-item" onclick="switchView('profile', this)">
+            <div class="nav-icon">⚙️</div><span>Perfil</span>
+        </div>
+    </nav>
+
+    <!-- Progressive Modal: Add Sub -->
+    <div class="modal-overlay" id="add-modal">
+        <div class="modal">
+            <input type="hidden" id="edit-index" value="-1">
+            
+            <!-- Step 1: Busca Inteligente -->
+            <div id="modal-step-1">
+                <h2 class="mb-2">Buscar Serviço</h2>
+                <input type="text" class="search-input" id="modal-search-input" placeholder="Digite o nome do app..." oninput="debounceModalSearch()" style="margin-bottom: 16px;">
+                
+                <h3 class="section-title" style="font-size: 0.9rem; margin-top: 10px;" id="modal-grid-title">Recomendados para Você</h3>
+                <div class="quick-grid" id="modal-quick-grid"></div>
+
+                <button class="btn btn-outline" onclick="autoFillStep1('', '', 'Outros', '')" style="margin-top: 20px;">+ Inserir Dados Manualmente</button>
+                <button class="btn btn-outline" onclick="toggleModal('add-modal')" style="border:none">Cancelar</button>
+            </div>
+
+            <!-- Step 2: Financeiro -->
+            <div id="modal-step-2" style="display: none;">
+                <h2 class="mb-2">Detalhes Financeiros</h2>
+                <div class="form-group"><label>Serviço</label><input type="text" id="add-name"></div>
+                <div class="form-row" style="display:none;">
+                    <input type="text" id="add-domain"><input type="text" id="add-category">
+                </div>
+                <div class="form-group"><label>Preço Mensal (R$)</label><input type="number" id="add-price" step="0.01" placeholder="0.00"></div>
+                <div class="form-row">
+                    <div class="form-group"><label>Vencimento (Dia)</label><input type="number" id="add-due-date" min="1" max="31" placeholder="Ex: 10"></div>
+                    <div class="form-group">
+                        <label>Pagamento</label>
+                        <select id="add-payment">
+                            <option value="Cartão">Cartão</option><option value="Pix">Pix</option><option value="Boleto">Boleto</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="saveSubscription()">Salvar Assinatura</button>
+                <button class="btn btn-outline" onclick="prevAddStep()" style="border:none" id="btn-back">← Voltar</button>
+                <button class="btn btn-outline" id="btn-delete" onclick="deleteSub()" style="display:none; color:var(--danger); border-color:var(--danger)">Remover Assinatura</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let state = JSON.parse(localStorage.getItem('subDataV5')) || { onboarded: false, name: '', budget: 0, interests: [], subs: [] };
+        let setupInterests = new Set();
+        
+        const db = [
+            { name: "ChatGPT Plus", domain: "openai.com", category: "IA", price: 100 },
+            { name: "Claude Pro", domain: "anthropic.com", category: "IA", price: 100 },
+            { name: "Gemini", domain: "google.com", category: "IA", price: 97 },
+            { name: "Netflix", domain: "netflix.com", category: "Streaming", price: 39.90 },
+            { name: "Spotify", domain: "spotify.com", category: "Streaming", price: 21.90 },
+            { name: "Prime Video", domain: "amazon.com.br", category: "Streaming", price: 19.90 },
+            { name: "Max", domain: "max.com", category: "Streaming", price: 39.90 },
+            { name: "GitHub Copilot", domain: "github.com", category: "Dev", price: 50 },
+            { name: "Vercel", domain: "vercel.com", category: "Dev", price: 100 },
+            { name: "Render", domain: "render.com", category: "Dev", price: 35 },
+            { name: "Notion", domain: "notion.so", category: "Produtividade", price: 40 },
+            { name: "Figma", domain: "figma.com", category: "Produtividade", price: 75 },
+            { name: "Xbox Game Pass", domain: "xbox.com", category: "Games", price: 35.99 },
+            { name: "Chess.com", domain: "chess.com", category: "Games", price: 29.90 },
+            { name: "Uber One", domain: "uber.com", category: "Dia a Dia", price: 19.90 },
+            { name: "iFood", domain: "ifood.com.br", category: "Dia a Dia", price: 4.90 }
+        ];
+
+        function save() { localStorage.setItem('subDataV5', JSON.stringify(state)); }
+
+        function init() {
+            if (!state.onboarded) {
+                document.getElementById('onboarding-fs').style.display = 'flex';
+            } else {
+                document.getElementById('app').style.display = 'block';
+                renderHome();
+                renderDiscover('Todos');
+                loadProfile();
+            }
+        }
+
+        function toggleSetupPill(el, val) {
+            el.classList.toggle('active');
+            if(setupInterests.has(val)) setupInterests.delete(val); else setupInterests.add(val);
+        }
+
+        function nextStep(s) {
+            document.querySelectorAll('.obs-step').forEach(e => e.classList.remove('active'));
+            document.getElementById(`step-${s}`).classList.add('active');
+        }
+
+        function finishOnboarding() {
+            state.name = document.getElementById('setup-name').value || 'Membro';
+            state.budget = parseFloat(document.getElementById('setup-budget').value) || 0;
+            state.interests = Array.from(setupInterests);
+            state.onboarded = true;
+            save();
+            document.getElementById('onboarding-fs').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            renderHome();
+            renderDiscover('Todos');
+            loadProfile();
+        }
+
+        function loadProfile() {
+            document.getElementById('prof-name').value = state.name;
+            document.getElementById('prof-budget').value = state.budget;
+            document.querySelectorAll('#prof-interests .category-pill').forEach(pill => {
+                if(state.interests.includes(pill.dataset.val)) pill.classList.add('active');
+                else pill.classList.remove('active');
+            });
+        }
+
+        function toggleProfPill(el) { el.classList.toggle('active'); }
+
+        function saveProfile() {
+            state.name = document.getElementById('prof-name').value;
+            state.budget = parseFloat(document.getElementById('prof-budget').value) || 0;
+            state.interests = Array.from(document.querySelectorAll('#prof-interests .category-pill.active')).map(p => p.dataset.val);
+            save();
+            renderHome();
+            alert("Perfil salvo com sucesso!");
+        }
+
+        function switchView(view, btn) {
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            document.getElementById(`view-${view}`).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function renderHome() {
+            document.getElementById('user-greeting').innerText = `Olá, ${state.name}.`;
+            document.getElementById('hero-count').innerText = state.subs.length;
+            
+            const heroLogos = document.getElementById('hero-logos');
+            heroLogos.innerHTML = '';
+            state.subs.slice(0, 5).forEach(s => {
+                heroLogos.innerHTML += `<img src="https://icon.horse/icon/${s.domain}" class="hero-logo-item" onerror="this.src='https://ui-avatars.com/api/?name=${s.name}&background=111&color=fff'">`;
+            });
+            if(state.subs.length > 5) heroLogos.innerHTML += `<div class="hero-logo-more">+${state.subs.length - 5}</div>`;
+
+            const total = state.subs.reduce((acc, curr) => acc + parseFloat(curr.price || 0), 0);
+            document.getElementById('total-month').innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById('budget-status').innerText = `R$ ${state.budget.toFixed(2)}`;
+            
+            if(state.budget > 0) {
+                const percent = Math.min((total / state.budget) * 100, 100);
+                document.getElementById('budget-bar').style.width = `${percent}%`;
+                const alertEl = document.getElementById('budget-alert');
+                if(percent >= 100) { alertEl.innerText = "Teto excedido!"; alertEl.style.display = 'block'; alertEl.style.color = "var(--danger)"; }
+                else if(percent > 80) { alertEl.innerText = "Próximo ao limite."; alertEl.style.display = 'block'; alertEl.style.color = "var(--warning)"; }
+                else { alertEl.style.display = 'none'; }
+            }
+
+            const list = document.getElementById('subs-list');
+            list.innerHTML = state.subs.length === 0 ? '<p class="text-muted">Adicione sua primeira assinatura.</p>' : '';
+            state.subs.forEach((sub, i) => {
+                list.innerHTML += `
+                    <div class="sub-card" onclick="openModal(${i})">
+                        <div class="flex">
+                            <img src="https://icon.horse/icon/${sub.domain}" class="sub-logo" onerror="this.src='https://ui-avatars.com/api/?name=${sub.name}&background=111&color=fff'">
+                            <div class="sub-info">
+                                <div class="sub-title">${sub.name}</div>
+                                <div class="sub-meta"><span class="badge">${sub.category}</span>${sub.dueDate ? `<span class="badge">Dia ${sub.dueDate}</span>` : ''}</div>
+                            </div>
+                        </div>
+                        <div class="sub-price">R$ ${parseFloat(sub.price).toFixed(2)}</div>
+                    </div>`;
+            });
+        }
+
+        function filterDiscover(cat, btn) {
+            document.querySelectorAll('#discover-categories .category-pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            renderDiscover(cat);
+        }
+
+        function renderDiscover(cat) {
+            const list = document.getElementById('discover-list');
+            list.innerHTML = '';
+            const filtered = cat === 'Todos' ? db : db.filter(d => d.category === cat);
+            filtered.forEach(app => {
+                list.innerHTML += `
+                <div class="sub-card" onclick="autoFillStep1('${app.name}', '${app.domain}', '${app.category}', '${app.price}')">
+                    <div class="flex">
+                        <img src="https://icon.horse/icon/${app.domain}" class="sub-logo" onerror="this.src='https://ui-avatars.com/api/?name=${app.name}&background=111&color=fff'">
+                        <div class="sub-info"><div class="sub-title">${app.name}</div><div class="sub-meta"><span class="badge">${app.category}</span></div></div>
+                    </div><span style="font-size: 1.2rem; color: var(--text-muted)">+</span>
+                </div>`;
+            });
+        }
+
+        let searchTimeout;
+        async function fetchClearbit(query, listElId, containerElId, hideElId) {
+            const resContainer = document.getElementById(containerElId);
+            const resList = document.getElementById(listElId);
+            
+            if(query.length < 2) {
+                if(containerElId) resContainer.style.display = 'none';
+                if(hideElId) document.getElementById(hideElId).style.display = 'block';
+                return;
+            }
+
+            if(containerElId) resContainer.style.display = 'block';
+            if(hideElId) document.getElementById(hideElId).style.display = 'none';
+            resList.innerHTML = '<div class="spinner"></div>';
+
+            try {
+                const req = await fetch(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${query}`);
+                const data = await req.json();
+                resList.innerHTML = '';
+                if(data.length === 0) { resList.innerHTML = '<p class="text-muted">Nenhum app encontrado.</p>'; return; }
+                
+                data.forEach(c => {
+                    const html = (listElId === 'modal-quick-grid') 
+                        ? `<div class="quick-item" onclick="autoFillStep1('${c.name}', '${c.domain}', 'Outros', '')"><img src="https://icon.horse/icon/${c.domain}" class="quick-logo"><div style="font-size:0.7rem">${c.name}</div></div>`
+                        : `<div class="sub-card" onclick="autoFillStep1('${c.name}', '${c.domain}', 'Outros', '')"><div class="flex"><img src="https://icon.horse/icon/${c.domain}" class="sub-logo"><div class="sub-info"><div class="sub-title">${c.name}</div><div class="sub-meta"><span class="badge">App Global</span></div></div></div><span style="font-size: 1.2rem; color: var(--text-muted)">+</span></div>`;
+                    resList.innerHTML += html;
+                });
+            } catch(e) { resList.innerHTML = '<p class="text-muted" style="color:var(--danger)">Erro na busca.</p>'; }
+        }
+
+        function debounceSearch(inputId, resContainerId, listId, hideId) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => fetchClearbit(document.getElementById(inputId).value, listId, resContainerId, hideId), 500);
+        }
+        function debounceModalSearch() {
+            document.getElementById('modal-grid-title').innerText = "Resultados";
+            clearTimeout(searchTimeout);
+            const val = document.getElementById('modal-search-input').value;
+            if(val.length < 2) { populateIntelligentGrid(); return; }
+            searchTimeout = setTimeout(() => fetchClearbit(val, 'modal-quick-grid', null, null), 500);
+        }
+
+        function toggleModal(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('active');
+            if(!el.classList.contains('active')) setTimeout(() => el.style.display = 'none', 200);
+            else el.style.display = 'flex';
+        }
+
+        function openEmptyModal() {
+            document.getElementById('edit-index').value = -1;
+            document.getElementById('modal-search-input').value = '';
+            populateIntelligentGrid();
+            document.getElementById('modal-step-1').style.display = 'block';
+            document.getElementById('modal-step-2').style.display = 'none';
+            toggleModal('add-modal');
+        }
+
+        function populateIntelligentGrid() {
+            document.getElementById('modal-grid-title').innerText = "Recomendados para Você";
+            const grid = document.getElementById('modal-quick-grid');
+            grid.innerHTML = '';
+            
+            let suggestions = state.interests.length > 0 ? db.filter(d => state.interests.includes(d.category)) : db;
+            if(suggestions.length === 0) suggestions = db;
+            
+            suggestions.slice(0, 8).forEach(app => {
+                grid.innerHTML += `
+                <div class="quick-item" onclick="autoFillStep1('${app.name}', '${app.domain}', '${app.category}', '${app.price}')">
+                    <img src="https://icon.horse/icon/${app.domain}" class="quick-logo" onerror="this.src='https://ui-avatars.com/api/?name=${app.name}&background=111&color=fff'">
+                    <div style="font-size:0.7rem">${app.name}</div>
+                </div>`;
+            });
+        }
+
+        function autoFillStep1(name, domain, cat, price) {
+            document.getElementById('add-name').value = name;
+            document.getElementById('add-domain').value = domain;
+            document.getElementById('add-category').value = cat;
+            document.getElementById('add-price').value = price;
+            document.getElementById('btn-back').style.display = 'block';
+            document.getElementById('btn-delete').style.display = 'none';
+            
+            if(!document.getElementById('add-modal').classList.contains('active')) toggleModal('add-modal');
+            document.getElementById('modal-step-1').style.display = 'none';
+            document.getElementById('modal-step-2').style.display = 'block';
+        }
+
+        function openModal(index) {
+            document.getElementById('edit-index').value = index;
+            document.getElementById('modal-step-1').style.display = 'none';
+            document.getElementById('modal-step-2').style.display = 'block';
+            document.getElementById('btn-back').style.display = 'none';
+            document.getElementById('btn-delete').style.display = 'block';
+
+            const sub = state.subs[index];
+            document.getElementById('add-name').value = sub.name;
+            document.getElementById('add-domain').value = sub.domain;
+            document.getElementById('add-category').value = sub.category;
+            document.getElementById('add-price').value = sub.price;
+            document.getElementById('add-due-date').value = sub.dueDate || '';
+            document.getElementById('add-payment').value = sub.paymentMethod || 'Cartão';
+            
+            toggleModal('add-modal');
+        }
+
+        function prevAddStep() {
+            document.getElementById('modal-step-2').style.display = 'none';
+            document.getElementById('modal-step-1').style.display = 'block';
+        }
+
+        function saveSubscription() {
+            const index = parseInt(document.getElementById('edit-index').value);
+            const sub = {
+                name: document.getElementById('add-name').value,
+                domain: document.getElementById('add-domain').value,
+                category: document.getElementById('add-category').value,
+                price: parseFloat(document.getElementById('add-price').value) || 0,
+                dueDate: document.getElementById('add-due-date').value,
+                paymentMethod: document.getElementById('add-payment').value
+            };
+            if(!sub.name) return;
+
+            if(index >= 0) state.subs[index] = sub; else state.subs.push(sub);
+            save(); toggleModal('add-modal'); renderHome();
+        }
+
+        function deleteSub() {
+            const index = parseInt(document.getElementById('edit-index').value);
+            if(index >= 0 && confirm("Remover assinatura?")) {
+                state.subs.splice(index, 1);
+                save(); toggleModal('add-modal'); renderHome();
+            }
+        }
+
+        // PWA Manifest com Logo SVG inline
+        const svgString = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='#000'/><path d='M160 110h192v64H224v64h96a64 64 0 0 1 64 64v64a64 64 0 0 1-64 64H160v-64h128v-64H192a64 64 0 0 1-64-64v-64a64 64 0 0 1 64-64z' fill='#fff'/></svg>`;
+        const manifest = { name: "SubManager", display: "standalone", start_url: location.href, background_color: "#000", icons: [{src:`data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`, sizes:"512x512", type:"image/svg+xml"}]};
+        document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(manifest))}">`);
+        if('serviceWorker' in navigator && location.protocol !== 'file:') {
+            const sw = `self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
+            navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw], {type: 'application/javascript'}))).catch(()=>{});
+        }
+
+        init();
+    </script>
+</body>
+</html>
