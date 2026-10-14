@@ -103,6 +103,27 @@
         .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: var(--primary-invert); }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 10px; }
+        .btn-sm { width: auto; padding: 8px 14px; border-radius: 10px; border: none; font-size: 0.85rem; font-weight: 600; cursor: pointer; background: var(--primary); color: var(--primary-invert); white-space: nowrap; }
+
+        .hero-logo-more { width: 36px; height: 36px; border-radius: 50%; border: 2px solid #000; margin-left: -10px; background: #222; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Estado vazio (sem assinaturas) */
+        .empty-card { background: linear-gradient(145deg, #111 0%, #000 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px 24px; margin-bottom: 16px; text-align: center; }
+        .empty-card .empty-icon { font-size: 2.4rem; margin-bottom: 12px; }
+        .empty-card h2 { font-size: 1.4rem; margin-bottom: 8px; }
+        .empty-card p { margin-bottom: 20px; line-height: 1.4; }
+
+        /* Status de vencimento */
+        .sub-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+        .sub-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .badge-warn { background: rgba(245,166,35,0.15); color: var(--warning); }
+        .badge-danger { background: rgba(255,51,51,0.15); color: var(--danger); }
+        .pay-btn { background: transparent; border: 1px solid var(--border-focus); color: var(--text); border-radius: 8px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; }
+        .pay-btn:hover { background: var(--surface-hover); }
+
+        /* Notificações */
+        .notif-card { display: none; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; }
+        .notif-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -148,10 +169,28 @@
             <span style="font-weight: 600; letter-spacing: -0.02em;">SubManager</span>
         </div>
 
-        <div class="hero-card">
+        <!-- Hero: só aparece com pelo menos 1 assinatura -->
+        <div class="hero-card" id="hero-card" style="display:none;">
             <div class="hero-title" id="user-greeting">Seu Portfólio</div>
             <div class="hero-count" id="hero-count">0</div>
             <div class="hero-logos-flex" id="hero-logos"></div>
+        </div>
+
+        <!-- Estado vazio: aparece no lugar do hero quando não há assinaturas -->
+        <div class="empty-card" id="hero-empty" style="display:none;">
+            <div class="hero-title" id="empty-greeting">Olá.</div>
+            <div class="empty-icon">📭</div>
+            <h2>Nenhuma assinatura ainda</h2>
+            <p class="text-muted">Cadastre os serviços que você paga para acompanhar gastos, vencimentos e o seu teto mensal.</p>
+            <button class="btn btn-primary" onclick="openEmptyModal()">+ Cadastrar assinatura</button>
+        </div>
+
+        <div class="notif-card" id="notif-prompt">
+            <div>
+                <div style="font-weight:600; font-size:0.95rem;">Lembretes de vencimento</div>
+                <div class="text-muted" style="font-size:0.8rem;">Avisamos quando uma assinatura vence hoje ou está atrasada.</div>
+            </div>
+            <button class="btn-sm" onclick="enableNotifications()">Ativar</button>
         </div>
 
         <div class="budget-card">
@@ -169,11 +208,13 @@
             <div id="budget-alert" style="font-size: 0.8rem; margin-top: 10px; display: none; color: var(--warning);"></div>
         </div>
 
-        <div class="flex space-between mb-2">
-            <h3 class="section-title" style="margin: 0; border: none; padding: 0;">Assinaturas Ativas</h3>
-            <button style="background:transparent; border:none; color:var(--text); font-size:1.5rem; cursor:pointer;" onclick="openEmptyModal()">+</button>
+        <div id="subs-section">
+            <div class="flex space-between mb-2">
+                <h3 class="section-title" style="margin: 0; border: none; padding: 0;">Assinaturas Ativas</h3>
+                <button style="background:transparent; border:none; color:var(--text); font-size:1.5rem; cursor:pointer;" onclick="openEmptyModal()">+</button>
+            </div>
+            <div id="subs-list"></div>
         </div>
-        <div id="subs-list"></div>
     </div>
 
     <!-- Discover View -->
@@ -194,12 +235,13 @@
 
         <div id="discover-categories">
             <div class="pill-scroll">
-                <span class="category-pill active" onclick="filterDiscover('Todos', this)">Todos</span>
-                <span class="category-pill" onclick="filterDiscover('IA', this)">IAs</span>
-                <span class="category-pill" onclick="filterDiscover('Streaming', this)">Streaming</span>
-                <span class="category-pill" onclick="filterDiscover('Dev', this)">Cloud & Dev</span>
-                <span class="category-pill" onclick="filterDiscover('Produtividade', this)">Produtividade</span>
-                <span class="category-pill" onclick="filterDiscover('Games', this)">Games</span>
+                <span class="category-pill active" data-cat="Todos" onclick="filterDiscover('Todos', this)">Todos</span>
+                <span class="category-pill" data-cat="IA" onclick="filterDiscover('IA', this)">IAs</span>
+                <span class="category-pill" data-cat="Streaming" onclick="filterDiscover('Streaming', this)">Streaming</span>
+                <span class="category-pill" data-cat="Dev" onclick="filterDiscover('Dev', this)">Cloud & Dev</span>
+                <span class="category-pill" data-cat="Produtividade" onclick="filterDiscover('Produtividade', this)">Produtividade</span>
+                <span class="category-pill" data-cat="Games" onclick="filterDiscover('Games', this)">Games</span>
+                <span class="category-pill" data-cat="Dia a Dia" onclick="filterDiscover('Dia a Dia', this)">Dia a Dia</span>
             </div>
             <div id="discover-list"></div>
         </div>
@@ -228,6 +270,13 @@
             <span class="category-pill" data-val="Produtividade" onclick="toggleProfPill(this)">Produtividade</span>
             <span class="category-pill" data-val="Games" onclick="toggleProfPill(this)">Games</span>
             <span class="category-pill" data-val="Dia a Dia" onclick="toggleProfPill(this)">Dia a Dia</span>
+        </div>
+        <div class="form-group">
+            <label>Notificações</label>
+            <div class="notif-row">
+                <span class="text-muted" id="notif-status" style="font-size:0.85rem;"></span>
+                <button class="btn-sm" id="notif-btn" onclick="enableNotifications()">Ativar</button>
+            </div>
         </div>
         <button class="btn btn-primary" onclick="saveProfile()">Salvar Configurações</button>
     </div>
@@ -287,9 +336,92 @@
     </div>
 
     <script>
-        let state = JSON.parse(localStorage.getItem('subDataV5')) || { onboarded: false, name: '', budget: 0, interests: [], subs: [] };
+        /* =====================================================
+           Persistência (localStorage)
+           ===================================================== */
+        const STORAGE_KEY = 'subDataV5';
+        const LEGACY_KEYS = ['subDataV4', 'subDataV3', 'subDataV2', 'subDataV1']; // recupera dados de versões antigas, se existirem
+        const SCHEMA = 6;
+
+        const pad = n => String(n).padStart(2, '0');
+        function todayStr(d = new Date()) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+        function parseDay(str) {
+            const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str || '');
+            return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+        }
+        function esc(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        const brl = n => (parseFloat(n) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        function avatarUrl(name) {
+            return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name || '?').replace(/'/g, '%27') + '&background=111&color=fff';
+        }
+        // onerror seguro: troca para o avatar uma única vez (evita loop se estiver offline)
+        function logoImg(cls, domain, name) {
+            return `<img src="https://icon.horse/icon/${esc(domain)}" class="${cls}" onerror="this.onerror=null;this.src='${avatarUrl(name)}'">`;
+        }
+
+        function defaultState() { return { schema: SCHEMA, onboarded: false, name: '', budget: 0, interests: [], subs: [] }; }
+
+        function readKey(k) {
+            let raw = null;
+            try { raw = localStorage.getItem(k); } catch (e) { return null; }
+            if (!raw) return null;
+            try { return JSON.parse(raw); }
+            catch (e) {
+                // JSON corrompido: guarda cópia para não perder o conteúdo e segue com estado limpo
+                try { localStorage.setItem(k + ':corrupt-backup', raw); } catch (_) {}
+                return null;
+            }
+        }
+
+        function normalizeSub(x) {
+            const day = parseInt(x.dueDate);
+            return {
+                name: String(x.name),
+                domain: x.domain ? String(x.domain) : '',
+                category: x.category ? String(x.category) : 'Outros',
+                price: parseFloat(x.price) || 0,
+                dueDate: day >= 1 && day <= 31 ? String(day) : '',
+                paymentMethod: x.paymentMethod || 'Cartão',
+                createdAt: parseDay(x.createdAt) ? x.createdAt : todayStr(),   // assinaturas antigas: ciclos só contam a partir de hoje
+                paidCycle: /^\d{4}-\d{2}$/.test(x.paidCycle || '') ? x.paidCycle : '',
+                lastNotified: parseDay(x.lastNotified) ? x.lastNotified : ''
+            };
+        }
+
+        function normalize(raw) {
+            const s = defaultState();
+            if (!raw || typeof raw !== 'object') return s;
+            s.name = typeof raw.name === 'string' ? raw.name : '';
+            s.budget = parseFloat(raw.budget) || 0;
+            s.interests = Array.isArray(raw.interests) ? raw.interests.filter(i => typeof i === 'string') : [];
+            s.subs = (Array.isArray(raw.subs) ? raw.subs : []).filter(x => x && x.name).map(normalizeSub);
+            // Se há dados do usuário, ele já passou pelo onboarding (mesmo que a flag tenha se perdido)
+            s.onboarded = raw.onboarded === true || !!s.name || s.subs.length > 0;
+            return s;
+        }
+
+        function loadState() {
+            let raw = readKey(STORAGE_KEY);
+            if (!raw) { for (const k of LEGACY_KEYS) { raw = readKey(k); if (raw) break; } }
+            return normalize(raw);
+        }
+
+        let saveWarned = false;
+        function save() {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); return true; }
+            catch (e) {
+                console.warn('Falha ao salvar no localStorage', e);
+                if (!saveWarned) { saveWarned = true; alert('Não foi possível salvar os dados neste navegador (armazenamento indisponível ou cheio).'); }
+                return false;
+            }
+        }
+
+        let state = loadState();
         let setupInterests = new Set();
-        
+        let searchTimeout;
+
         const db = [
             { name: "ChatGPT Plus", domain: "openai.com", category: "IA", price: 100 },
             { name: "Claude Pro", domain: "anthropic.com", category: "IA", price: 100 },
@@ -309,22 +441,150 @@
             { name: "iFood", domain: "ifood.com.br", category: "Dia a Dia", price: 4.90 }
         ];
 
-        function save() { localStorage.setItem('subDataV5', JSON.stringify(state)); }
+        /* =====================================================
+           Vencimentos
+           Ciclo = mês. Uma assinatura está "pendente" quando o último
+           vencimento (<= hoje) pertence a um ciclo ainda não marcado
+           como pago e posterior ao cadastro.
+           ===================================================== */
+        function dueOn(y, m, day) {
+            const last = new Date(y, m + 1, 0).getDate();   // dia 31 em fevereiro vence no último dia do mês
+            return new Date(y, m, Math.min(day, last));
+        }
+        function cycleKey(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; }
+
+        function dueStatus(sub, now = new Date()) {
+            const day = parseInt(sub.dueDate);
+            if (!day || day < 1 || day > 31) return null;
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            let due = dueOn(today.getFullYear(), today.getMonth(), day);
+            if (due > today) due = dueOn(today.getFullYear(), today.getMonth() - 1, day);
+            const created = parseDay(sub.createdAt);
+            if (created && due < created) return null;                       // ciclo anterior ao cadastro
+            const key = cycleKey(due);
+            if (sub.paidCycle && sub.paidCycle >= key) return null;          // ciclo já pago
+            const days = Math.round((today - due) / 86400000);
+            return { type: days === 0 ? 'today' : 'overdue', days, cycle: key };
+        }
+
+        function markPaid(i) {
+            const sub = state.subs[i];
+            const st = sub && dueStatus(sub);
+            if (!st) return;
+            sub.paidCycle = st.cycle;
+            save();
+            renderHome();
+        }
+
+        /* =====================================================
+           Notificações
+           ===================================================== */
+        async function showNotif(title, opts) {
+            try {
+                if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.getRegistration();
+                    if (reg && reg.showNotification) { await reg.showNotification(title, opts); return true; }   // exigido no Android/iOS
+                }
+            } catch (e) {}
+            try { new Notification(title, opts); return true; } catch (e) { return false; }
+        }
+
+        let notifRunning = false;
+        async function checkDueNotifications() {
+            if (notifRunning || !state.onboarded) return;
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+            notifRunning = true;
+            try {
+                const today = todayStr();
+                const pending = [];
+                state.subs.forEach(sub => {
+                    const st = dueStatus(sub);
+                    if (st && sub.lastNotified !== today) pending.push({ sub, st });   // no máximo 1 aviso por dia por assinatura
+                });
+                if (!pending.length) return;
+
+                if (pending.length <= 3) {
+                    for (const { sub, st } of pending) {
+                        const title = st.type === 'today' ? `${sub.name} vence hoje` : `${sub.name} está atrasada`;
+                        const body = st.type === 'today'
+                            ? `${brl(sub.price)} · ${sub.paymentMethod}`
+                            : `Venceu há ${st.days} ${st.days === 1 ? 'dia' : 'dias'} (dia ${sub.dueDate}) · ${brl(sub.price)}`;
+                        if (await showNotif(title, { body, tag: `sub-${sub.name}-${st.cycle}` })) sub.lastNotified = today;
+                    }
+                } else {
+                    const overdue = pending.filter(p => p.st.type === 'overdue').length;
+                    const body = pending.map(p => p.sub.name).join(', ');
+                    const title = `${pending.length} assinaturas precisam de atenção` + (overdue ? ` (${overdue} atrasada${overdue > 1 ? 's' : ''})` : '');
+                    if (await showNotif(title, { body, tag: `sub-grupo-${today}` })) pending.forEach(p => p.sub.lastNotified = today);
+                }
+                save();
+            } finally { notifRunning = false; }
+        }
+
+        async function enableNotifications() {
+            if (!('Notification' in window)) { alert('Este navegador não suporta notificações.'); return; }
+            if (Notification.permission === 'denied') { alert('As notificações estão bloqueadas. Libere-as nas configurações do site/navegador.'); return; }
+            try {
+                await new Promise(res => { const r = Notification.requestPermission(res); if (r && r.then) r.then(res); });
+            } catch (e) {}
+            updateNotifUI();
+            checkDueNotifications();
+        }
+
+        function updateNotifUI() {
+            const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+            const prompt = document.getElementById('notif-prompt');
+            if (prompt) prompt.style.display = (perm === 'default' && state.subs.length > 0) ? 'flex' : 'none';
+            const status = document.getElementById('notif-status');
+            const btn = document.getElementById('notif-btn');
+            if (!status || !btn) return;
+            btn.style.display = 'none';
+            if (perm === 'granted') status.textContent = 'Ativadas: avisos de vencimento e atraso.';
+            else if (perm === 'denied') status.textContent = 'Bloqueadas no navegador. Libere nas configurações do site.';
+            else if (perm === 'unsupported') status.textContent = 'Este navegador não suporta notificações.';
+            else { status.textContent = 'Desativadas.'; btn.style.display = 'inline-block'; }
+        }
+
+        /* =====================================================
+           Inicialização e navegação
+           ===================================================== */
+        let lastDay = todayStr();
 
         function init() {
+            const onboardingEl = document.getElementById('onboarding-fs');
             if (!state.onboarded) {
-                document.getElementById('onboarding-fs').style.display = 'flex';
+                onboardingEl.style.display = 'flex';
             } else {
-                document.getElementById('app').style.display = 'block';
-                renderHome();
-                renderDiscover('Todos');
-                loadProfile();
+                onboardingEl.style.display = 'none';
+                save();   // grava o estado já normalizado/migrado
             }
+            renderHome();
+            resetDiscover();
+            loadProfile();
+            updateNotifUI();
+
+            try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}   // reduz risco de o navegador apagar os dados
+
+            checkDueNotifications();
+            setInterval(tick, 60000);
+            document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+            window.addEventListener('focus', tick);
+            // Mantém várias abas/janelas sincronizadas (evita uma aba antiga sobrescrever dados novos)
+            window.addEventListener('storage', e => {
+                if (e.key !== STORAGE_KEY) return;
+                state = loadState();
+                renderHome(); loadProfile(); updateNotifUI();
+            });
+        }
+
+        function tick() {
+            if (todayStr() !== lastDay) { lastDay = todayStr(); renderHome(); }   // virou o dia: atualiza badges
+            checkDueNotifications();
         }
 
         function toggleSetupPill(el, val) {
             el.classList.toggle('active');
-            if(setupInterests.has(val)) setupInterests.delete(val); else setupInterests.add(val);
+            if (setupInterests.has(val)) setupInterests.delete(val); else setupInterests.add(val);
         }
 
         function nextStep(s) {
@@ -333,35 +593,35 @@
         }
 
         function finishOnboarding() {
-            state.name = document.getElementById('setup-name').value || 'Membro';
+            state.name = document.getElementById('setup-name').value.trim() || 'Membro';
             state.budget = parseFloat(document.getElementById('setup-budget').value) || 0;
             state.interests = Array.from(setupInterests);
             state.onboarded = true;
             save();
             document.getElementById('onboarding-fs').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
             renderHome();
-            renderDiscover('Todos');
+            resetDiscover();
             loadProfile();
+            updateNotifUI();
         }
 
         function loadProfile() {
-            document.getElementById('prof-name').value = state.name;
-            document.getElementById('prof-budget').value = state.budget;
+            document.getElementById('prof-name').value = state.name || '';
+            document.getElementById('prof-budget').value = state.budget > 0 ? state.budget : '';
             document.querySelectorAll('#prof-interests .category-pill').forEach(pill => {
-                if(state.interests.includes(pill.dataset.val)) pill.classList.add('active');
-                else pill.classList.remove('active');
+                pill.classList.toggle('active', state.interests.includes(pill.dataset.val));
             });
         }
 
         function toggleProfPill(el) { el.classList.toggle('active'); }
 
         function saveProfile() {
-            state.name = document.getElementById('prof-name').value;
+            state.name = document.getElementById('prof-name').value.trim() || state.name || 'Membro';
             state.budget = parseFloat(document.getElementById('prof-budget').value) || 0;
             state.interests = Array.from(document.querySelectorAll('#prof-interests .category-pill.active')).map(p => p.dataset.val);
             save();
             renderHome();
+            loadProfile();
             alert("Perfil salvo com sucesso!");
         }
 
@@ -370,53 +630,96 @@
             document.getElementById(`view-${view}`).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             btn.classList.add('active');
+            if (view === 'discover') resetDiscover();                       // sempre abre em "Todos"
+            if (view === 'profile') { loadProfile(); updateNotifUI(); }     // mostra o que está salvo, descartando edições não salvas
+            if (view === 'home') renderHome();
+            window.scrollTo(0, 0);
         }
 
+        /* =====================================================
+           Portfólio
+           ===================================================== */
         function renderHome() {
-            document.getElementById('user-greeting').innerText = `Olá, ${state.name}.`;
+            const hasSubs = state.subs.length > 0;
+            const greeting = state.name ? `Olá, ${state.name}.` : 'Olá.';
+
+            // Hero só existe com assinaturas; sem elas, mensagem + CTA
+            document.getElementById('hero-card').style.display = hasSubs ? 'block' : 'none';
+            document.getElementById('hero-empty').style.display = hasSubs ? 'none' : 'block';
+            document.getElementById('subs-section').style.display = hasSubs ? 'block' : 'none';
+            document.getElementById('user-greeting').innerText = greeting;
+            document.getElementById('empty-greeting').innerText = greeting;
+
             document.getElementById('hero-count').innerText = state.subs.length;
-            
             const heroLogos = document.getElementById('hero-logos');
             heroLogos.innerHTML = '';
-            state.subs.slice(0, 5).forEach(s => {
-                heroLogos.innerHTML += `<img src="https://icon.horse/icon/${s.domain}" class="hero-logo-item" onerror="this.src='https://ui-avatars.com/api/?name=${s.name}&background=111&color=fff'">`;
-            });
-            if(state.subs.length > 5) heroLogos.innerHTML += `<div class="hero-logo-more">+${state.subs.length - 5}</div>`;
+            state.subs.slice(0, 5).forEach(s => { heroLogos.innerHTML += logoImg('hero-logo-item', s.domain, s.name); });
+            if (state.subs.length > 5) heroLogos.innerHTML += `<div class="hero-logo-more">+${state.subs.length - 5}</div>`;
 
-            const total = state.subs.reduce((acc, curr) => acc + parseFloat(curr.price || 0), 0);
-            document.getElementById('total-month').innerText = `R$ ${total.toFixed(2)}`;
-            document.getElementById('budget-status').innerText = `R$ ${state.budget.toFixed(2)}`;
-            
-            if(state.budget > 0) {
+            const total = state.subs.reduce((acc, curr) => acc + (parseFloat(curr.price) || 0), 0);
+            document.getElementById('total-month').innerText = brl(total);
+            document.getElementById('budget-status').innerText = brl(state.budget);
+
+            const alertEl = document.getElementById('budget-alert');
+            const bar = document.getElementById('budget-bar');
+            if (state.budget > 0) {
                 const percent = Math.min((total / state.budget) * 100, 100);
-                document.getElementById('budget-bar').style.width = `${percent}%`;
-                const alertEl = document.getElementById('budget-alert');
-                if(percent >= 100) { alertEl.innerText = "Teto excedido!"; alertEl.style.display = 'block'; alertEl.style.color = "var(--danger)"; }
-                else if(percent > 80) { alertEl.innerText = "Próximo ao limite."; alertEl.style.display = 'block'; alertEl.style.color = "var(--warning)"; }
+                bar.style.width = `${percent}%`;
+                if (percent >= 100) { alertEl.innerText = "Teto excedido!"; alertEl.style.display = 'block'; alertEl.style.color = "var(--danger)"; }
+                else if (percent > 80) { alertEl.innerText = "Próximo ao limite."; alertEl.style.display = 'block'; alertEl.style.color = "var(--warning)"; }
                 else { alertEl.style.display = 'none'; }
+            } else {
+                bar.style.width = '0%';
+                alertEl.style.display = 'none';
             }
 
             const list = document.getElementById('subs-list');
-            list.innerHTML = state.subs.length === 0 ? '<p class="text-muted">Adicione sua primeira assinatura.</p>' : '';
+            list.innerHTML = '';
             state.subs.forEach((sub, i) => {
+                const st = dueStatus(sub);
+                const statusBadge = !st ? '' : st.type === 'today'
+                    ? '<span class="badge badge-warn">Vence hoje</span>'
+                    : `<span class="badge badge-danger">Atrasada · ${st.days}d</span>`;
+                const payBtn = st ? `<button class="pay-btn" onclick="event.stopPropagation(); markPaid(${i})">✓ Paguei</button>` : '';
                 list.innerHTML += `
                     <div class="sub-card" onclick="openModal(${i})">
                         <div class="flex">
-                            <img src="https://icon.horse/icon/${sub.domain}" class="sub-logo" onerror="this.src='https://ui-avatars.com/api/?name=${sub.name}&background=111&color=fff'">
+                            ${logoImg('sub-logo', sub.domain, sub.name)}
                             <div class="sub-info">
-                                <div class="sub-title">${sub.name}</div>
-                                <div class="sub-meta"><span class="badge">${sub.category}</span>${sub.dueDate ? `<span class="badge">Dia ${sub.dueDate}</span>` : ''}</div>
+                                <div class="sub-title">${esc(sub.name)}</div>
+                                <div class="sub-meta"><span class="badge">${esc(sub.category)}</span>${sub.dueDate ? `<span class="badge">Dia ${esc(sub.dueDate)}</span>` : ''}${statusBadge}</div>
                             </div>
                         </div>
-                        <div class="sub-price">R$ ${parseFloat(sub.price).toFixed(2)}</div>
+                        <div class="sub-right">
+                            <div class="sub-price">${brl(sub.price)}</div>
+                            ${payBtn}
+                        </div>
                     </div>`;
             });
+
+            updateNotifUI();
         }
 
+        /* =====================================================
+           Descobrir
+           ===================================================== */
         function filterDiscover(cat, btn) {
             document.querySelectorAll('#discover-categories .category-pill').forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
             renderDiscover(cat);
+        }
+
+        // Estado inicial da aba: categoria "Todos", sem busca ativa
+        function resetDiscover() {
+            clearTimeout(searchTimeout);
+            const input = document.getElementById('search-api');
+            if (input) input.value = '';
+            document.getElementById('search-results').style.display = 'none';
+            document.getElementById('discover-categories').style.display = 'block';
+            document.querySelectorAll('#discover-categories .category-pill').forEach(p => p.classList.toggle('active', p.dataset.cat === 'Todos'));
+            const scroller = document.querySelector('#discover-categories .pill-scroll');
+            if (scroller) scroller.scrollLeft = 0;
+            renderDiscover('Todos');
         }
 
         function renderDiscover(cat) {
@@ -427,41 +730,40 @@
                 list.innerHTML += `
                 <div class="sub-card" onclick="autoFillStep1('${app.name}', '${app.domain}', '${app.category}', '${app.price}')">
                     <div class="flex">
-                        <img src="https://icon.horse/icon/${app.domain}" class="sub-logo" onerror="this.src='https://ui-avatars.com/api/?name=${app.name}&background=111&color=fff'">
+                        ${logoImg('sub-logo', app.domain, app.name)}
                         <div class="sub-info"><div class="sub-title">${app.name}</div><div class="sub-meta"><span class="badge">${app.category}</span></div></div>
                     </div><span style="font-size: 1.2rem; color: var(--text-muted)">+</span>
                 </div>`;
             });
         }
 
-        let searchTimeout;
         async function fetchClearbit(query, listElId, containerElId, hideElId) {
             const resContainer = document.getElementById(containerElId);
             const resList = document.getElementById(listElId);
-            
-            if(query.length < 2) {
-                if(containerElId) resContainer.style.display = 'none';
-                if(hideElId) document.getElementById(hideElId).style.display = 'block';
+
+            if (query.length < 2) {
+                if (containerElId) resContainer.style.display = 'none';
+                if (hideElId) document.getElementById(hideElId).style.display = 'block';
                 return;
             }
 
-            if(containerElId) resContainer.style.display = 'block';
-            if(hideElId) document.getElementById(hideElId).style.display = 'none';
+            if (containerElId) resContainer.style.display = 'block';
+            if (hideElId) document.getElementById(hideElId).style.display = 'none';
             resList.innerHTML = '<div class="spinner"></div>';
 
             try {
-                const req = await fetch(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${query}`);
+                const req = await fetch(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(query)}`);
                 const data = await req.json();
                 resList.innerHTML = '';
-                if(data.length === 0) { resList.innerHTML = '<p class="text-muted">Nenhum app encontrado.</p>'; return; }
-                
+                if (data.length === 0) { resList.innerHTML = '<p class="text-muted">Nenhum app encontrado.</p>'; return; }
+
                 data.forEach(c => {
-                    const html = (listElId === 'modal-quick-grid') 
+                    const html = (listElId === 'modal-quick-grid')
                         ? `<div class="quick-item" onclick="autoFillStep1('${c.name}', '${c.domain}', 'Outros', '')"><img src="https://icon.horse/icon/${c.domain}" class="quick-logo"><div style="font-size:0.7rem">${c.name}</div></div>`
                         : `<div class="sub-card" onclick="autoFillStep1('${c.name}', '${c.domain}', 'Outros', '')"><div class="flex"><img src="https://icon.horse/icon/${c.domain}" class="sub-logo"><div class="sub-info"><div class="sub-title">${c.name}</div><div class="sub-meta"><span class="badge">App Global</span></div></div></div><span style="font-size: 1.2rem; color: var(--text-muted)">+</span></div>`;
                     resList.innerHTML += html;
                 });
-            } catch(e) { resList.innerHTML = '<p class="text-muted" style="color:var(--danger)">Erro na busca.</p>'; }
+            } catch (e) { resList.innerHTML = '<p class="text-muted" style="color:var(--danger)">Erro na busca.</p>'; }
         }
 
         function debounceSearch(inputId, resContainerId, listId, hideId) {
@@ -472,19 +774,29 @@
             document.getElementById('modal-grid-title').innerText = "Resultados";
             clearTimeout(searchTimeout);
             const val = document.getElementById('modal-search-input').value;
-            if(val.length < 2) { populateIntelligentGrid(); return; }
+            if (val.length < 2) { populateIntelligentGrid(); return; }
             searchTimeout = setTimeout(() => fetchClearbit(val, 'modal-quick-grid', null, null), 500);
         }
 
+        /* =====================================================
+           Modal de cadastro / edição
+           ===================================================== */
         function toggleModal(id) {
             const el = document.getElementById(id);
             el.classList.toggle('active');
-            if(!el.classList.contains('active')) setTimeout(() => el.style.display = 'none', 200);
+            if (!el.classList.contains('active')) setTimeout(() => { if (!el.classList.contains('active')) el.style.display = 'none'; }, 200);
             else el.style.display = 'flex';
         }
 
-        function openEmptyModal() {
+        // Limpa o formulário para um novo cadastro (evita herdar vencimento/índice da edição anterior)
+        function resetAddForm() {
             document.getElementById('edit-index').value = -1;
+            document.getElementById('add-due-date').value = '';
+            document.getElementById('add-payment').value = 'Cartão';
+        }
+
+        function openEmptyModal() {
+            resetAddForm();
             document.getElementById('modal-search-input').value = '';
             populateIntelligentGrid();
             document.getElementById('modal-step-1').style.display = 'block';
@@ -496,28 +808,31 @@
             document.getElementById('modal-grid-title').innerText = "Recomendados para Você";
             const grid = document.getElementById('modal-quick-grid');
             grid.innerHTML = '';
-            
+
             let suggestions = state.interests.length > 0 ? db.filter(d => state.interests.includes(d.category)) : db;
-            if(suggestions.length === 0) suggestions = db;
-            
+            if (suggestions.length === 0) suggestions = db;
+
             suggestions.slice(0, 8).forEach(app => {
                 grid.innerHTML += `
                 <div class="quick-item" onclick="autoFillStep1('${app.name}', '${app.domain}', '${app.category}', '${app.price}')">
-                    <img src="https://icon.horse/icon/${app.domain}" class="quick-logo" onerror="this.src='https://ui-avatars.com/api/?name=${app.name}&background=111&color=fff'">
+                    ${logoImg('quick-logo', app.domain, app.name)}
                     <div style="font-size:0.7rem">${app.name}</div>
                 </div>`;
             });
         }
 
         function autoFillStep1(name, domain, cat, price) {
+            const modalOpen = document.getElementById('add-modal').classList.contains('active');
+            if (!modalOpen) resetAddForm();   // veio da aba Descobrir: sempre é um cadastro novo
+            document.getElementById('edit-index').value = -1;
             document.getElementById('add-name').value = name;
             document.getElementById('add-domain').value = domain;
             document.getElementById('add-category').value = cat;
             document.getElementById('add-price').value = price;
             document.getElementById('btn-back').style.display = 'block';
             document.getElementById('btn-delete').style.display = 'none';
-            
-            if(!document.getElementById('add-modal').classList.contains('active')) toggleModal('add-modal');
+
+            if (!modalOpen) toggleModal('add-modal');
             document.getElementById('modal-step-1').style.display = 'none';
             document.getElementById('modal-step-2').style.display = 'block';
         }
@@ -536,7 +851,7 @@
             document.getElementById('add-price').value = sub.price;
             document.getElementById('add-due-date').value = sub.dueDate || '';
             document.getElementById('add-payment').value = sub.paymentMethod || 'Cartão';
-            
+
             toggleModal('add-modal');
         }
 
@@ -547,38 +862,57 @@
 
         function saveSubscription() {
             const index = parseInt(document.getElementById('edit-index').value);
-            const sub = {
-                name: document.getElementById('add-name').value,
-                domain: document.getElementById('add-domain').value,
-                category: document.getElementById('add-category').value,
-                price: parseFloat(document.getElementById('add-price').value) || 0,
-                dueDate: document.getElementById('add-due-date').value,
-                paymentMethod: document.getElementById('add-payment').value
-            };
-            if(!sub.name) return;
+            const prev = index >= 0 ? state.subs[index] : null;
+            const dueRaw = parseInt(document.getElementById('add-due-date').value);
+            const dueDate = dueRaw >= 1 && dueRaw <= 31 ? String(dueRaw) : '';
 
-            if(index >= 0) state.subs[index] = sub; else state.subs.push(sub);
+            const sub = Object.assign(
+                { createdAt: todayStr(), paidCycle: '', lastNotified: '' },
+                prev || {},
+                {
+                    name: document.getElementById('add-name').value.trim(),
+                    domain: document.getElementById('add-domain').value,
+                    category: document.getElementById('add-category').value || 'Outros',
+                    price: parseFloat(document.getElementById('add-price').value) || 0,
+                    dueDate,
+                    paymentMethod: document.getElementById('add-payment').value
+                }
+            );
+            if (!sub.name) return;
+
+            // Mudou o dia de vencimento: reinicia o ciclo para não gerar "atraso" retroativo
+            if (prev && prev.dueDate !== dueDate) { sub.createdAt = todayStr(); sub.lastNotified = ''; }
+
+            if (prev) state.subs[index] = sub; else state.subs.push(sub);
             save(); toggleModal('add-modal'); renderHome();
+            checkDueNotifications();
         }
 
         function deleteSub() {
             const index = parseInt(document.getElementById('edit-index').value);
-            if(index >= 0 && confirm("Remover assinatura?")) {
+            if (index >= 0 && confirm("Remover assinatura?")) {
                 state.subs.splice(index, 1);
                 save(); toggleModal('add-modal'); renderHome();
             }
         }
 
-        // PWA Manifest com Logo SVG inline
-        const svgString = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='#000'/><path d='M160 110h192v64H224v64h96a64 64 0 0 1 64 64v64a64 64 0 0 1-64 64H160v-64h128v-64H192a64 64 0 0 1-64-64v-64a64 64 0 0 1 64-64z' fill='#fff'/></svg>`;
-        const manifest = { name: "SubManager", display: "standalone", start_url: location.href, background_color: "#000", icons: [{src:`data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`, sizes:"512x512", type:"image/svg+xml"}]};
-        document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(manifest))}">`);
-        if('serviceWorker' in navigator && location.protocol !== 'file:') {
-            const sw = `self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));`;
-            navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw], {type: 'application/javascript'}))).catch(()=>{});
+        /* =====================================================
+           PWA
+           ===================================================== */
+        function setupPWA() {
+            try {
+                const svgString = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='#000'/><path d='M160 110h192v64H224v64h96a64 64 0 0 1 64 64v64a64 64 0 0 1-64 64H160v-64h128v-64H192a64 64 0 0 1-64-64v-64a64 64 0 0 1 64-64z' fill='#fff'/></svg>`;
+                const manifest = { name: "SubManager", display: "standalone", start_url: location.href, background_color: "#000", icons: [{ src: `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`, sizes: "512x512", type: "image/svg+xml" }] };
+                document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="data:application/json;charset=utf-8,${encodeURIComponent(JSON.stringify(manifest))}">`);
+                // Service worker precisa ser um arquivo real (navegadores rejeitam blob:). Se o sw.js não existir, o app segue normalmente.
+                if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+                    navigator.serviceWorker.register('./sw.js').catch(() => {});
+                }
+            } catch (e) { console.warn('PWA setup falhou', e); }
         }
 
-        init();
+        init();        // primeiro o app; falhas no PWA não podem impedir a renderização
+        setupPWA();
     </script>
 </body>
 </html>
