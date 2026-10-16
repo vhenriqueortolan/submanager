@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import Logo from './Logo.jsx';
 import { CATALOG, PAYMENT_METHODS } from '../lib/catalog.js';
 import { buildSub, emptyForm, formFromSub } from '../lib/subs.js';
+import { CYCLES, annualAmount } from '../lib/cycles.js';
+import { MONTHS, WEEKDAYS, brl } from '../lib/format.js';
 import { useCompanySearch } from '../hooks/useCompanySearch.js';
 
 function QuickItem({ app, onPick }) {
@@ -44,7 +46,9 @@ export default function SubModal({ mode, sub, preset, interests, onSave, onDelet
     setSource(app.source || 'manual');
     setStep(2);
   };
-  const searching = query.trim().length >= 2;
+  const cycleInfo = CYCLES[form.cycle];
+  const monthlyHint = form.cycle !== 'monthly' && parseFloat(form.price) > 0 ? annualAmount(form) / 12 : 0;
+  const searching =query.trim().length >= 2;
 
   return (
     <div className="modal-overlay" id="add-modal" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
@@ -97,7 +101,16 @@ export default function SubModal({ mode, sub, preset, interests, onSave, onDelet
             </div>
 
             <div className="form-group">
-              <label htmlFor="add-price">Preço Mensal (R$)</label>
+              <label htmlFor="add-cycle">Cobrança</label>
+              <select id="add-cycle" value={form.cycle} onChange={set('cycle')}>
+                {Object.entries(CYCLES).map(([key, c]) => (
+                  <option key={key} value={key}>{c.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="add-price">Valor cobrado por {cycleInfo.unit} (R$)</label>
               <input
                 type="number"
                 inputMode="decimal"
@@ -108,30 +121,55 @@ export default function SubModal({ mode, sub, preset, interests, onSave, onDelet
                 value={form.price}
                 onChange={set('price')}
               />
+              {monthlyHint > 0 && <small className="text-muted" id="add-monthly-hint">≈ {brl(monthlyHint)} por mês</small>}
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="add-due-date">Vencimento (Dia)</label>
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  id="add-due-date"
-                  min="1"
-                  max="31"
-                  placeholder="Ex: 10"
-                  value={form.dueDate}
-                  onChange={set('dueDate')}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="add-payment">Pagamento</label>
-                <select id="add-payment" value={form.paymentMethod} onChange={set('paymentMethod')}>
-                  {PAYMENT_METHODS.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
-              </div>
+              {form.cycle === 'weekly' ? (
+                <div className="form-group">
+                  <label htmlFor="add-due-weekday">Dia da semana</label>
+                  <select id="add-due-weekday" value={form.dueWeekday} onChange={set('dueWeekday')}>
+                    <option value="">Selecione</option>
+                    {WEEKDAYS.map((w, i) => (
+                      <option key={w} value={String(i)}>{w}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="form-group">
+                  <label htmlFor="add-due-date">Vencimento (Dia)</label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    id="add-due-date"
+                    min="1"
+                    max="31"
+                    placeholder="Ex: 10"
+                    value={form.dueDate}
+                    onChange={set('dueDate')}
+                  />
+                </div>
+              )}
+              {form.cycle === 'yearly' && (
+                <div className="form-group">
+                  <label htmlFor="add-due-month">Vencimento (Mês)</label>
+                  <select id="add-due-month" value={form.dueMonth} onChange={set('dueMonth')}>
+                    <option value="">Selecione</option>
+                    {MONTHS.map((m, i) => (
+                      <option key={m} value={String(i + 1)}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="add-payment">Pagamento</label>
+              <select id="add-payment" value={form.paymentMethod} onChange={set('paymentMethod')}>
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
             </div>
 
             <button
