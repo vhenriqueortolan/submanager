@@ -3,6 +3,7 @@ import AppBrand from './AppBrand.jsx';
 import Logo from './Logo.jsx';
 import { brl } from '../lib/format.js';
 import { dueStatus, parseDay } from '../lib/dates.js';
+import { annualProjection, monthlyTotal } from '../lib/totals.js';
 
 function Hero({ greeting, subs }) {
   return (
@@ -33,7 +34,7 @@ function EmptyHero({ greeting, onAdd }) {
   );
 }
 
-function BudgetCard({ total, budget }) {
+function BudgetCard({ total, annual, budget }) {
   const percent = budget > 0 ? Math.min((total / budget) * 100, 100) : 0;
   let alert = null;
   if (budget > 0) {
@@ -57,6 +58,12 @@ function BudgetCard({ total, budget }) {
       </div>
       {alert && (
         <div className="budget-alert" id="budget-alert" style={{ color: alert.color }}>{alert.text}</div>
+      )}
+      {total > 0 && (
+        <div className="budget-annual" id="annual-projection">
+          <span className="stat-label">Projeção anual</span>
+          <span className="annual-value">{brl(annual)}</span>
+        </div>
       )}
     </div>
   );
@@ -118,7 +125,8 @@ export default function Home({ state, today, permission, onEnableNotifications, 
     return subs.map((sub) => ({ sub, status: dueStatus(sub, now) }));
   }, [subs, today]);
 
-  const total = subs.reduce((acc, s) => acc + (parseFloat(s.price) || 0), 0);
+  const total = monthlyTotal(subs);
+  const annual = annualProjection(subs);
 
   return (
     <main className="container active" id="view-home">
@@ -136,7 +144,7 @@ export default function Home({ state, today, permission, onEnableNotifications, 
         </div>
       )}
 
-      <BudgetCard total={total} budget={budget} />
+      <BudgetCard total={total} annual={annual} budget={budget} />
 
       {hasSubs && (
         <section id="subs-section">

@@ -11,6 +11,17 @@ export default function Onboarding({ onFinish }) {
   const toggle = (value) =>
     setInterests((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
 
+  // Pular encerra o onboarding mantendo o que já foi preenchido até aqui.
+  const skip = (
+    <button
+      type="button"
+      className="btn btn-outline btn-ghost skip-btn"
+      onClick={() => onFinish({ name, budget, interests, skipped: true })}
+    >
+      Pular por enquanto
+    </button>
+  );
+
   return (
     <div id="onboarding-fs">
       {step === 1 && (
@@ -28,6 +39,7 @@ export default function Onboarding({ onFinish }) {
             onChange={(e) => setName(e.target.value)}
           />
           <button type="button" className="btn btn-primary" onClick={() => setStep(2)}>Continuar</button>
+          {skip}
         </div>
       )}
 
@@ -46,6 +58,7 @@ export default function Onboarding({ onFinish }) {
             onChange={(e) => setBudget(e.target.value)}
           />
           <button type="button" className="btn btn-primary" onClick={() => setStep(3)}>Continuar</button>
+          {skip}
         </div>
       )}
 
@@ -69,6 +82,7 @@ export default function Onboarding({ onFinish }) {
           <button type="button" className="btn btn-primary" onClick={() => onFinish({ name, budget, interests })}>
             Ir para o App
           </button>
+          {skip}
         </div>
       )}
     </div>

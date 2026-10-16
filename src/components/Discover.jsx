@@ -80,7 +80,7 @@ export default function Discover({ onPick }) {
             <button
               type="button"
               className="btn btn-outline"
-              onClick={() => onPick({ name: query.trim(), domain: '', category: 'Outros', price: '' })}
+              onClick={() => onPick({ name: query.trim(), domain: '', category: 'Outros', price: '', source: 'manual' })}
             >
               + Adicionar “{query.trim()}” manualmente
             </button>

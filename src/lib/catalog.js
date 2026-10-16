@@ -9,7 +9,7 @@ export const CATEGORIES = [
 
 export const PAYMENT_METHODS = ['Cartão', 'Pix', 'Boleto'];
 
-export const CATALOG = [
+const ITEMS = [
   { name: 'ChatGPT Plus', domain: 'openai.com', category: 'IA', price: 100 },
   { name: 'Claude Pro', domain: 'anthropic.com', category: 'IA', price: 100 },
   { name: 'Gemini', domain: 'google.com', category: 'IA', price: 97 },
@@ -27,3 +27,5 @@ export const CATALOG = [
   { name: 'Uber One', domain: 'uber.com', category: 'Dia a Dia', price: 19.9 },
   { name: 'iFood', domain: 'ifood.com.br', category: 'Dia a Dia', price: 4.9 },
 ];
+
+export const CATALOG = ITEMS.map((a) => ({ ...a, source: 'catalog' }));

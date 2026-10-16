@@ -7,9 +7,12 @@ Gestão inteligente do portfólio de assinaturas — PWA em **React 19 + Vite**,
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # testes da lógica (node:test, sem dependências extras)
+npm test           # testes unitários da lógica (node:test, sem dependências extras)
 npm run build      # gera ./dist
 npm run preview    # serve o build de produção
+
+npx playwright install chromium   # só na primeira vez
+npm run test:e2e   # testes de ponta a ponta (faz build + preview sozinho)
 ```
 
 Requer Node 20.19+ (ou 22.12+).
@@ -22,6 +25,16 @@ Requer Node 20.19+ (ou 22.12+).
 
 `vercel.json` só define headers: `sw.js` nunca fica em cache (para o app atualizar) e o `manifest.webmanifest` sai com o content-type correto.
 
+## Testes e CI
+
+- **Unitários** (`npm test`): regras de vencimento, normalização do storage, notificações, totais.
+- **E2E** (`npm run test:e2e`): Playwright em Chromium, nos viewports desktop e mobile (Pixel 7). A rede externa é bloqueada/simulada, então os testes não dependem da internet. Para testar um deploy de preview: `E2E_BASE_URL=https://seu-preview.vercel.app npm run test:e2e`.
+- **CI** (`.github/workflows/ci.yml`): em todo PR e push na `main` roda `unit-and-build` e `e2e`. Em falha, o relatório do Playwright fica anexado à execução. Marque os dois como *required* na proteção da branch `main`.
+
+## Analytics
+
+`src/lib/analytics.js` usa o Vercel Web Analytics (sem cookies). Visualizações de página funcionam em todos os planos; **eventos customizados** (`onboarding_completed`, `subscription_added`, `subscription_removed`, `notification_permission`, `backup_exported`, `backup_imported`, `pwa_installed`) só aparecem no painel em planos Pro/Enterprise, com no máximo 2 propriedades por evento. Regra: nunca enviar nomes de serviços, valores ou datas. Só roda em build de produção.
+
 ## Estrutura
 
 ```
@@ -32,11 +45,15 @@ src/
     storage.js       load/save/normalize do localStorage, migração e import
     subs.js          montagem de assinatura a partir do formulário
     notifications.js regras e envio de notificações
+    totals.js        gasto mensal e projeção anual
+    analytics.js     eventos de uso (sem dados financeiros)
     search.js        busca global de serviços (Clearbit) — troque só este arquivo se o provedor mudar
     catalog.js       categorias e catálogo curado
   hooks/           useStore, useToday, useDueNotifications, useCompanySearch...
-  components/      Home, Discover, Profile, SubModal, Onboarding, BottomNav...
-  App.jsx          composição, abas e modal
+  components/      Home, Discover, Profile, SubModal, ConfirmDialog, Onboarding, BottomNav...
+  App.jsx          composição, abas, modal e diálogo de confirmação
+e2e/               testes Playwright (fixtures com rede simulada)
+.github/workflows/ CI
 ```
 
 ## Dados e migração do app antigo

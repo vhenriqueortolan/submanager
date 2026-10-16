@@ -22,6 +22,7 @@ export default function SubModal({ mode, sub, preset, interests, onSave, onDelet
   const [step, setStep] = useState(isEdit || preset ? 2 : 1);
   const [form, setForm] = useState(() => (isEdit ? formFromSub(sub) : emptyForm(preset)));
   const [query, setQuery] = useState('');
+  const [source, setSource] = useState(preset?.source || 'manual');
   const search = useCompanySearch(step === 1 ? query : '');
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function SubModal({ mode, sub, preset, interests, onSave, onDelet
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
   const pick = (app) => {
     setForm(emptyForm(app));
+    setSource(app.source || 'manual');
     setStep(2);
   };
   const searching = query.trim().length >= 2;
@@ -136,7 +138,7 @@ export default function SubModal({ mode, sub, preset, interests, onSave, onDelet
               type="button"
               className="btn btn-primary"
               disabled={!form.name.trim()}
-              onClick={() => onSave(buildSub(isEdit ? sub : null, form))}
+              onClick={() => onSave(buildSub(isEdit ? sub : null, form), { source })}
             >
               Salvar Assinatura
             </button>

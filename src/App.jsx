@@ -4,6 +4,7 @@ import Home from './components/Home.jsx';
 import Discover from './components/Discover.jsx';
 import Profile from './components/Profile.jsx';
 import SubModal from './components/SubModal.jsx';
+import ConfirmDialog from './components/ConfirmDialog.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import Toast from './components/Toast.jsx';
 import { useStore } from './hooks/useStore.js';
@@ -13,14 +14,16 @@ import { useDueNotifications } from './hooks/useDueNotifications.js';
 import { todayStr } from './lib/dates.js';
 import { parseImport } from './lib/storage.js';
 import { downloadBackup } from './lib/backup.js';
+import { trackEvent } from './lib/analytics.js';
 
 export default function App() {
   const { state, dispatch, saveFailed } = useStore();
   const today = useToday();
   const [tab, setTab] = useState('home');
   const [modal, setModal] = useState(null); // null | { mode: 'new', preset? } | { mode: 'edit', sub }
+  const [confirm, setConfirm] = useState(null); // null | { title, message, confirmLabel, danger, onConfirm }
   const [toast, setToast] = useState(null);
-  const [permission, requestNotifications] = useNotificationPermission();
+  const [permission, requestPermission] = useNotificationPermission();
 
   const notify = useCallback((message) => setToast({ message, id: Date.now() }), []);
 
@@ -38,34 +41,65 @@ export default function App() {
   useDueNotifications(state.onboarded ? state.subs : [], onNotified, permission);
 
   const closeModal = useCallback(() => setModal(null), []);
+  const closeConfirm = useCallback(() => setConfirm(null), []);
 
-  const handleSaveSub = (sub) => {
+  const enableNotifications = async () => {
+    const result = await requestPermission();
+    trackEvent('notification_permission', { result });
+  };
+
+  const handleSaveSub = (sub, meta = {}) => {
+    if (modal?.mode === 'new') {
+      trackEvent('subscription_added', { source: meta.source || 'manual', first: state.subs.length === 0 });
+    }
     dispatch({ type: 'upsertSub', sub });
     setModal(null);
   };
 
   const handleDeleteSub = (id) => {
-    if (!window.confirm('Remover assinatura?')) return;
-    dispatch({ type: 'deleteSub', id });
-    setModal(null);
+    const sub = state.subs.find((s) => s.id === id);
+    setConfirm({
+      title: 'Remover assinatura?',
+      message: `“${sub?.name ?? 'Esta assinatura'}” será removida do seu portfólio.`,
+      confirmLabel: 'Remover',
+      danger: true,
+      onConfirm: () => {
+        dispatch({ type: 'deleteSub', id });
+        trackEvent('subscription_removed');
+        setConfirm(null);
+        setModal(null);
+      },
+    });
   };
 
   const handleImport = async (file) => {
+    let next;
     try {
-      const next = parseImport(await file.text());
-      if (!window.confirm(`Substituir os dados atuais por este backup (${next.subs.length} assinaturas)?`)) return;
-      dispatch({ type: 'replace', state: next });
-      notify('Backup importado.');
+      next = parseImport(await file.text());
     } catch (err) {
       notify(err.message || 'Não foi possível importar o backup.');
+      return;
     }
+    setConfirm({
+      title: 'Substituir os dados atuais?',
+      message: `Este backup tem ${next.subs.length} ${next.subs.length === 1 ? 'assinatura' : 'assinaturas'} e vai substituir o que está salvo neste navegador. Se tiver dúvida, exporte um backup antes.`,
+      confirmLabel: 'Substituir',
+      danger: true,
+      onConfirm: () => {
+        dispatch({ type: 'replace', state: next });
+        trackEvent('backup_imported');
+        setConfirm(null);
+        notify('Backup importado.');
+      },
+    });
   };
 
   if (!state.onboarded) {
     return (
       <Onboarding
-        onFinish={({ name, budget, interests }) => {
+        onFinish={({ name, budget, interests, skipped }) => {
           dispatch({ type: 'completeOnboarding', name, budget, interests });
+          trackEvent('onboarding_completed', { skipped: !!skipped });
           setTab('home');
         }}
       />
@@ -79,7 +113,7 @@ export default function App() {
           state={state}
           today={today}
           permission={permission}
-          onEnableNotifications={requestNotifications}
+          onEnableNotifications={enableNotifications}
           onAdd={() => setModal({ mode: 'new' })}
           onEdit={(id) => setModal({ mode: 'edit', sub: state.subs.find((s) => s.id === id) })}
           onPay={(id, cycle) => dispatch({ type: 'markPaid', id, cycle })}
@@ -93,13 +127,14 @@ export default function App() {
           key={JSON.stringify([state.name, state.budget, state.interests])}
           state={state}
           permission={permission}
-          onEnableNotifications={requestNotifications}
+          onEnableNotifications={enableNotifications}
           onSave={({ name, budget, interests }) => {
             dispatch({ type: 'saveProfile', name, budget, interests });
             notify('Perfil salvo com sucesso!');
           }}
           onExport={() => {
             downloadBackup(state);
+            trackEvent('backup_exported');
             notify('Backup exportado.');
           }}
           onImport={handleImport}
@@ -117,6 +152,17 @@ export default function App() {
           onSave={handleSaveSub}
           onDelete={handleDeleteSub}
           onClose={closeModal}
+        />
+      )}
+
+      {confirm && (
+        <ConfirmDialog
+          title={confirm.title}
+          message={confirm.message}
+          confirmLabel={confirm.confirmLabel}
+          danger={confirm.danger}
+          onConfirm={confirm.onConfirm}
+          onCancel={closeConfirm}
         />
       )}
 
