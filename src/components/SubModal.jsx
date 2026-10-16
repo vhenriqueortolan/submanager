@@ -4,6 +4,7 @@ import { CATALOG, PAYMENT_METHODS } from '../lib/catalog.js';
 import { buildSub, emptyForm, formFromSub } from '../lib/subs.js';
 import { CYCLES, annualAmount } from '../lib/cycles.js';
 import { paymentsNewestFirst } from '../lib/payments.js';
+import { resolvePerson } from '../lib/people.js';
 import { MONTHS, WEEKDAYS, brl } from '../lib/format.js';
 import { useCompanySearch } from '../hooks/useCompanySearch.js';
 import useFocusTrap from '../hooks/useFocusTrap.js';
@@ -26,11 +27,12 @@ function QuickItem({ app, onPick }) {
  * Modal de cadastro/edição. É montado apenas quando aberto, então cada abertura começa
  * com formulário limpo (sem herdar vencimento/índice da edição anterior).
  */
-export default function SubModal({ mode, sub, preset, interests, onSave, onDelete, onUnpay, onClose }) {
+export default function SubModal({ mode, sub, preset, interests, people, onAddPerson, onSave, onDelete, onUnpay, onClose }) {
   const isEdit = mode === 'edit';
   const [step, setStep] = useState(isEdit || preset ? 2 : 1);
   const [form, setForm] = useState(() => (isEdit ? formFromSub(sub) : emptyForm(preset)));
   const [query, setQuery] = useState('');
+  const [personName, setPersonName] = useState('');
   const [source, setSource] = useState(preset?.source || 'manual');
   const search = useCompanySearch(step === 1 ? query : '');
   const dialogRef = useRef(null);
@@ -55,6 +57,16 @@ export default function SubModal({ mode, sub, preset, interests, onSave, onDelet
     setSource(app.source || 'manual');
     setStep(2);
   };
+  const toggleShared = (id) =>
+    setForm((f) => ({ ...f, sharedWith: f.sharedWith.includes(id) ? f.sharedWith.filter((x) => x !== id) : [...f.sharedWith, id] }));
+  const addPerson = () => {
+    const found = resolvePerson(people, personName);
+    if (!found) return;
+    if (found.isNew) onAddPerson(found.person);
+    setForm((f) => (f.sharedWith.includes(found.person.id) ? f : { ...f, sharedWith: [...f.sharedWith, found.person.id] }));
+    setPersonName('');
+  };
+  const validShared = form.sharedWith.filter((id) => people.some((p) => p.id === id));
   const cycleInfo = CYCLES[form.cycle];
   const monthlyHint = form.cycle !== 'monthly' && parseFloat(form.price) > 0 ? annualAmount(form) / 12 : 0;
   const searching =query.trim().length >= 2;
@@ -179,6 +191,47 @@ export default function SubModal({ mode, sub, preset, interests, onSave, onDelet
                   <option key={m} value={m}>{m}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="form-group" id="shared-with">
+              <label htmlFor="add-person">Dividido com</label>
+              {people.length > 0 && (
+                <div className="profile-pills" role="group" aria-label="Pessoas">
+                  {people.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={`category-pill${form.sharedWith.includes(p.id) ? ' active' : ''}`}
+                      aria-pressed={form.sharedWith.includes(p.id)}
+                      onClick={() => toggleShared(p.id)}
+                    >
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="person-add">
+                <input
+                  type="text"
+                  id="add-person"
+                  maxLength={40}
+                  placeholder="Adicionar pessoa"
+                  value={personName}
+                  onChange={(e) => setPersonName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addPerson();
+                    }
+                  }}
+                />
+                <button type="button" className="btn-sm" onClick={addPerson}>Adicionar</button>
+              </div>
+              {validShared.length > 0 && parseFloat(form.price) > 0 && (
+                <small className="text-muted" id="add-share-hint">
+                  Sua parte: {brl(parseFloat(form.price) / (validShared.length + 1))} por {cycleInfo.unit}
+                </small>
+              )}
             </div>
 
             {isEdit && (

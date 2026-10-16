@@ -1,5 +1,6 @@
 import { newId } from './storage.js';
 import { todayStr } from './dates.js';
+import { normalizeSharedWith } from './people.js';
 import { DEFAULT_CYCLE, cycleOf, normalizeDue } from './cycles.js';
 
 const DUE_FIELDS = ['cycle', 'dueDate', 'dueMonth', 'dueWeekday'];
@@ -15,6 +16,7 @@ export function emptyForm(preset = {}) {
     dueMonth: '',
     dueWeekday: '',
     paymentMethod: 'Cartão',
+    sharedWith: [],
   };
 }
 
@@ -29,6 +31,7 @@ export function formFromSub(sub) {
     dueMonth: sub.dueMonth || '',
     dueWeekday: sub.dueWeekday || '',
     paymentMethod: sub.paymentMethod || 'Cartão',
+    sharedWith: Array.isArray(sub.sharedWith) ? sub.sharedWith : [],
   };
 }
 
@@ -47,6 +50,7 @@ export function buildSub(prev, form, today = todayStr()) {
     price: parseFloat(form.price) || 0,
     ...due,
     paymentMethod: form.paymentMethod || 'Cartão',
+    sharedWith: normalizeSharedWith(form.sharedWith),
   };
   // Mudou o ciclo ou o vencimento: reinicia o controle para não gerar "atraso" retroativo.
   const before = prev && { ...normalizeDue(prev) };

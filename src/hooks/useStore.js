@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
+import { removePersonFromState } from '../lib/people.js';
 import { addPayment, removePayment } from '../lib/payments.js';
 import { loadState, saveState, STORAGE_KEY } from '../lib/storage.js';
 
@@ -49,6 +50,14 @@ function reducer(state, action) {
         ...state,
         subs: state.subs.map((s) => (s.id === action.id ? removePayment(s, action.paymentId) : s)),
       };
+
+    case 'addPerson':
+      return state.people.some((p) => p.id === action.person.id)
+        ? state
+        : { ...state, people: [...state.people, action.person] };
+
+    case 'removePerson':
+      return removePersonFromState(state, action.id);
 
     case 'backupDone':
       return { ...state, lastBackupAt: action.day };

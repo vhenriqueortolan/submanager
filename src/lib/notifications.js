@@ -1,6 +1,7 @@
 import { dueStatus, todayStr } from './dates.js';
 import { brl, WEEKLY_LABEL } from './format.js';
 import { cycleOf } from './cycles.js';
+import { myShare, sharers } from './people.js';
 
 export const notificationsSupported = () => typeof Notification !== 'undefined';
 
@@ -61,13 +62,19 @@ function dueHint(sub) {
   return `dia ${sub.dueDate}`;
 }
 
-export function describe(sub, st) {
+/** Valor cobrado e, quando dividido, a sua parte. */
+function amountText(sub, people) {
+  const full = brl(sub.price);
+  return sharers(sub, people).length ? `${full} (sua parte ${brl(myShare(sub, people))})` : full;
+}
+
+export function describe(sub, st, people = []) {
   if (st.type === 'today') {
-    return { title: `${sub.name} vence hoje`, body: `${brl(sub.price)} · ${sub.paymentMethod}` };
+    return { title: `${sub.name} vence hoje`, body: `${amountText(sub, people)} · ${sub.paymentMethod}` };
   }
   return {
     title: `${sub.name} está atrasada`,
-    body: `Venceu há ${st.days} ${st.days === 1 ? 'dia' : 'dias'} (${dueHint(sub)}) · ${brl(sub.price)}`,
+    body: `Venceu há ${st.days} ${st.days === 1 ? 'dia' : 'dias'} (${dueHint(sub)}) · ${amountText(sub, people)}`,
   };
 }
 
@@ -75,7 +82,7 @@ export function describe(sub, st) {
  * Dispara as notificações pendentes (no máximo 1 por assinatura por dia; agrupa se forem > 3).
  * @returns {Promise<string[]>} ids das assinaturas efetivamente notificadas
  */
-export async function notifyDue(subs, now = new Date()) {
+export async function notifyDue(subs, now = new Date(), people = []) {
   if (getPermission() !== 'granted') return [];
   const pending = pendingDue(subs, now);
   if (!pending.length) return [];
@@ -83,7 +90,7 @@ export async function notifyDue(subs, now = new Date()) {
   const done = [];
   if (pending.length <= 3) {
     for (const { sub, st } of pending) {
-      const { title, body } = describe(sub, st);
+      const { title, body } = describe(sub, st, people);
       if (await showNotif(title, { body, tag: `sub-${sub.id}-${st.cycle}` })) done.push(sub.id);
     }
   } else {

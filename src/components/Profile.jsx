@@ -20,7 +20,7 @@ const NOTIF_STATUS = {
  * O formulário inicia sempre a partir do que está salvo (o App remonta este componente
  * quando os valores salvos mudam), então edições não salvas são descartadas ao reabrir a aba.
  */
-export default function Profile({ state, permission, onEnableNotifications, onSave, onExport, onImport }) {
+export default function Profile({ state, permission, onEnableNotifications, onSave, onExport, onImport, onRemovePerson }) {
   const [name, setName] = useState(state.name || '');
   const [budget, setBudget] = useState(state.budget > 0 ? String(state.budget) : '');
   const [interests, setInterests] = useState(state.interests);
@@ -42,7 +42,7 @@ export default function Profile({ state, permission, onEnableNotifications, onSa
       </div>
 
       <div className="form-group">
-        <label htmlFor="prof-budget">Teto de Gastos (R$)</label>
+        <label htmlFor="prof-budget">Teto mensal (sua parte) (R$)</label>
         <input
           type="number"
           inputMode="decimal"
@@ -76,6 +76,29 @@ export default function Profile({ state, permission, onEnableNotifications, onSa
             <button type="button" className="btn-sm" id="notif-btn" onClick={onEnableNotifications}>Ativar</button>
           )}
         </div>
+      </div>
+
+      <div className="form-group" id="people-section">
+        <label>Pessoas</label>
+        {state.people.length === 0 ? (
+          <p className="text-muted">Ninguém ainda. Adicione pessoas ao dividir uma assinatura. Os nomes ficam só neste aparelho.</p>
+        ) : (
+          <ul className="payment-list">
+            {state.people.map((p) => (
+              <li key={p.id} className="payment-row">
+                <span>{p.name}</span>
+                <button
+                  type="button"
+                  className="pay-btn"
+                  aria-label={`Remover ${p.name}`}
+                  onClick={() => onRemovePerson(p.id)}
+                >
+                  Remover
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="form-group">

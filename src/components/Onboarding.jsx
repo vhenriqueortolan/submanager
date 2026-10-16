@@ -46,7 +46,7 @@ export default function Onboarding({ onFinish }) {
       {step === 2 && (
         <div className="obs-step" id="step-2">
           <h1 className="obs-title">Orçamento.</h1>
-          <p className="text-muted mb-2">Qual o seu teto máximo mensal? (R$)</p>
+          <p className="text-muted mb-2">Qual o seu teto mensal? Conte só a sua parte, se dividir alguma assinatura. (R$)</p>
           <input
             type="number"
             inputMode="decimal"
