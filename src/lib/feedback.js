@@ -2,7 +2,10 @@
  * Formulário de feedback (Google Forms). Com `url` vazia o botão não aparece.
  * `fields` guarda os códigos `entry.NNN` de cada pergunta.
  */
-export const FEEDBACK_FORM = { url: '', fields: { version: '', platform: '', comment: '' } };
+export const FEEDBACK_FORM = {
+  url: 'https://docs.google.com/forms/d/e/1FAIpQLSeNF41_rQY8-e94LlYEuXlALv5hVMeTuD7Xqwvn9QK5BCgqoA/viewform',
+  fields: { version: 'entry.999524458', platform: 'entry.204667521', comment: '' },
+};
 
 export function platformOf(userAgent) {
   const ua = userAgent || '';

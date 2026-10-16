@@ -51,8 +51,15 @@ test.describe('instalação no iPhone', () => {
   });
 });
 
-test('sem URL de formulário, o botão de feedback não aparece', async ({ page }) => {
+test('botão de feedback abre o formulário com versão e plataforma', async ({ page }, testInfo) => {
   await seed(page, withSubs(sampleSubs()));
   await tab(page, 'Perfil').click();
-  await expect(page.getByRole('link', { name: 'Enviar feedback' })).toHaveCount(0);
+  const link = page.getByRole('link', { name: 'Enviar feedback' });
+  await expect(link).toHaveAttribute('target', '_blank');
+  await expect(link).toHaveAttribute('rel', /noopener/);
+  const url = new URL(await link.getAttribute('href'));
+  expect(url.hostname).toBe('docs.google.com');
+  expect(url.searchParams.get('usp')).toBe('pp_url');
+  expect(url.searchParams.get('entry.999524458')).toMatch(/^\d+\.\d+\.\d+$/);
+  expect(url.searchParams.get('entry.204667521')).toBe(testInfo.project.name === 'mobile' ? 'Android' : 'Computador');
 });
