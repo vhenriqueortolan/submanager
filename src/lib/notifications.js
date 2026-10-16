@@ -1,5 +1,6 @@
 import { dueStatus, todayStr } from './dates.js';
-import { brl } from './format.js';
+import { brl, WEEKLY_LABEL } from './format.js';
+import { cycleOf } from './cycles.js';
 
 export const notificationsSupported = () => typeof Notification !== 'undefined';
 
@@ -50,13 +51,23 @@ export function pendingDue(subs, now = new Date()) {
   return out;
 }
 
+const pad2 = (v) => String(v).padStart(2, '0');
+
+/** Quando a cobrança vence, no texto do aviso atrasado: "dia 10", "dia 15/03" ou "toda segunda". */
+function dueHint(sub) {
+  const cycle = cycleOf(sub);
+  if (cycle === 'weekly') return (WEEKLY_LABEL[parseInt(sub.dueWeekday, 10)] || '').toLowerCase();
+  if (cycle === 'yearly') return `dia ${pad2(sub.dueDate)}/${pad2(sub.dueMonth)}`;
+  return `dia ${sub.dueDate}`;
+}
+
 export function describe(sub, st) {
   if (st.type === 'today') {
     return { title: `${sub.name} vence hoje`, body: `${brl(sub.price)} · ${sub.paymentMethod}` };
   }
   return {
     title: `${sub.name} está atrasada`,
-    body: `Venceu há ${st.days} ${st.days === 1 ? 'dia' : 'dias'} (dia ${sub.dueDate}) · ${brl(sub.price)}`,
+    body: `Venceu há ${st.days} ${st.days === 1 ? 'dia' : 'dias'} (${dueHint(sub)}) · ${brl(sub.price)}`,
   };
 }
 

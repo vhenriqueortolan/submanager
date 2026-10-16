@@ -12,7 +12,7 @@ export const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho
 export const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
 const pad2 = (n) => String(n).padStart(2, '0');
-const WEEKLY_LABEL = ['Todo domingo', 'Toda segunda', 'Toda terça', 'Toda quarta', 'Toda quinta', 'Toda sexta', 'Todo sábado'];
+export const WEEKLY_LABEL = ['Todo domingo', 'Toda segunda', 'Toda terça', 'Toda quarta', 'Toda quinta', 'Toda sexta', 'Todo sábado'];
 
 /** Preço com sufixo do ciclo nos ciclos não mensais: "R$ 120,00/ano". */
 export function priceLabel(sub) {
