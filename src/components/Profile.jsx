@@ -1,6 +1,13 @@
 import { useRef, useState } from 'react';
 import AppBrand from './AppBrand.jsx';
 import { CATEGORIES } from '../lib/catalog.js';
+import { FEEDBACK_FORM, buildFeedbackUrl, platformOf } from '../lib/feedback.js';
+import { installState } from '../lib/install.js';
+import { useInstallPrompt } from '../hooks/useInstallPrompt.js';
+import pkg from '../../package.json';
+
+const isStandalone = () =>
+  window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
 const NOTIF_STATUS = {
   granted: 'Ativadas: avisos de vencimento e atraso.',
@@ -18,6 +25,9 @@ export default function Profile({ state, permission, onEnableNotifications, onSa
   const [budget, setBudget] = useState(state.budget > 0 ? String(state.budget) : '');
   const [interests, setInterests] = useState(state.interests);
   const fileRef = useRef(null);
+  const { hasPrompt, promptInstall } = useInstallPrompt();
+  const install = installState({ userAgent: navigator.userAgent, standalone: isStandalone(), hasPrompt });
+  const feedbackUrl = buildFeedbackUrl(FEEDBACK_FORM, { version: pkg.version, platform: platformOf(navigator.userAgent) });
 
   const toggle = (value) =>
     setInterests((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
@@ -86,6 +96,33 @@ export default function Profile({ state, permission, onEnableNotifications, onSa
           />
         </div>
         <p className="text-muted backup-hint">Seus dados ficam salvos só neste navegador. Exporte um backup para guardar ou levar para outro aparelho.</p>
+      </div>
+
+      {install !== 'unavailable' && (
+        <div className="form-group" id="install-section">
+          <label>Instalar o app</label>
+          {install === 'installed' && <p className="text-muted">App instalado</p>}
+          {install === 'prompt' && (
+            <button type="button" className="btn btn-outline" onClick={promptInstall}>Instalar app</button>
+          )}
+          {install === 'ios' && (
+            <>
+              <ol className="text-muted install-steps">
+                <li>Toque em Compartilhar (o quadrado com uma seta para cima) na barra do Safari.</li>
+                <li>Escolha “Adicionar à Tela de Início”.</li>
+              </ol>
+              <p className="text-muted">No iPhone, os avisos só funcionam com o app instalado.</p>
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="form-group" id="about-section">
+        <label>Sobre</label>
+        <p className="text-muted">Versão <span id="app-version">{pkg.version}</span></p>
+        {feedbackUrl && (
+          <a className="btn btn-outline" href={feedbackUrl} target="_blank" rel="noopener">Enviar feedback</a>
+        )}
       </div>
 
       <button type="button" className="btn btn-primary" onClick={() => onSave({ name, budget, interests })}>
