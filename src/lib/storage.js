@@ -1,6 +1,7 @@
 import { parseDay, todayStr } from './dates.js';
 import { normalizeDue, paidCycleValid } from './cycles.js';
 import { lastPaidCycle, normalizePayments } from './payments.js';
+import { normalizePeople, normalizeSharedWith } from './people.js';
 
 // Mantém a mesma chave das versões anteriores para não perder dados existentes.
 export const STORAGE_KEY = 'subDataV5';
@@ -14,7 +15,7 @@ export function newId() {
 }
 
 export function defaultState() {
-  return { schema: SCHEMA, onboarded: false, name: '', budget: 0, interests: [], subs: [], lastBackupAt: '', backupSnoozeUntil: '' };
+  return { schema: SCHEMA, onboarded: false, name: '', budget: 0, interests: [], subs: [], people: [], lastBackupAt: '', backupSnoozeUntil: '' };
 }
 
 export function normalizeSub(x, seen = new Set()) {
@@ -35,6 +36,7 @@ export function normalizeSub(x, seen = new Set()) {
     paidCycle: paidCycleValid(x.paidCycle, due.cycle) ? x.paidCycle : '',
     lastNotified: parseDay(x.lastNotified) ? x.lastNotified : '',
     payments: normalizePayments(x.payments),
+    sharedWith: normalizeSharedWith(x.sharedWith),
   };
   // `paidCycle` espelha o último pagamento do histórico; sem histórico, vale o valor legado.
   const lastPaid = lastPaidCycle(sub);
@@ -53,6 +55,7 @@ export function normalize(raw) {
   s.subs = (Array.isArray(raw.subs) ? raw.subs : [])
     .filter((x) => x && x.name)
     .map((x) => normalizeSub(x, seen));
+  s.people = normalizePeople(raw.people);
   s.lastBackupAt = parseDay(raw.lastBackupAt) ? raw.lastBackupAt : '';
   s.backupSnoozeUntil = parseDay(raw.backupSnoozeUntil) ? raw.backupSnoozeUntil : '';
   // Se há dados do usuário, ele já passou pelo onboarding (mesmo que a flag tenha se perdido).

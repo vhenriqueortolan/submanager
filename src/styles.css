@@ -175,3 +175,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .btn-sm-ghost { background: transparent; color: var(--text-muted, var(--text)); border: 1px solid var(--border-focus); }
 .payment-list { list-style: none; margin: 0; padding: 0; }
 .payment-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+
+.sub-share { font-size: 0.75rem; text-align: right; }
+.person-add { display: flex; gap: 8px; align-items: center; }
+.person-add input { flex: 1; }

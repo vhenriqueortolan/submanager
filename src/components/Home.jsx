@@ -3,7 +3,8 @@ import AppBrand from './AppBrand.jsx';
 import Logo from './Logo.jsx';
 import { brl, dueLabel, priceLabel } from '../lib/format.js';
 import { dueStatus, parseDay } from '../lib/dates.js';
-import { annualProjection, monthlyTotal } from '../lib/totals.js';
+import { annualProjection, monthlyTotal, totalServiceMonthly } from '../lib/totals.js';
+import { myShare, sharers } from '../lib/people.js';
 import { cycleOf } from '../lib/cycles.js';
 import { sortByUrgency } from '../lib/sort.js';
 import { backupDue } from '../lib/reminder.js';
@@ -37,7 +38,7 @@ function EmptyHero({ greeting, onAdd }) {
   );
 }
 
-function BudgetCard({ total, annual, budget, converted }) {
+function BudgetCard({ total, annual, budget, converted, serviceTotal }) {
   const percent = budget > 0 ? Math.min((total / budget) * 100, 100) : 0;
   let alert = null;
   if (budget > 0) {
@@ -48,8 +49,11 @@ function BudgetCard({ total, annual, budget, converted }) {
     <div className="budget-card">
       <div className="flex space-between">
         <div>
-          <div className="stat-label">Gasto Mensal</div>
+          <div className="stat-label">Seu gasto mensal</div>
           <div className="stat-value" id="total-month">{brl(total)}</div>
+          {serviceTotal !== null && (
+            <div className="text-muted budget-note" id="total-services">Total dos serviços: {brl(serviceTotal)}</div>
+          )}
           {converted && (
             <div className="text-muted budget-note" id="budget-note">Anuais e semanais convertidas para mensal</div>
           )}
@@ -75,8 +79,9 @@ function BudgetCard({ total, annual, budget, converted }) {
   );
 }
 
-function SubCard({ sub, status, now, onEdit, onPay }) {
+function SubCard({ sub, people, status, now, onEdit, onPay }) {
   const due = dueLabel(sub, now);
+  const divided = sharers(sub, people).length > 0;
   return (
     <div
       className="sub-card"
@@ -104,6 +109,7 @@ function SubCard({ sub, status, now, onEdit, onPay }) {
       </div>
       <div className="sub-right">
         <div className="sub-price">{priceLabel(sub)}</div>
+        {divided && <div className="sub-share text-muted">Sua parte {brl(myShare(sub, people))}</div>}
         {status && (
           <button
             type="button"
@@ -122,7 +128,7 @@ function SubCard({ sub, status, now, onEdit, onPay }) {
 }
 
 export default function Home({ state, today, permission, onEnableNotifications, onAdd, onEdit, onPay, onExportBackup, onSnoozeBackup }) {
-  const { name, budget, subs } = state;
+  const { name, budget, subs, people } = state;
   const hasSubs = subs.length > 0;
   const greeting = name ? `Olá, ${name}.` : 'Olá.';
 
@@ -134,8 +140,10 @@ export default function Home({ state, today, permission, onEnableNotifications, 
   const now = useMemo(() => parseDay(today) ?? new Date(), [today]);
   const converted = subs.some((s) => cycleOf(s) !== 'monthly');
 
-  const total = monthlyTotal(subs);
-  const annual = annualProjection(subs);
+  const total = monthlyTotal(subs, people);
+  const annual = annualProjection(subs, people);
+  const anyDivided = subs.some((s) => sharers(s, people).length > 0);
+  const serviceTotal = anyDivided ? totalServiceMonthly(subs) : null;
 
   return (
     <main className="container active" id="view-home">
@@ -166,7 +174,7 @@ export default function Home({ state, today, permission, onEnableNotifications, 
         </div>
       )}
 
-      <BudgetCard total={total} annual={annual} budget={budget} converted={converted} />
+      <BudgetCard total={total} annual={annual} budget={budget} converted={converted} serviceTotal={serviceTotal} />
 
       {hasSubs && (
         <section id="subs-section">
@@ -176,7 +184,7 @@ export default function Home({ state, today, permission, onEnableNotifications, 
           </div>
           <div id="subs-list">
             {items.map(({ sub, status }) => (
-              <SubCard key={sub.id} sub={sub} status={status} now={now} onEdit={onEdit} onPay={onPay} />
+              <SubCard key={sub.id} sub={sub} people={people} status={status} now={now} onEdit={onEdit} onPay={onPay} />
             ))}
           </div>
         </section>

@@ -6,13 +6,15 @@ import { notifyDue } from '../lib/notifications.js';
  * (ao abrir, ao voltar para a aba, a cada minuto e quando a lista muda).
  * Notificações com o app fechado exigem Web Push (backend) — ver README.
  */
-export function useDueNotifications(subs, onNotified, permission) {
+export function useDueNotifications(subs, onNotified, permission, people = []) {
   const subsRef = useRef(subs);
+  const peopleRef = useRef(people);
   const cbRef = useRef(onNotified);
   const running = useRef(false);
 
   useEffect(() => {
     subsRef.current = subs;
+    peopleRef.current = people;
     cbRef.current = onNotified;
   });
 
@@ -20,7 +22,7 @@ export function useDueNotifications(subs, onNotified, permission) {
     if (running.current) return;
     running.current = true;
     try {
-      const ids = await notifyDue(subsRef.current);
+      const ids = await notifyDue(subsRef.current, new Date(), peopleRef.current);
       if (ids.length) cbRef.current(ids);
     } finally {
       running.current = false;

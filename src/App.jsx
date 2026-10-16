@@ -39,7 +39,7 @@ export default function App() {
   }, [saveFailed, notify]);
 
   const onNotified = useCallback((ids) => dispatch({ type: 'markNotified', ids, day: todayStr() }), [dispatch]);
-  useDueNotifications(state.onboarded ? state.subs : [], onNotified, permission);
+  useDueNotifications(state.onboarded ? state.subs : [], onNotified, permission, state.people);
 
   const closeModal = useCallback(() => setModal(null), []);
   const closeConfirm = useCallback(() => setConfirm(null), []);
@@ -73,6 +73,22 @@ export default function App() {
   const handleUnpay = (id, paymentId) => {
     dispatch({ type: 'unmarkPaid', id, paymentId });
     notify('Pagamento removido.');
+  };
+
+  const handleRemovePerson = (id) => {
+    const person = state.people.find((p) => p.id === id);
+    const count = state.subs.filter((s) => s.sharedWith.includes(id)).length;
+    setConfirm({
+      title: 'Remover pessoa?',
+      message: `“${person?.name ?? 'Esta pessoa'}” será removida${count ? ` de ${count} ${count === 1 ? 'assinatura' : 'assinaturas'}` : ''} e as divisões serão recalculadas.`,
+      confirmLabel: 'Remover',
+      danger: true,
+      onConfirm: () => {
+        dispatch({ type: 'removePerson', id });
+        setConfirm(null);
+        notify('Pessoa removida.');
+      },
+    });
   };
 
   const handleExport = () => {
@@ -162,6 +178,7 @@ export default function App() {
             notify('Perfil salvo com sucesso!');
           }}
           onExport={handleExport}
+          onRemovePerson={handleRemovePerson}
           onImport={handleImport}
         />
       )}
@@ -174,6 +191,8 @@ export default function App() {
           sub={modal.mode === 'edit' ? state.subs.find((s) => s.id === modal.sub.id) ?? modal.sub : undefined}
           preset={modal.preset}
           interests={state.interests}
+          people={state.people}
+          onAddPerson={(person) => dispatch({ type: 'addPerson', person })}
           onSave={handleSaveSub}
           onDelete={handleDeleteSub}
           onUnpay={handleUnpay}
