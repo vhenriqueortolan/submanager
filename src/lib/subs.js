@@ -40,6 +40,7 @@ export function buildSub(prev, form, today = todayStr()) {
     createdAt: prev?.createdAt ?? today,
     paidCycle: prev?.paidCycle ?? '',
     lastNotified: prev?.lastNotified ?? '',
+    payments: prev?.payments ?? [],
     name: form.name.trim(),
     domain: (form.domain || '').trim(),
     category: form.category || 'Outros',

@@ -139,13 +139,13 @@ test('normalizeSub: defaults e descarte de paidCycle incompatível', () => {
   assert.equal(normalizeSub({ ...base, cycle: 'inválido', dueDate: '5' }).cycle, 'monthly');
 });
 
-test('backup antigo (sem cycle) importa como mensal; schema sobe para 8', () => {
-  assert.equal(SCHEMA, 8);
+test('backup antigo (sem cycle) importa como mensal; schema sobe para 9', () => {
+  assert.equal(SCHEMA, 9);
   const text = JSON.stringify({ name: 'V', subs: [{ id: 'a', name: 'Netflix', price: 39.9, dueDate: '10', createdAt: '2026-01-01', paidCycle: '2026-09' }] });
   const st = parseImport(text);
   assert.equal(st.subs[0].cycle, 'monthly');
   assert.equal(st.subs[0].paidCycle, '2026-09');
-  assert.equal(st.schema, 8);
+  assert.equal(st.schema, 9);
 });
 
 test('chave legada carrega como mensal', () => {

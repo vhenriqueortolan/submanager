@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
+import { addPayment, removePayment } from '../lib/payments.js';
 import { loadState, saveState, STORAGE_KEY } from '../lib/storage.js';
 
 function reducer(state, action) {
@@ -39,8 +40,21 @@ function reducer(state, action) {
     case 'markPaid':
       return {
         ...state,
-        subs: state.subs.map((s) => (s.id === action.id ? { ...s, paidCycle: action.cycle } : s)),
+        subs: state.subs.map((s) =>
+          s.id === action.id ? addPayment(s, action.cycle, action.day, action.paymentId) : s),
       };
+
+    case 'unmarkPaid':
+      return {
+        ...state,
+        subs: state.subs.map((s) => (s.id === action.id ? removePayment(s, action.paymentId) : s)),
+      };
+
+    case 'backupDone':
+      return { ...state, lastBackupAt: action.day };
+
+    case 'snoozeBackup':
+      return { ...state, backupSnoozeUntil: action.until };
 
     case 'markNotified': {
       const ids = new Set(action.ids);

@@ -168,3 +168,10 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .confirm-msg { margin-bottom: 20px; line-height: 1.4; }
 .btn-danger-solid { background: var(--danger); color: #fff; }
 .skip-btn { margin-top: 16px; color: var(--text-muted); }
+
+.toast { display: flex; align-items: center; gap: 14px; pointer-events: auto; }
+.toast-action { background: transparent; border: none; color: var(--primary); font-weight: 700; font-size: 0.9rem; cursor: pointer; padding: 4px 6px; }
+.banner-actions { display: flex; flex-direction: column; gap: 6px; }
+.btn-sm-ghost { background: transparent; color: var(--text-muted, var(--text)); border: 1px solid var(--border-focus); }
+.payment-list { list-style: none; margin: 0; padding: 0; }
+.payment-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; }

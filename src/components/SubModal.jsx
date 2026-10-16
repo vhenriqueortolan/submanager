@@ -3,9 +3,15 @@ import Logo from './Logo.jsx';
 import { CATALOG, PAYMENT_METHODS } from '../lib/catalog.js';
 import { buildSub, emptyForm, formFromSub } from '../lib/subs.js';
 import { CYCLES, annualAmount } from '../lib/cycles.js';
+import { paymentsNewestFirst } from '../lib/payments.js';
 import { MONTHS, WEEKDAYS, brl } from '../lib/format.js';
 import { useCompanySearch } from '../hooks/useCompanySearch.js';
 import useFocusTrap from '../hooks/useFocusTrap.js';
+
+const formatDay = (day) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day || '');
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : 'Sem data';
+};
 
 function QuickItem({ app, onPick }) {
   return (
@@ -20,7 +26,7 @@ function QuickItem({ app, onPick }) {
  * Modal de cadastro/edição. É montado apenas quando aberto, então cada abertura começa
  * com formulário limpo (sem herdar vencimento/índice da edição anterior).
  */
-export default function SubModal({ mode, sub, preset, interests, onSave, onDelete, onClose }) {
+export default function SubModal({ mode, sub, preset, interests, onSave, onDelete, onUnpay, onClose }) {
   const isEdit = mode === 'edit';
   const [step, setStep] = useState(isEdit || preset ? 2 : 1);
   const [form, setForm] = useState(() => (isEdit ? formFromSub(sub) : emptyForm(preset)));
@@ -174,6 +180,31 @@ export default function SubModal({ mode, sub, preset, interests, onSave, onDelet
                 ))}
               </select>
             </div>
+
+            {isEdit && (
+              <div className="form-group" id="payment-history">
+                <label>Histórico de pagamentos</label>
+                {paymentsNewestFirst(sub).length === 0 ? (
+                  <p className="text-muted">Nenhum pagamento registrado.</p>
+                ) : (
+                  <ul className="payment-list">
+                    {paymentsNewestFirst(sub).map((p) => (
+                      <li key={p.id} className="payment-row">
+                        <span>{formatDay(p.paidAt)} · {brl(p.amount)}</span>
+                        <button
+                          type="button"
+                          className="pay-btn"
+                          aria-label={`Desmarcar pagamento de ${formatDay(p.paidAt)}`}
+                          onClick={() => onUnpay(sub.id, p.id)}
+                        >
+                          Desmarcar
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
             <button
               type="button"
