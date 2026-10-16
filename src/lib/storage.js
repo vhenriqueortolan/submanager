@@ -1,9 +1,10 @@
 import { parseDay, todayStr } from './dates.js';
+import { normalizeDue, paidCycleValid } from './cycles.js';
 
 // Mantém a mesma chave das versões anteriores para não perder dados existentes.
 export const STORAGE_KEY = 'subDataV5';
 export const LEGACY_KEYS = ['subDataV4', 'subDataV3', 'subDataV2', 'subDataV1'];
-export const SCHEMA = 7;
+export const SCHEMA = 8;
 
 export function newId() {
   const c = globalThis.crypto;
@@ -16,7 +17,7 @@ export function defaultState() {
 }
 
 export function normalizeSub(x, seen = new Set()) {
-  const day = parseInt(x.dueDate, 10);
+  const due = normalizeDue(x);
   let id = typeof x.id === 'string' && x.id ? x.id : newId();
   if (seen.has(id)) id = newId();
   seen.add(id);
@@ -26,11 +27,11 @@ export function normalizeSub(x, seen = new Set()) {
     domain: x.domain ? String(x.domain) : '',
     category: x.category ? String(x.category) : 'Outros',
     price: parseFloat(x.price) || 0,
-    dueDate: day >= 1 && day <= 31 ? String(day) : '',
+    ...due,
     paymentMethod: x.paymentMethod ? String(x.paymentMethod) : 'Cartão',
     // Assinaturas sem data de cadastro: os ciclos só contam a partir de hoje (evita "atrasos" falsos).
     createdAt: parseDay(x.createdAt) ? x.createdAt : todayStr(),
-    paidCycle: /^\d{4}-\d{2}$/.test(x.paidCycle || '') ? x.paidCycle : '',
+    paidCycle: paidCycleValid(x.paidCycle, due.cycle) ? x.paidCycle : '',
     lastNotified: parseDay(x.lastNotified) ? x.lastNotified : '',
   };
 }

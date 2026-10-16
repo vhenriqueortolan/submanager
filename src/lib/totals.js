@@ -1,10 +1,13 @@
-const cents = (n) => Math.round(n * 100) / 100;
+import { annualAmount } from './cycles.js';
 
-/** Soma mensal das assinaturas. (Na Fase 1 passa a normalizar ciclos anuais/semanais.) */
+const cents = (n) => Math.round(n * 100) / 100;
+const annualSum = (subs) => subs.reduce((acc, s) => acc + annualAmount(s), 0);
+
+/** Gasto mensal equivalente: assinaturas anuais e semanais convertidas para mês. */
 export function monthlyTotal(subs) {
-  return cents(subs.reduce((acc, s) => acc + (parseFloat(s.price) || 0), 0));
+  return cents(annualSum(subs) / 12);
 }
 
 export function annualProjection(subs) {
-  return cents(monthlyTotal(subs) * 12);
+  return cents(annualSum(subs));
 }

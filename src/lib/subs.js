@@ -1,5 +1,8 @@
 import { newId } from './storage.js';
 import { todayStr } from './dates.js';
+import { DEFAULT_CYCLE, cycleOf, normalizeDue } from './cycles.js';
+
+const DUE_FIELDS = ['cycle', 'dueDate', 'dueMonth', 'dueWeekday'];
 
 export function emptyForm(preset = {}) {
   return {
@@ -7,7 +10,10 @@ export function emptyForm(preset = {}) {
     domain: preset.domain || '',
     category: preset.category || 'Outros',
     price: preset.price === undefined || preset.price === '' ? '' : String(preset.price),
+    cycle: DEFAULT_CYCLE,
     dueDate: '',
+    dueMonth: '',
+    dueWeekday: '',
     paymentMethod: 'Cartão',
   };
 }
@@ -18,15 +24,17 @@ export function formFromSub(sub) {
     domain: sub.domain || '',
     category: sub.category || 'Outros',
     price: String(sub.price ?? ''),
+    cycle: cycleOf(sub),
     dueDate: sub.dueDate || '',
+    dueMonth: sub.dueMonth || '',
+    dueWeekday: sub.dueWeekday || '',
     paymentMethod: sub.paymentMethod || 'Cartão',
   };
 }
 
 /** Monta a assinatura a partir do formulário, preservando id/ciclo/notificações da anterior. */
 export function buildSub(prev, form, today = todayStr()) {
-  const dueRaw = parseInt(form.dueDate, 10);
-  const dueDate = dueRaw >= 1 && dueRaw <= 31 ? String(dueRaw) : '';
+  const due = normalizeDue(form);
   const sub = {
     id: prev?.id ?? newId(),
     createdAt: prev?.createdAt ?? today,
@@ -36,13 +44,15 @@ export function buildSub(prev, form, today = todayStr()) {
     domain: (form.domain || '').trim(),
     category: form.category || 'Outros',
     price: parseFloat(form.price) || 0,
-    dueDate,
+    ...due,
     paymentMethod: form.paymentMethod || 'Cartão',
   };
-  // Mudou o dia de vencimento: reinicia o ciclo para não gerar "atraso" retroativo.
-  if (prev && prev.dueDate !== dueDate) {
+  // Mudou o ciclo ou o vencimento: reinicia o controle para não gerar "atraso" retroativo.
+  const before = prev && { ...normalizeDue(prev) };
+  if (prev && DUE_FIELDS.some((k) => before[k] !== due[k])) {
     sub.createdAt = today;
     sub.lastNotified = '';
+    sub.paidCycle = '';
   }
   return sub;
 }
