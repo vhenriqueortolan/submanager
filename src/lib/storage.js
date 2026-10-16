@@ -1,10 +1,11 @@
 import { parseDay, todayStr } from './dates.js';
 import { normalizeDue, paidCycleValid } from './cycles.js';
+import { lastPaidCycle, normalizePayments } from './payments.js';
 
 // Mantém a mesma chave das versões anteriores para não perder dados existentes.
 export const STORAGE_KEY = 'subDataV5';
 export const LEGACY_KEYS = ['subDataV4', 'subDataV3', 'subDataV2', 'subDataV1'];
-export const SCHEMA = 8;
+export const SCHEMA = 9;
 
 export function newId() {
   const c = globalThis.crypto;
@@ -13,7 +14,7 @@ export function newId() {
 }
 
 export function defaultState() {
-  return { schema: SCHEMA, onboarded: false, name: '', budget: 0, interests: [], subs: [] };
+  return { schema: SCHEMA, onboarded: false, name: '', budget: 0, interests: [], subs: [], lastBackupAt: '', backupSnoozeUntil: '' };
 }
 
 export function normalizeSub(x, seen = new Set()) {
@@ -21,7 +22,7 @@ export function normalizeSub(x, seen = new Set()) {
   let id = typeof x.id === 'string' && x.id ? x.id : newId();
   if (seen.has(id)) id = newId();
   seen.add(id);
-  return {
+  const sub = {
     id,
     name: String(x.name),
     domain: x.domain ? String(x.domain) : '',
@@ -33,7 +34,12 @@ export function normalizeSub(x, seen = new Set()) {
     createdAt: parseDay(x.createdAt) ? x.createdAt : todayStr(),
     paidCycle: paidCycleValid(x.paidCycle, due.cycle) ? x.paidCycle : '',
     lastNotified: parseDay(x.lastNotified) ? x.lastNotified : '',
+    payments: normalizePayments(x.payments),
   };
+  // `paidCycle` espelha o último pagamento do histórico; sem histórico, vale o valor legado.
+  const lastPaid = lastPaidCycle(sub);
+  if (lastPaid) sub.paidCycle = lastPaid;
+  return sub;
 }
 
 /** Garante um estado válido a partir de qualquer JSON (corrompido, parcial ou de versões antigas). */
@@ -47,6 +53,8 @@ export function normalize(raw) {
   s.subs = (Array.isArray(raw.subs) ? raw.subs : [])
     .filter((x) => x && x.name)
     .map((x) => normalizeSub(x, seen));
+  s.lastBackupAt = parseDay(raw.lastBackupAt) ? raw.lastBackupAt : '';
+  s.backupSnoozeUntil = parseDay(raw.backupSnoozeUntil) ? raw.backupSnoozeUntil : '';
   // Se há dados do usuário, ele já passou pelo onboarding (mesmo que a flag tenha se perdido).
   s.onboarded = raw.onboarded === true || !!s.name || s.subs.length > 0;
   return s;

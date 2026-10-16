@@ -6,6 +6,7 @@ import { dueStatus, parseDay } from '../lib/dates.js';
 import { annualProjection, monthlyTotal } from '../lib/totals.js';
 import { cycleOf } from '../lib/cycles.js';
 import { sortByUrgency } from '../lib/sort.js';
+import { backupDue } from '../lib/reminder.js';
 
 function Hero({ greeting, subs }) {
   return (
@@ -120,7 +121,7 @@ function SubCard({ sub, status, now, onEdit, onPay }) {
   );
 }
 
-export default function Home({ state, today, permission, onEnableNotifications, onAdd, onEdit, onPay }) {
+export default function Home({ state, today, permission, onEnableNotifications, onAdd, onEdit, onPay, onExportBackup, onSnoozeBackup }) {
   const { name, budget, subs } = state;
   const hasSubs = subs.length > 0;
   const greeting = name ? `Olá, ${name}.` : 'Olá.';
@@ -149,6 +150,19 @@ export default function Home({ state, today, permission, onEnableNotifications, 
             <div className="text-muted notif-sub">Avisamos quando uma assinatura vence hoje ou está atrasada.</div>
           </div>
           <button type="button" className="btn-sm" onClick={onEnableNotifications}>Ativar</button>
+        </div>
+      )}
+
+      {backupDue(state, today) && (
+        <div className="notif-card" id="backup-banner">
+          <div>
+            <div className="notif-title">Faça um backup dos seus dados</div>
+            <div className="text-muted notif-sub">Eles ficam só neste aparelho. Um backup evita perdê-los se o navegador limpar o armazenamento.</div>
+          </div>
+          <div className="banner-actions">
+            <button type="button" className="btn-sm" onClick={onExportBackup}>Exportar backup</button>
+            <button type="button" className="btn-sm btn-sm-ghost" onClick={onSnoozeBackup}>Agora não</button>
+          </div>
         </div>
       )}
 

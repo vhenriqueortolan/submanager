@@ -31,7 +31,7 @@ export function normalizeDue(x) {
   };
 }
 
-const PAID_FORMAT = {
+export const PAID_FORMAT = {
   weekly: /^\d{4}-\d{2}-\d{2}$/,
   monthly: /^\d{4}-\d{2}$/,
   yearly: /^\d{4}$/,

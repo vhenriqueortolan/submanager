@@ -12,8 +12,9 @@ import { useToday } from './hooks/useToday.js';
 import { useNotificationPermission } from './hooks/useNotificationPermission.js';
 import { useDueNotifications } from './hooks/useDueNotifications.js';
 import { todayStr } from './lib/dates.js';
-import { parseImport, requestPersistence } from './lib/storage.js';
+import { newId, parseImport, requestPersistence } from './lib/storage.js';
 import { downloadBackup } from './lib/backup.js';
+import { snoozeUntil } from './lib/reminder.js';
 import { trackEvent } from './lib/analytics.js';
 
 export default function App() {
@@ -25,11 +26,11 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [permission, requestPermission] = useNotificationPermission();
 
-  const notify = useCallback((message) => setToast({ message, id: Date.now() }), []);
+  const notify = useCallback((message, action) => setToast({ message, action, id: Date.now() }), []);
 
   useEffect(() => {
     if (!toast) return undefined;
-    const t = setTimeout(() => setToast(null), 2600);
+    const t = setTimeout(() => setToast(null), toast.action ? 5000 : 2600);
     return () => clearTimeout(t);
   }, [toast]);
 
@@ -55,6 +56,30 @@ export default function App() {
     dispatch({ type: 'upsertSub', sub });
     if (modal?.mode === 'new' && state.subs.length === 0) requestPersistence();
     setModal(null);
+  };
+
+  const handlePay = (id, cycle) => {
+    const paymentId = newId();
+    dispatch({ type: 'markPaid', id, cycle, day: todayStr(), paymentId });
+    notify('Pago.', {
+      label: 'Desfazer',
+      onClick: () => {
+        dispatch({ type: 'unmarkPaid', id, paymentId });
+        notify('Pagamento desfeito.');
+      },
+    });
+  };
+
+  const handleUnpay = (id, paymentId) => {
+    dispatch({ type: 'unmarkPaid', id, paymentId });
+    notify('Pagamento removido.');
+  };
+
+  const handleExport = () => {
+    downloadBackup(state);
+    dispatch({ type: 'backupDone', day: todayStr() });
+    trackEvent('backup_exported');
+    notify('Backup exportado.');
   };
 
   const handleDeleteSub = (id) => {
@@ -118,7 +143,9 @@ export default function App() {
           onEnableNotifications={enableNotifications}
           onAdd={() => setModal({ mode: 'new' })}
           onEdit={(id) => setModal({ mode: 'edit', sub: state.subs.find((s) => s.id === id) })}
-          onPay={(id, cycle) => dispatch({ type: 'markPaid', id, cycle })}
+          onPay={handlePay}
+          onExportBackup={handleExport}
+          onSnoozeBackup={() => dispatch({ type: 'snoozeBackup', until: snoozeUntil(today) })}
         />
       )}
 
@@ -134,11 +161,7 @@ export default function App() {
             dispatch({ type: 'saveProfile', name, budget, interests });
             notify('Perfil salvo com sucesso!');
           }}
-          onExport={() => {
-            downloadBackup(state);
-            trackEvent('backup_exported');
-            notify('Backup exportado.');
-          }}
+          onExport={handleExport}
           onImport={handleImport}
         />
       )}
@@ -148,11 +171,12 @@ export default function App() {
       {modal && (
         <SubModal
           mode={modal.mode}
-          sub={modal.sub}
+          sub={modal.mode === 'edit' ? state.subs.find((s) => s.id === modal.sub.id) ?? modal.sub : undefined}
           preset={modal.preset}
           interests={state.interests}
           onSave={handleSaveSub}
           onDelete={handleDeleteSub}
+          onUnpay={handleUnpay}
           onClose={closeModal}
         />
       )}

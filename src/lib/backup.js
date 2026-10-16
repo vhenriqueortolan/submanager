@@ -1,7 +1,8 @@
 import { todayStr } from './dates.js';
+import { withBackupStamp } from './reminder.js';
 
 export function downloadBackup(state, now = new Date()) {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify(withBackupStamp(state, now), null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
