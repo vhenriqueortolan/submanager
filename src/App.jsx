@@ -12,7 +12,7 @@ import { useToday } from './hooks/useToday.js';
 import { useNotificationPermission } from './hooks/useNotificationPermission.js';
 import { useDueNotifications } from './hooks/useDueNotifications.js';
 import { todayStr } from './lib/dates.js';
-import { parseImport } from './lib/storage.js';
+import { parseImport, requestPersistence } from './lib/storage.js';
 import { downloadBackup } from './lib/backup.js';
 import { trackEvent } from './lib/analytics.js';
 
@@ -53,6 +53,7 @@ export default function App() {
       trackEvent('subscription_added', { source: meta.source || 'manual', first: state.subs.length === 0 });
     }
     dispatch({ type: 'upsertSub', sub });
+    if (modal?.mode === 'new' && state.subs.length === 0) requestPersistence();
     setModal(null);
   };
 
@@ -100,6 +101,7 @@ export default function App() {
         onFinish={({ name, budget, interests, skipped }) => {
           dispatch({ type: 'completeOnboarding', name, budget, interests });
           trackEvent('onboarding_completed', { skipped: !!skipped });
+          requestPersistence();
           setTab('home');
         }}
       />

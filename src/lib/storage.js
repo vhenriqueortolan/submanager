@@ -84,6 +84,22 @@ export function loadState(storage = globalThis.localStorage) {
   return normalize(raw);
 }
 
+/**
+ * Pede ao navegador que não apague o armazenamento do site (best-effort, sem UI).
+ * Reduz o risco de limpeza em Safari/iOS fora da Tela de Início, mas não é garantia:
+ * o backup continua sendo a rede de segurança.
+ * @returns {Promise<boolean>} true se o armazenamento está (ou ficou) persistente
+ */
+export async function requestPersistence(manager = globalThis.navigator?.storage) {
+  try {
+    if (!manager || typeof manager.persist !== 'function') return false;
+    if (typeof manager.persisted === 'function' && (await manager.persisted())) return true;
+    return (await manager.persist()) === true;
+  } catch {
+    return false;
+  }
+}
+
 /** @returns {boolean} true se gravou com sucesso */
 export function saveState(state, storage = globalThis.localStorage) {
   try {
