@@ -65,7 +65,7 @@ test('sem assinaturas, o banner de backup não aparece', async ({ page }) => {
 });
 
 test('dados antigos (schema 8, sem payments) carregam e ganham os campos novos', async ({ page }) => {
-  await seed(page, withSubs(sampleSubs().map(({ payments: _p, ...s }) => s), { schema: 8 }));
+  await seed(page, withSubs(sampleSubs(), { schema: 8 }));
   await expect(page.locator('#hero-count')).toHaveText('4');
   const hoje = page.locator('.sub-card', { hasText: 'HojeApp' });
   await hoje.getByRole('button', { name: /Paguei/ }).click();
