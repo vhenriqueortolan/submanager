@@ -27,7 +27,8 @@ Requer Node 20.19+ (ou 22.12+).
 
 ## Testes e CI
 
-- **Unitários** (`npm test`): regras de vencimento, normalização do storage, notificações, totais.
+- **Lint** (`npm run lint`): ESLint; roda no job `unit-and-build`.
+- **Unitários** (`npm test`): ciclos e vencimento, normalização do storage, notificações, totais, ordenação.
 - **E2E** (`npm run test:e2e`): Playwright em Chromium, nos viewports desktop e mobile (Pixel 7). A rede externa é bloqueada/simulada, então os testes não dependem da internet. Para testar um deploy de preview: `E2E_BASE_URL=https://seu-preview.vercel.app npm run test:e2e`.
 - **CI** (`.github/workflows/ci.yml`): em todo PR e push na `main` roda `unit-and-build` e `e2e`. Em falha, o relatório do Playwright fica anexado à execução. Marque os dois como *required* na proteção da branch `main`.
 
@@ -41,20 +42,41 @@ Requer Node 20.19+ (ou 22.12+).
 public/            sw.js, manifest, ícones (copiados como estão para a raiz do site)
 src/
   lib/             lógica pura, sem React (testada em *.test.js)
-    dates.js         vencimento/atraso por ciclo mensal
+    cycles.js        ciclos de cobrança (semanal/mensal/anual), valor anual, validação de vencimento
+    dates.js         lastDue/nextDue e status de vencimento/atraso por ciclo
     storage.js       load/save/normalize do localStorage, migração e import
     subs.js          montagem de assinatura a partir do formulário
     notifications.js regras e envio de notificações
-    totals.js        gasto mensal e projeção anual
+    totals.js        gasto mensal equivalente e projeção anual
+    sort.js          ordenação da lista por urgência
+    format.js        moeda, rótulos de preço e de vencimento
     analytics.js     eventos de uso (sem dados financeiros)
     search.js        busca global de serviços (Clearbit) — troque só este arquivo se o provedor mudar
     catalog.js       categorias e catálogo curado
-  hooks/           useStore, useToday, useDueNotifications, useCompanySearch...
+  hooks/           useStore, useToday, useDueNotifications, useCompanySearch, useFocusTrap...
   components/      Home, Discover, Profile, SubModal, ConfirmDialog, Onboarding, BottomNav...
   App.jsx          composição, abas, modal e diálogo de confirmação
 e2e/               testes Playwright (fixtures com rede simulada)
 .github/workflows/ CI
 ```
+
+## Ciclos de cobrança
+
+Cada assinatura tem um ciclo: **semanal**, **mensal** (padrão) ou **anual**.
+
+| Campo | Valores | Usado em |
+|-------|---------|----------|
+| `cycle` | `weekly` | `monthly` | `yearly` (ausente = `monthly`) | todos |
+| `dueDate` | `1`..`31` | mensal e anual; vazio no semanal |
+| `dueMonth` | `1`..`12` | só anual |
+| `dueWeekday` | `0`..`6` (0 = domingo) | só semanal |
+
+- **Dia 29–31:** vence no último dia do mês quando o mês é mais curto (29/02 em ano não bissexto vence 28/02).
+- **Chave do ciclo pago (`paidCycle`):** mensal `YYYY-MM`, anual `YYYY`, semanal `YYYY-MM-DD` (data do vencimento). A comparação `paidCycle >= chave` só vale dentro do mesmo tipo de ciclo, por isso `normalizeSub` descarta um `paidCycle` de formato incompatível com o ciclo.
+- **Equivalência mensal:** o "Gasto Mensal" soma `preço × períodos por ano / 12` (semanal ×52, mensal ×12, anual ×1) e a projeção anual soma `preço × períodos por ano`. Ex.: R$ 120/ano = R$ 10,00/mês; R$ 10/semana = R$ 43,33/mês e R$ 520,00/ano.
+- **Mudar o ciclo ou o vencimento** reinicia o controle (`createdAt` = hoje, `lastNotified` e `paidCycle` vazios), para não gerar atraso retroativo.
+- **Dados antigos:** `SCHEMA = 8`, mudança aditiva. Assinaturas e backups sem `cycle` carregam como mensais.
+- **Lista da Home:** ordenada por urgência (atrasadas → vence hoje → próximas → sem vencimento).
 
 ## Dados e migração do app antigo
 
@@ -68,9 +90,13 @@ A chave de armazenamento (`subDataV5`) é a mesma, então o formato é compatív
 
 ## Notificações
 
-Disparam quando uma assinatura **vence hoje** ou está **atrasada** (no máximo 1 aviso por dia por assinatura), enquanto o app está aberto ou ao voltar para ele. Uma assinatura sai do estado "atrasada" ao tocar em **✓ Paguei**.
+Disparam quando uma assinatura (de qualquer ciclo) **vence hoje** ou está **atrasada** (no máximo 1 aviso por dia por assinatura), enquanto o app está aberto ou ao voltar para ele. Uma assinatura sai do estado "atrasada" ao tocar em **✓ Paguei**.
 
 Avisos com o app **fechado** exigem Web Push (backend + chaves VAPID) — não incluído nesta versão. No iOS, notificações só funcionam com o app instalado na Tela de Início.
+
+## Armazenamento
+
+Os dados ficam no `localStorage`. Após o onboarding e ao salvar a primeira assinatura o app pede `navigator.storage.persist()` para o navegador não apagar o armazenamento. É um pedido best-effort, **sem garantia**: o backup (Perfil → Exportar) continua sendo a rede de segurança.
 
 ## PWA
 
