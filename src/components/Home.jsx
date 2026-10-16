@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import AppBrand from './AppBrand.jsx';
 import Logo from './Logo.jsx';
-import { brl } from '../lib/format.js';
+import { brl, dueLabel, priceLabel } from '../lib/format.js';
 import { dueStatus, parseDay } from '../lib/dates.js';
 import { annualProjection, monthlyTotal } from '../lib/totals.js';
+import { cycleOf } from '../lib/cycles.js';
+import { sortByUrgency } from '../lib/sort.js';
 
 function Hero({ greeting, subs }) {
   return (
@@ -34,7 +36,7 @@ function EmptyHero({ greeting, onAdd }) {
   );
 }
 
-function BudgetCard({ total, annual, budget }) {
+function BudgetCard({ total, annual, budget, converted }) {
   const percent = budget > 0 ? Math.min((total / budget) * 100, 100) : 0;
   let alert = null;
   if (budget > 0) {
@@ -47,6 +49,9 @@ function BudgetCard({ total, annual, budget }) {
         <div>
           <div className="stat-label">Gasto Mensal</div>
           <div className="stat-value" id="total-month">{brl(total)}</div>
+          {converted && (
+            <div className="text-muted budget-note" id="budget-note">Anuais e semanais convertidas para mensal</div>
+          )}
         </div>
         <div className="text-right">
           <div className="stat-label">Teto</div>
@@ -69,7 +74,8 @@ function BudgetCard({ total, annual, budget }) {
   );
 }
 
-function SubCard({ sub, status, onEdit, onPay }) {
+function SubCard({ sub, status, now, onEdit, onPay }) {
+  const due = dueLabel(sub, now);
   return (
     <div
       className="sub-card"
@@ -89,14 +95,14 @@ function SubCard({ sub, status, onEdit, onPay }) {
           <div className="sub-title">{sub.name}</div>
           <div className="sub-meta">
             <span className="badge">{sub.category}</span>
-            {sub.dueDate && <span className="badge">Dia {sub.dueDate}</span>}
+            {due && <span className="badge">{due}</span>}
             {status?.type === 'today' && <span className="badge badge-warn">Vence hoje</span>}
             {status?.type === 'overdue' && <span className="badge badge-danger">Atrasada · {status.days}d</span>}
           </div>
         </div>
       </div>
       <div className="sub-right">
-        <div className="sub-price">{brl(sub.price)}</div>
+        <div className="sub-price">{priceLabel(sub)}</div>
         {status && (
           <button
             type="button"
@@ -122,8 +128,10 @@ export default function Home({ state, today, permission, onEnableNotifications, 
   // `today` na dependência: os status são recalculados na virada do dia.
   const items = useMemo(() => {
     const now = parseDay(today) ?? new Date();
-    return subs.map((sub) => ({ sub, status: dueStatus(sub, now) }));
+    return sortByUrgency(subs.map((sub) => ({ sub, status: dueStatus(sub, now) })), now);
   }, [subs, today]);
+  const now = useMemo(() => parseDay(today) ?? new Date(), [today]);
+  const converted = subs.some((s) => cycleOf(s) !== 'monthly');
 
   const total = monthlyTotal(subs);
   const annual = annualProjection(subs);
@@ -144,7 +152,7 @@ export default function Home({ state, today, permission, onEnableNotifications, 
         </div>
       )}
 
-      <BudgetCard total={total} annual={annual} budget={budget} />
+      <BudgetCard total={total} annual={annual} budget={budget} converted={converted} />
 
       {hasSubs && (
         <section id="subs-section">
@@ -154,7 +162,7 @@ export default function Home({ state, today, permission, onEnableNotifications, 
           </div>
           <div id="subs-list">
             {items.map(({ sub, status }) => (
-              <SubCard key={sub.id} sub={sub} status={status} onEdit={onEdit} onPay={onPay} />
+              <SubCard key={sub.id} sub={sub} status={status} now={now} onEdit={onEdit} onPay={onPay} />
             ))}
           </div>
         </section>

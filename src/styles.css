@@ -127,6 +127,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .text-right { text-align: right; }
 .brand-name { font-weight: 600; letter-spacing: -0.02em; }
 .stat-label { font-size: 0.85rem; color: var(--text-muted); }
+.budget-note { font-size: 0.75rem; margin-top: 2px; }
 .stat-value { font-size: 1.2rem; font-weight: 600; }
 .budget-alert { font-size: 0.8rem; margin-top: 10px; }
 .section-title-plain { margin: 0; border: none; padding: 0; }
