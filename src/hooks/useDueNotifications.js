@@ -2,19 +2,21 @@ import { useCallback, useEffect, useRef } from 'react';
 import { notifyDue } from '../lib/notifications.js';
 
 /**
- * Dispara avisos de "vence hoje" / "atrasada" enquanto o app está aberto
+ * Dispara avisos de vencimento (no dia, atrasada e antecedência) conforme as preferências, enquanto o app está aberto
  * (ao abrir, ao voltar para a aba, a cada minuto e quando a lista muda).
  * Notificações com o app fechado exigem Web Push (backend) — ver README.
  */
-export function useDueNotifications(subs, onNotified, permission, people = []) {
+export function useDueNotifications(subs, onNotified, permission, people = [], settings) {
   const subsRef = useRef(subs);
   const peopleRef = useRef(people);
+  const settingsRef = useRef(settings);
   const cbRef = useRef(onNotified);
   const running = useRef(false);
 
   useEffect(() => {
     subsRef.current = subs;
     peopleRef.current = people;
+    settingsRef.current = settings;
     cbRef.current = onNotified;
   });
 
@@ -22,7 +24,7 @@ export function useDueNotifications(subs, onNotified, permission, people = []) {
     if (running.current) return;
     running.current = true;
     try {
-      const ids = await notifyDue(subsRef.current, new Date(), peopleRef.current);
+      const ids = await notifyDue(subsRef.current, new Date(), peopleRef.current, settingsRef.current);
       if (ids.length) cbRef.current(ids);
     } finally {
       running.current = false;
@@ -31,7 +33,7 @@ export function useDueNotifications(subs, onNotified, permission, people = []) {
 
   useEffect(() => {
     check();
-  }, [subs, permission, check]);
+  }, [subs, permission, settings, check]);
 
   useEffect(() => {
     const onVisible = () => {

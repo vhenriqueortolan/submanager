@@ -39,7 +39,7 @@ export default function App() {
   }, [saveFailed, notify]);
 
   const onNotified = useCallback((ids) => dispatch({ type: 'markNotified', ids, day: todayStr() }), [dispatch]);
-  useDueNotifications(state.onboarded ? state.subs : [], onNotified, permission, state.people);
+  useDueNotifications(state.onboarded ? state.subs : [], onNotified, permission, state.people, state.settings);
 
   const closeModal = useCallback(() => setModal(null), []);
   const closeConfirm = useCallback(() => setConfirm(null), []);
@@ -179,6 +179,7 @@ export default function App() {
           }}
           onExport={handleExport}
           onRemovePerson={handleRemovePerson}
+          onSettings={(patch) => dispatch({ type: 'updateSettings', patch })}
           onImport={handleImport}
         />
       )}
