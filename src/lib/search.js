@@ -8,5 +8,5 @@ export async function searchCompanies(query, signal) {
   const data = await res.json();
   return (Array.isArray(data) ? data : [])
     .filter((c) => c && c.name)
-    .map((c) => ({ name: String(c.name), domain: String(c.domain || ''), category: 'Outros', price: '' }));
+    .map((c) => ({ name: String(c.name), domain: String(c.domain || ''), category: 'Outros', price: '', source: 'search' }));
 }
