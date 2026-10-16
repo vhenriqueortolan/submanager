@@ -2,6 +2,7 @@ import { parseDay, todayStr } from './dates.js';
 import { normalizeDue, paidCycleValid } from './cycles.js';
 import { lastPaidCycle, normalizePayments } from './payments.js';
 import { normalizePeople, normalizeSharedWith } from './people.js';
+import { DEFAULT_SETTINGS, normalizeSettings } from './settings.js';
 
 // Mantém a mesma chave das versões anteriores para não perder dados existentes.
 export const STORAGE_KEY = 'subDataV5';
@@ -15,7 +16,7 @@ export function newId() {
 }
 
 export function defaultState() {
-  return { schema: SCHEMA, onboarded: false, name: '', budget: 0, interests: [], subs: [], people: [], lastBackupAt: '', backupSnoozeUntil: '' };
+  return { schema: SCHEMA, onboarded: false, name: '', budget: 0, interests: [], subs: [], people: [], settings: { ...DEFAULT_SETTINGS }, lastBackupAt: '', backupSnoozeUntil: '' };
 }
 
 export function normalizeSub(x, seen = new Set()) {
@@ -56,6 +57,7 @@ export function normalize(raw) {
     .filter((x) => x && x.name)
     .map((x) => normalizeSub(x, seen));
   s.people = normalizePeople(raw.people);
+  s.settings = normalizeSettings(raw.settings);
   s.lastBackupAt = parseDay(raw.lastBackupAt) ? raw.lastBackupAt : '';
   s.backupSnoozeUntil = parseDay(raw.backupSnoozeUntil) ? raw.backupSnoozeUntil : '';
   // Se há dados do usuário, ele já passou pelo onboarding (mesmo que a flag tenha se perdido).

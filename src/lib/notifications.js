@@ -1,4 +1,5 @@
-import { dueStatus, todayStr } from './dates.js';
+import { cycleKey, dueStatus, nextDue, todayStr } from './dates.js';
+import { DEFAULT_SETTINGS } from './settings.js';
 import { brl, WEEKLY_LABEL } from './format.js';
 import { cycleOf } from './cycles.js';
 import { myShare, sharers } from './people.js';
@@ -41,13 +42,42 @@ async function showNotif(title, options) {
   }
 }
 
-/** Assinaturas que vencem hoje ou estão atrasadas e ainda não avisadas hoje. */
-export function pendingDue(subs, now = new Date()) {
+const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+/**
+ * Antecedência: o próximo vencimento está entre 1 e `advanceDays` dias à frente.
+ * Não altera `dueStatus`; "hoje" não conta como antecedência.
+ * @returns {null | {type: 'upcoming', days: number, cycle: string}}
+ */
+export function upcomingStatus(sub, now = new Date(), advanceDays = 0) {
+  if (!(advanceDays > 0)) return null;
+  const next = nextDue(sub, now);
+  if (!next) return null;
+  const days = Math.round((next - startOfDay(now)) / 86400000);
+  if (days < 1 || days > advanceDays) return null;
+  const key = cycleKey(next, cycleOf(sub));
+  if (sub.paidCycle && sub.paidCycle >= key) return null;
+  return { type: 'upcoming', days, cycle: key };
+}
+
+/**
+ * Avisos pendentes (hoje, atrasada ou antecedência) de assinaturas ainda não avisadas hoje,
+ * respeitando as preferências. Cada assinatura tem no máximo um aviso por dia.
+ */
+export function pendingDue(subs, now = new Date(), settings = DEFAULT_SETTINGS) {
+  if (!settings.enabled) return [];
   const today = todayStr(now);
   const out = [];
   for (const sub of subs) {
-    const st = dueStatus(sub, now);
-    if (st && sub.lastNotified !== today) out.push({ sub, st });
+    if (sub.lastNotified === today) continue;
+    let st = dueStatus(sub, now);
+    if (st) {
+      if (st.type === 'today' && !settings.notifyToday) continue;
+      if (st.type === 'overdue' && !settings.notifyOverdue) continue;
+    } else {
+      st = upcomingStatus(sub, now, settings.advanceDays);
+    }
+    if (st) out.push({ sub, st });
   }
   return out;
 }
@@ -69,6 +99,10 @@ function amountText(sub, people) {
 }
 
 export function describe(sub, st, people = []) {
+  if (st.type === 'upcoming') {
+    const when = st.days === 1 ? 'amanhã' : `em ${st.days} dias`;
+    return { title: `${sub.name} vence ${when}`, body: `${amountText(sub, people)} · ${sub.paymentMethod}` };
+  }
   if (st.type === 'today') {
     return { title: `${sub.name} vence hoje`, body: `${amountText(sub, people)} · ${sub.paymentMethod}` };
   }
@@ -82,16 +116,16 @@ export function describe(sub, st, people = []) {
  * Dispara as notificações pendentes (no máximo 1 por assinatura por dia; agrupa se forem > 3).
  * @returns {Promise<string[]>} ids das assinaturas efetivamente notificadas
  */
-export async function notifyDue(subs, now = new Date(), people = []) {
+export async function notifyDue(subs, now = new Date(), people = [], settings = DEFAULT_SETTINGS) {
   if (getPermission() !== 'granted') return [];
-  const pending = pendingDue(subs, now);
+  const pending = pendingDue(subs, now, settings);
   if (!pending.length) return [];
 
   const done = [];
   if (pending.length <= 3) {
     for (const { sub, st } of pending) {
       const { title, body } = describe(sub, st, people);
-      if (await showNotif(title, { body, tag: `sub-${sub.id}-${st.cycle}` })) done.push(sub.id);
+      if (await showNotif(title, { body, tag: `sub-${sub.id}-${st.cycle}-${st.type}` })) done.push(sub.id);
     }
   } else {
     const overdue = pending.filter((p) => p.st.type === 'overdue').length;

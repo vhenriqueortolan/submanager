@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
+import { normalizeSettings } from '../lib/settings.js';
 import { removePersonFromState } from '../lib/people.js';
 import { addPayment, removePayment } from '../lib/payments.js';
 import { loadState, saveState, STORAGE_KEY } from '../lib/storage.js';
@@ -58,6 +59,9 @@ function reducer(state, action) {
 
     case 'removePerson':
       return removePersonFromState(state, action.id);
+
+    case 'updateSettings':
+      return { ...state, settings: normalizeSettings({ ...state.settings, ...action.patch }) };
 
     case 'backupDone':
       return { ...state, lastBackupAt: action.day };
