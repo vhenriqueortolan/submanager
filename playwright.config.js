@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { TIMEZONE } from './e2e/timezone.js';
 
 const PORT = process.env.E2E_PORT || 4173;
 const externalBase = process.env.E2E_BASE_URL; // para apontar para um preview da Vercel, por exemplo
@@ -12,7 +13,7 @@ export default defineConfig({
   use: {
     baseURL: externalBase || `http://localhost:${PORT}`,
     locale: 'pt-BR',
-    timezoneId: 'America/Sao_Paulo',
+    timezoneId: TIMEZONE,
     // O service worker do app intercepta as requisições da página, e o page.route() do Playwright não enxerga o que passa por ele.
     // Sem isso, o stub de /_vercel/* (fixtures.js) é ignorado depois do primeiro load e o servidor devolve index.html no lugar do script.
     serviceWorkers: 'block',

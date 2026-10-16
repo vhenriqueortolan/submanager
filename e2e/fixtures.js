@@ -1,4 +1,5 @@
 import { test as base, expect } from '@playwright/test';
+import { browserToday } from './timezone.js';
 
 export const STORAGE_KEY = 'subDataV5';
 
@@ -76,7 +77,7 @@ export const readNotifs = (page) => page.evaluate(() => window.__notifs || []);
 
 /** Assinaturas de exemplo relativas a hoje: vence hoje, atrasada, paga e futura. */
 export function sampleSubs(now = new Date()) {
-  const t = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const t = browserToday(now);
   const yesterday = new Date(t); yesterday.setDate(t.getDate() - 1);
   const threeMonthsAgo = new Date(t); threeMonthsAgo.setMonth(t.getMonth() - 3);
   const thisCycle = `${t.getFullYear()}-${pad(t.getMonth() + 1)}`;
