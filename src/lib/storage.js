@@ -52,7 +52,7 @@ export function normalize(raw) {
 }
 
 function readKey(storage, key) {
-  let raw = null;
+  let raw;
   try {
     raw = storage.getItem(key);
   } catch {
