@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Logo from './Logo.jsx';
 import { CATALOG, PAYMENT_METHODS } from '../lib/catalog.js';
 import { buildSub, emptyForm, formFromSub } from '../lib/subs.js';
 import { CYCLES, annualAmount } from '../lib/cycles.js';
 import { MONTHS, WEEKDAYS, brl } from '../lib/format.js';
 import { useCompanySearch } from '../hooks/useCompanySearch.js';
+import useFocusTrap from '../hooks/useFocusTrap.js';
 
 function QuickItem({ app, onPick }) {
   return (
@@ -26,6 +27,8 @@ export default function SubModal({ mode, sub, preset, interests, onSave, onDelet
   const [query, setQuery] = useState('');
   const [source, setSource] = useState(preset?.source || 'manual');
   const search = useCompanySearch(step === 1 ? query : '');
+  const dialogRef = useRef(null);
+  useFocusTrap(dialogRef, step);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -52,7 +55,7 @@ export default function SubModal({ mode, sub, preset, interests, onSave, onDelet
 
   return (
     <div className="modal-overlay" id="add-modal" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal active" role="dialog" aria-modal="true" aria-label={isEdit ? 'Editar assinatura' : 'Nova assinatura'}>
+      <div ref={dialogRef} className="modal active" role="dialog" aria-modal="true" aria-label={isEdit ? 'Editar assinatura' : 'Nova assinatura'}>
         {step === 1 && (
           <div id="modal-step-1">
             <h2 className="mb-2">Buscar Serviço</h2>

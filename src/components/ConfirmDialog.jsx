@@ -1,7 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import useFocusTrap from '../hooks/useFocusTrap.js';
 
 /** Substitui window.confirm: acessível, com Esc para cancelar e foco inicial em "Cancelar". */
 export default function ConfirmDialog({ title, message, confirmLabel = 'Confirmar', danger = false, onConfirm, onCancel }) {
+  const dialogRef = useRef(null);
+  useFocusTrap(dialogRef);
+
   useEffect(() => {
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
@@ -15,6 +19,7 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Confirma
   return (
     <div className="modal-overlay confirm-overlay" onMouseDown={(e) => e.target === e.currentTarget && onCancel()}>
       <div
+        ref={dialogRef}
         className="modal active confirm-dialog"
         role="alertdialog"
         aria-modal="true"
