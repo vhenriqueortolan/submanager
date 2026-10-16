@@ -1,3 +1,5 @@
+import { cycleOf } from './cycles.js';
+
 const pad = (n) => String(n).padStart(2, '0');
 
 /** Data local no formato YYYY-MM-DD. */
@@ -17,31 +19,84 @@ export function dueOn(year, month, day) {
   return new Date(year, month, Math.min(day, last));
 }
 
-/** Chave do ciclo mensal, ex.: "2026-10". */
-export function cycleKey(d) {
+const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+const validIn = (v, min, max) => {
+  const n = parseInt(v, 10);
+  return n >= min && n <= max ? n : -1;
+};
+
+/** Chave do ciclo: mensal "2026-10", anual "2026", semanal "2026-10-15" (data do vencimento). */
+export function cycleKey(d, cycle = 'monthly') {
+  if (cycle === 'yearly') return String(d.getFullYear());
+  if (cycle === 'weekly') return todayStr(d);
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+}
+
+/** Vencimento mais recente <= hoje (null se a assinatura não tem vencimento válido). */
+export function lastDue(sub, now = new Date()) {
+  const today = startOfDay(now);
+  const cycle = cycleOf(sub);
+  if (cycle === 'weekly') {
+    const wd = validIn(sub.dueWeekday, 0, 6);
+    if (wd < 0) return null;
+    const back = (today.getDay() - wd + 7) % 7;
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate() - back);
+  }
+  const day = validIn(sub.dueDate, 1, 31);
+  if (day < 0) return null;
+  if (cycle === 'yearly') {
+    const month = validIn(sub.dueMonth, 1, 12);
+    if (month < 0) return null;
+    let due = dueOn(today.getFullYear(), month - 1, day);
+    if (due > today) due = dueOn(today.getFullYear() - 1, month - 1, day);
+    return due;
+  }
+  let due = dueOn(today.getFullYear(), today.getMonth(), day);
+  if (due > today) due = dueOn(today.getFullYear(), today.getMonth() - 1, day);
+  return due;
+}
+
+/** Próximo vencimento >= hoje (null se a assinatura não tem vencimento válido). */
+export function nextDue(sub, now = new Date()) {
+  const today = startOfDay(now);
+  const cycle = cycleOf(sub);
+  if (cycle === 'weekly') {
+    const wd = validIn(sub.dueWeekday, 0, 6);
+    if (wd < 0) return null;
+    const ahead = (wd - today.getDay() + 7) % 7;
+    return new Date(today.getFullYear(), today.getMonth(), today.getDate() + ahead);
+  }
+  const day = validIn(sub.dueDate, 1, 31);
+  if (day < 0) return null;
+  if (cycle === 'yearly') {
+    const month = validIn(sub.dueMonth, 1, 12);
+    if (month < 0) return null;
+    let due = dueOn(today.getFullYear(), month - 1, day);
+    if (due < today) due = dueOn(today.getFullYear() + 1, month - 1, day);
+    return due;
+  }
+  let due = dueOn(today.getFullYear(), today.getMonth(), day);
+  if (due < today) due = dueOn(today.getFullYear(), today.getMonth() + 1, day);
+  return due;
 }
 
 /**
  * Status de vencimento de uma assinatura.
- * Ciclo = mês. Está "pendente" quando o último vencimento (<= hoje) pertence a um
- * ciclo ainda não pago e posterior ao cadastro.
+ * Só o ciclo mais recente conta: está "pendente" quando o último vencimento (<= hoje)
+ * é posterior ao cadastro e seu ciclo ainda não foi pago.
  * @returns {null | {type: 'today'|'overdue', days: number, cycle: string}}
  */
 export function dueStatus(sub, now = new Date()) {
-  const day = parseInt(sub.dueDate, 10);
-  if (!day || day < 1 || day > 31) return null;
-
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let due = dueOn(today.getFullYear(), today.getMonth(), day);
-  if (due > today) due = dueOn(today.getFullYear(), today.getMonth() - 1, day);
+  const due = lastDue(sub, now);
+  if (!due) return null;
 
   const created = parseDay(sub.createdAt);
   if (created && due < created) return null; // ciclo anterior ao cadastro
 
-  const key = cycleKey(due);
+  const key = cycleKey(due, cycleOf(sub));
   if (sub.paidCycle && sub.paidCycle >= key) return null; // ciclo já pago
 
-  const days = Math.round((today - due) / 86400000);
+  const days = Math.round((startOfDay(now) - due) / 86400000);
   return { type: days === 0 ? 'today' : 'overdue', days, cycle: key };
 }
