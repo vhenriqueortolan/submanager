@@ -2,14 +2,20 @@ import { test, expect, seed, withSubs, sampleSubs } from './fixtures.js';
 
 const inside = (page, selector) => page.evaluate((s) => !!document.activeElement?.closest(s), selector);
 
+// Desktop: foco inicial no primeiro campo. Mobile (toque): no ←, para não abrir o teclado sozinho.
+const expectInitialFocus = async (page, field, isMobile) => {
+  if (isMobile) await expect(page.getByRole('button', { name: 'Voltar' }).last()).toBeFocused();
+  else await expect(page.locator(field)).toBeFocused();
+};
+
 test.describe('foco do modal', () => {
-  test('foco inicial, Tab preso no diálogo, Esc devolve o foco e o body não rola', async ({ page }) => {
+  test('foco inicial, Tab preso no diálogo, Esc devolve o foco e o body não rola', async ({ page, isMobile }) => {
     await seed(page, withSubs(sampleSubs()));
     const card = page.locator('.sub-card', { hasText: 'HojeApp' });
     await card.focus();
     await page.keyboard.press('Enter');
 
-    await expect(page.locator('#add-name')).toBeFocused();
+    await expectInitialFocus(page, '#add-name', isMobile);
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden');
 
     for (let i = 0; i < 25; i += 1) {
@@ -27,13 +33,13 @@ test.describe('foco do modal', () => {
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('');
   });
 
-  test('ao trocar de passo o foco vai para o novo conteúdo; diálogo de confirmação devolve o foco', async ({ page }) => {
+  test('ao trocar de passo o foco vai para o novo conteúdo; diálogo de confirmação devolve o foco', async ({ page, isMobile }) => {
     await seed(page, withSubs([]));
     const open = page.getByRole('button', { name: '+ Cadastrar assinatura' });
     await open.click();
-    await expect(page.locator('#modal-search-input')).toBeFocused();
+    await expectInitialFocus(page, '#modal-search-input', isMobile);
     await page.getByRole('button', { name: '+ Inserir Dados Manualmente' }).click();
-    await expect(page.locator('#add-name')).toBeFocused();
+    await expectInitialFocus(page, '#add-name', isMobile);
     await page.fill('#add-name', 'Teste Foco');
     await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
     await expect(page.locator('#add-modal')).toHaveCount(0);

@@ -5,7 +5,7 @@ import { useScreenHistory } from '../hooks/useScreenStack.js';
 
 /**
  * Tela de detalhe: entra pela direita, tem ← no topo e fecha com ←, Esc ou o Voltar do sistema.
- * Com `dirty`, sair pergunta "Descartar alterações?". `focusFirst`: foco inicial no primeiro campo (formulários);
+ * Com `dirty`, sair pergunta "Descartar alterações?". `focusFirst`: foco inicial no primeiro campo (formulários), só fora de telas de toque;
  * sem ele, o foco vai para o ←, para não abrir o teclado do celular sem ninguém pedir.
  */
 export default function DetailScreen({ id, domId, title, dirty = false, focusFirst = false, onClose, children }) {
@@ -14,7 +14,9 @@ export default function DetailScreen({ id, domId, title, dirty = false, focusFir
   useFocusTrap(ref);
 
   useEffect(() => {
-    if (focusFirst) ref.current?.querySelector('.detail-body input, .detail-body select, .detail-body textarea, .detail-body button')?.focus();
+    // Em tela de toque, focar um campo abre o teclado sem ninguém pedir; lá o foco fica no ←.
+    const touch = window.matchMedia?.('(pointer: coarse)').matches;
+    if (focusFirst && !touch) ref.current?.querySelector('.detail-body input, .detail-body select, .detail-body textarea, .detail-body button')?.focus();
   }, [focusFirst]);
 
   return (
