@@ -7,17 +7,18 @@ import { dueStatus } from './dates.js';
 
 const base = { id: 's1', name: 'Netflix', price: 39.9, dueDate: '10', createdAt: '2026-01-01', paidCycle: '', lastNotified: '', payments: [] };
 
-test('schema sobe para 9 e o estado novo traz os campos de backup', () => {
-  assert.equal(SCHEMA, 9);
+test('schema sobe para 10 e o estado novo traz os campos de backup', () => {
+  assert.equal(SCHEMA, 10);
   const st = defaultState();
-  assert.equal(st.schema, 9);
+  assert.equal(st.schema, 10);
   assert.equal(st.lastBackupAt, '');
   assert.equal(st.backupSnoozeUntil, '');
 });
 
 test('pagar registra o pagamento e espelha em paidCycle', () => {
   const s = addPayment(base, '2026-10', '2026-10-10', 'p1');
-  assert.deepEqual(s.payments, [{ id: 'p1', cycle: '2026-10', paidAt: '2026-10-10', amount: 39.9 }]);
+  assert.equal(s.payments.length, 1);
+  assert.deepEqual({ ...s.payments[0] }, { id: 'p1', cycle: '2026-10', paidAt: '2026-10-10', amount: 39.9, price: 39.9, share: 39.9, kind: 'manual', estimated: false });
   assert.equal(s.paidCycle, '2026-10');
   assert.equal(base.payments.length, 0, 'não altera a assinatura original');
 });

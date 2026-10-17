@@ -8,7 +8,7 @@ import { normalizeStatus } from './status.js';
 // Mantém a mesma chave das versões anteriores para não perder dados existentes.
 export const STORAGE_KEY = 'subDataV5';
 export const LEGACY_KEYS = ['subDataV4', 'subDataV3', 'subDataV2', 'subDataV1'];
-export const SCHEMA = 9;
+export const SCHEMA = 10;
 
 export function newId() {
   const c = globalThis.crypto;
@@ -37,7 +37,7 @@ export function normalizeSub(x, seen = new Set()) {
     createdAt: parseDay(x.createdAt) ? x.createdAt : todayStr(),
     paidCycle: paidCycleValid(x.paidCycle, due.cycle) ? x.paidCycle : '',
     lastNotified: parseDay(x.lastNotified) ? x.lastNotified : '',
-    payments: normalizePayments(x.payments),
+    payments: normalizePayments(x.payments, { divided: normalizeSharedWith(x.sharedWith).length > 0 }),
     sharedWith: normalizeSharedWith(x.sharedWith),
     autoCharge: x.autoCharge === true,
     muted: x.muted === true,

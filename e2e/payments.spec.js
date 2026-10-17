@@ -71,6 +71,6 @@ test('dados antigos (schema 8, sem payments) carregam e ganham os campos novos',
   await hoje.getByRole('button', { name: /Paguei/ }).click();
   await tab(page, 'Perfil').click();
   const st = await readStorage(page);
-  expect(st.schema).toBe(9);
+  expect(st.schema).toBe(10);
   expect(st.subs.every((s) => Array.isArray(s.payments))).toBe(true);
 });

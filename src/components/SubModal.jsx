@@ -250,7 +250,9 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
                   <ul className="payment-list">
                     {paymentsNewestFirst(sub).map((p) => (
                       <li key={p.id} className="payment-row">
-                        <span>{formatDay(p.paidAt)} · {brl(p.amount)}</span>
+                        <span>
+                          {formatDay(p.paidAt)} · {p.share === null ? `${brl(p.amount)} total` : brl(p.share)}
+                        </span>
                         <button
                           type="button"
                           className="pay-btn"
