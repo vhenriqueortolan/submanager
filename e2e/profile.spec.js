@@ -1,4 +1,4 @@
-import { test, expect, seed, withSubs, sampleSubs, openProfileScreen } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, openProfileScreen, editText, editTrigger } from './fixtures.js';
 
 const tab = (page, name) => page.locator('.bottom-nav').getByRole('button', { name });
 
@@ -17,55 +17,60 @@ test('hub mostra as cinco linhas, na ordem, com resumos que batem com os dados',
 test('campos refletem o que está salvo e a edição não salva é descartada', async ({ page }) => {
   await seed(page, withSubs(sampleSubs()));
   await openProfileScreen(page, 'Meu perfil');
-  await expect(page.locator('#prof-name')).toHaveValue('Victor');
+  await expect(page.locator('[data-edit="profile-name"]')).toContainText('Victor');
   await expect(page.locator('#prof-interests .category-pill.active')).toHaveText(['IA', 'Games']);
 
-  await page.fill('#prof-name', 'Rascunho');
+  await editText(page, 'profile-name', 'Rascunho');
   await page.getByRole('button', { name: 'Voltar' }).click();
   const dialog = page.getByRole('alertdialog', { name: 'Descartar alterações?' });
   await expect(dialog).toBeVisible();
   await dialog.getByRole('button', { name: 'Descartar' }).click();
-  await expect(page.locator('#prof-name')).toHaveCount(0);
+  await expect(page.locator('[data-edit="profile-name"]')).toHaveCount(0);
 
   await page.getByRole('button', { name: /^Meu perfil\./ }).click();
-  await expect(page.locator('#prof-name')).toHaveValue('Victor');
+  await expect(page.locator('[data-edit="profile-name"]')).toContainText('Victor');
 
   await page.getByRole('button', { name: 'Voltar' }).click();
   await page.getByRole('button', { name: /^Orçamento\./ }).click();
-  await expect(page.locator('#prof-budget')).toHaveValue('500');
+  await expect(page.locator('[data-edit="budget"]')).toContainText('R$ 500,00');
 });
 
 test('salvar mostra toast e sobrevive ao reload', async ({ page }) => {
   await seed(page, withSubs(sampleSubs()));
   await openProfileScreen(page, 'Meu perfil');
-  await page.fill('#prof-name', 'Victor S');
+  await editText(page, 'profile-name', 'Victor S');
   await page.locator('#prof-interests [data-val="Dev"]').click();
   await page.getByRole('button', { name: 'Salvar', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Perfil salvo com sucesso!');
   await page.getByRole('button', { name: 'Voltar' }).click(); // salvo: não pergunta
-  await expect(page.locator('#prof-name')).toHaveCount(0);
+  await expect(page.locator('[data-edit="profile-name"]')).toHaveCount(0);
 
   await page.getByRole('button', { name: /^Orçamento\./ }).click();
-  await page.fill('#prof-budget', '800,50');
+  await editText(page, 'budget', '800,50');
   await page.getByRole('button', { name: 'Salvar', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Perfil salvo com sucesso!');
 
   await page.reload();
   await openProfileScreen(page, 'Meu perfil');
-  await expect(page.locator('#prof-name')).toHaveValue('Victor S');
+  await expect(page.locator('[data-edit="profile-name"]')).toContainText('Victor S');
   await expect(page.locator('#prof-interests .category-pill.active')).toHaveText(['IA', 'Cloud & Dev', 'Games']);
   await page.getByRole('button', { name: 'Voltar' }).click();
   await page.getByRole('button', { name: /^Orçamento\./ }).click();
-  await expect(page.locator('#prof-budget')).toHaveValue('800,5');
+  await expect(page.locator('[data-edit="budget"]')).toContainText('R$ 800,50');
 });
 
 test('Orçamento: valor inválido bloqueia o Salvar e vazio zera o teto', async ({ page }) => {
   await seed(page, withSubs(sampleSubs()));
   await openProfileScreen(page, 'Orçamento');
-  await page.fill('#prof-budget', 'abc');
-  await expect(page.getByRole('button', { name: 'Salvar', exact: true })).toBeDisabled();
-  await expect(page.locator('#prof-budget-help')).toContainText('valor válido');
-  await page.fill('#prof-budget', '');
+  // Valor inválido não chega a virar valor: o Pronto da folha fica bloqueado, com a mensagem de erro.
+  await editTrigger(page, 'budget').click();
+  const sheet = page.getByRole('dialog', { name: 'Valor máximo por mês' });
+  await sheet.getByLabel('Valor máximo').fill('abc');
+  await expect(sheet.getByRole('button', { name: 'Pronto' })).toBeDisabled();
+  await expect(sheet).toContainText('valor válido');
+  await sheet.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(sheet).toHaveCount(0);
+  await editText(page, 'budget', '');
   await page.getByRole('button', { name: 'Salvar', exact: true }).click();
   await page.getByRole('button', { name: 'Voltar' }).click();
   await expect(page.getByRole('button', { name: /^Orçamento\./ })).toHaveAccessibleName('Orçamento. Sem valor definido');

@@ -1,4 +1,4 @@
-import { test, expect, seed, withSubs, sampleSubs, readStorage } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, readStorage, editText, editTrigger } from './fixtures.js';
 
 const openNew = async (page, state = withSubs([])) => {
   await seed(page, state);
@@ -38,17 +38,17 @@ test('Voltar do sistema no passo 2 volta ao passo 1; no passo 1 fecha a tela e o
 test('cadastro novo com dados digitados pergunta ao sair (←, Voltar do sistema e Esc)', async ({ page }) => {
   await openNew(page);
   await goManual(page);
-  await page.fill('#add-name', 'Rascunho');
+  await editText(page, 'name', 'Rascunho');
 
   await page.getByRole('button', { name: 'Voltar' }).last().click();
   await expect(discardDialog(page)).toBeVisible();
   await page.getByRole('button', { name: 'Continuar editando' }).click();
-  await expect(page.locator('#add-name')).toHaveValue('Rascunho');
+  await expect(editTrigger(page, 'name')).toContainText("Rascunho");
 
   await page.goBack();
   await expect(discardDialog(page)).toBeVisible();
   await page.getByRole('button', { name: 'Continuar editando' }).click();
-  await expect(page.locator('#add-name')).toHaveValue('Rascunho');
+  await expect(editTrigger(page, 'name')).toContainText("Rascunho");
 
   await page.keyboard.press('Escape');
   await expect(discardDialog(page)).toBeVisible();
@@ -61,8 +61,8 @@ test('cadastro novo com dados digitados pergunta ao sair (←, Voltar do sistema
 test('salvar fecha as duas telas e deixa o histórico limpo', async ({ page }) => {
   await openNew(page);
   await goManual(page);
-  await page.fill('#add-name', 'Meu Serviço');
-  await page.fill('#add-price', '29.9');
+  await editText(page, 'name', 'Meu Serviço');
+  await editText(page, 'price', '29.9');
   await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
   await expect(page.locator('#add-modal')).toHaveCount(0);
   await expect(page.locator('.sub-card', { hasText: 'Meu Serviço' })).toBeVisible();
@@ -75,8 +75,8 @@ test('sem nome, o Salvar fica desabilitado com a dica; o valor tem placeholder e
   await goManual(page);
   await expect(page.getByRole('button', { name: 'Salvar Assinatura' })).toBeDisabled();
   await expect(page.locator('#save-hint')).toHaveText('Informe o nome do serviço');
-  await expect(page.locator('#add-price')).toHaveAttribute('placeholder', '0,00');
-  await page.fill('#add-name', 'X');
+  await expect(editTrigger(page, 'price')).toContainText("R$ 0,00");
+  await editText(page, 'name', 'X');
   await expect(page.locator('#save-hint')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Salvar Assinatura' })).toBeEnabled();
 });
@@ -85,7 +85,7 @@ test('edição: seções, ← fecha a tela e Remover Assinatura fica no fim, em 
   await seed(page, withSubs(sampleSubs()));
   await page.locator('.sub-card', { hasText: 'HojeApp' }).click();
   await expect(page.getByRole('dialog', { name: 'Editar assinatura' })).toBeVisible();
-  await expect(page.locator('#modal-step-2 .section-heading')).toHaveText(['Serviço', 'Pagamento', 'Divisão', 'Avisos', 'Histórico']);
+  await expect(page.locator('#modal-step-2 .ds-section-title')).toHaveText(['Plano', 'Divisão', 'Avisos', 'Histórico']);
 
   const save = await page.getByRole('button', { name: 'Salvar Assinatura' }).boundingBox();
   const remove = page.getByRole('button', { name: 'Remover Assinatura' });
@@ -109,7 +109,7 @@ test('edição: seções, ← fecha a tela e Remover Assinatura fica no fim, em 
 test('edição com alteração pergunta ao sair; sem alteração fecha direto', async ({ page }) => {
   await seed(page, withSubs(sampleSubs()));
   await page.locator('.sub-card', { hasText: 'HojeApp' }).click();
-  await page.fill('#add-price', '77');
+  await editText(page, 'price', '77');
   await page.goBack();
   await expect(discardDialog(page)).toBeVisible();
   await discardDialog(page).getByRole('button', { name: 'Descartar' }).click();

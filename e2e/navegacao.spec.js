@@ -1,4 +1,4 @@
-import { test, expect, seed, withSubs, sampleSubs } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, editText } from './fixtures.js';
 
 const ROWS = ['Meu perfil', 'Orçamento', 'Notificações', 'Dados e privacidade', 'Sobre'];
 
@@ -28,10 +28,10 @@ test('Orçamento: alteração não salva + Voltar do sistema → Continuar edita
   await seed(page, withSubs(sampleSubs()));
   await page.locator('.bottom-nav').getByRole('button', { name: 'Perfil' }).click();
   await page.getByRole('button', { name: /^Orçamento\./ }).click();
-  await page.fill('#prof-budget', '999');
+  await editText(page, 'budget', '999');
   await page.goBack();
   await page.getByRole('button', { name: 'Continuar editando' }).click();
-  await expect(page.locator('#prof-budget')).toHaveValue('999');
+  await expect(page.locator('[data-edit="budget"]')).toContainText('R$ 999,00');
   await page.goBack();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Descartar' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);

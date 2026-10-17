@@ -7,7 +7,10 @@ import { CYCLES, annualAmount } from '../lib/cycles.js';
 import { paymentsNewestFirst } from '../lib/payments.js';
 import { resolvePerson } from '../lib/people.js';
 import { MONTHS, WEEKDAYS, brl } from '../lib/format.js';
+import { parseMoneyInput, moneyToInput } from '../lib/budget.js';
 import { useCompanySearch } from '../hooks/useCompanySearch.js';
+import { Button, Chip, EditableHero, SectionTitle, SettingList, SettingRow } from '../design/index.jsx';
+import { FieldEditor, OptionEditor } from '../design/Editors.jsx';
 
 const formatDay = (day) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day || '');
@@ -35,7 +38,7 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
   const [form, setForm] = useState(() => (isEdit ? formFromSub(sub) : emptyForm(preset)));
   const [baseline, setBaseline] = useState(form); // o que a pessoa ainda não mexeu: a base do "Descartar alterações?"
   const [query, setQuery] = useState('');
-  const [personName, setPersonName] = useState('');
+  const [editing, setEditing] = useState(null); // folha de edição aberta: name | price | cycle | due-date | due-weekday | due-month | payment | person
   const [source, setSource] = useState(preset?.source || 'manual');
   const search = useCompanySearch(step === 1 ? query : '');
   const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
@@ -46,16 +49,17 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
   }, [interests]);
 
   const [autoTouched, setAutoTouched] = useState(isEdit);
-  const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const set = (field) => (value) => setForm((f) => ({ ...f, [field]: value }));
   // Cadastro novo: a cobrança automática acompanha o método (Cartão) até o usuário mexer na opção.
-  const setPayment = (e) => {
-    const paymentMethod = e.target.value;
+  const setPayment = (paymentMethod) =>
     setForm((f) => ({ ...f, paymentMethod, autoCharge: autoTouched ? f.autoCharge : paymentMethod === 'Cartão' }));
-  };
-  const setFlag = (field) => (e) => {
-    const { checked } = e.target;
+  const setFlag = (field) => (checked) => {
     if (field === 'autoCharge') setAutoTouched(true);
     setForm((f) => ({ ...f, [field]: checked }));
+  };
+  const setPrice = (text) => {
+    const n = parseMoneyInput(text);
+    setForm((f) => ({ ...f, price: n > 0 ? String(n) : '' }));
   };
   const pick = (app) => {
     const next = emptyForm(app);
@@ -66,16 +70,16 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
   };
   const toggleShared = (id) =>
     setForm((f) => ({ ...f, sharedWith: f.sharedWith.includes(id) ? f.sharedWith.filter((x) => x !== id) : [...f.sharedWith, id] }));
-  const addPerson = () => {
-    const found = resolvePerson(people, personName);
+  const addPerson = (name) => {
+    const found = resolvePerson(people, name);
     if (!found) return;
     if (found.isNew) onAddPerson(found.person);
     setForm((f) => (f.sharedWith.includes(found.person.id) ? f : { ...f, sharedWith: [...f.sharedWith, found.person.id] }));
-    setPersonName('');
   };
   const validShared = form.sharedWith.filter((id) => people.some((p) => p.id === id));
   const cycleInfo = CYCLES[form.cycle];
-  const monthlyHint = form.cycle !== 'monthly' && parseFloat(form.price) > 0 ? annualAmount(form) / 12 : 0;
+  const priceNumber = parseFloat(form.price) || 0;
+  const monthlyHint = form.cycle !== 'monthly' && priceNumber > 0 ? annualAmount(form) / 12 : 0;
   const searching = query.trim().length >= 2;
   const nameMissing = !form.name.trim();
 
@@ -125,153 +129,91 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
           domId={startsAtDetails ? 'add-modal' : undefined}
           title={isEdit ? 'Editar assinatura' : 'Nova assinatura'}
           dirty={dirty}
-          focusFirst
           onClose={startsAtDetails ? onClose : () => setStep(1)}
         >
           <div id="modal-step-2">
-            <h2 className="section-heading first">Serviço</h2>
+            <EditableHero
+              label="Serviço"
+              value={form.name.trim()}
+              placeholder="Nome do serviço"
+              logo={<Logo domain={form.domain} name={form.name.trim() || '?'} className="ds-hero-logo" />}
+              data-edit="name"
+              onEdit={() => setEditing('name')}
+            />
+            <EditableHero
+              label="Valor"
+              value={priceNumber > 0 ? brl(priceNumber) : ''}
+              placeholder="R$ 0,00"
+              size="display"
+              suffix={`por ${cycleInfo.unit}`}
+              data-edit="price"
+              onEdit={() => setEditing('price')}
+            />
+            {monthlyHint > 0 && <p className="ds-help" id="add-monthly-hint">≈ {brl(monthlyHint)} por mês</p>}
 
-            <div className="form-group">
-              <label htmlFor="add-name">Serviço</label>
-              <input type="text" id="add-name" value={form.name} onChange={set('name')} />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="add-cycle">Cobrança</label>
-              <select id="add-cycle" value={form.cycle} onChange={set('cycle')}>
-                {Object.entries(CYCLES).map(([key, c]) => (
-                  <option key={key} value={key}>{c.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="add-price">Valor cobrado por {cycleInfo.unit} (R$)</label>
-              <input
-                type="number"
-                inputMode="decimal"
-                id="add-price"
-                step="0.01"
-                min="0"
-                placeholder="0,00"
-                value={form.price}
-                onChange={set('price')}
-              />
-              {monthlyHint > 0 && <small className="text-muted" id="add-monthly-hint">≈ {brl(monthlyHint)} por mês</small>}
-            </div>
-
-            <div className="form-row">
+            <SectionTitle>Plano</SectionTitle>
+            <SettingList>
+              <SettingRow key="cycle" label="Cobrança" value={cycleInfo.label} data-edit="cycle" onClick={() => setEditing('cycle')} />
               {form.cycle === 'weekly' ? (
-                <div className="form-group">
-                  <label htmlFor="add-due-weekday">Dia da semana</label>
-                  <select id="add-due-weekday" value={form.dueWeekday} onChange={set('dueWeekday')}>
-                    <option value="">Selecione</option>
-                    {WEEKDAYS.map((w, i) => (
-                      <option key={w} value={String(i)}>{w}</option>
-                    ))}
-                  </select>
-                </div>
+                <SettingRow
+                  key="weekday"
+                  label="Dia da semana"
+                  value={form.dueWeekday === '' ? 'Escolher' : WEEKDAYS[Number(form.dueWeekday)]}
+                  data-edit="due-weekday"
+                  onClick={() => setEditing('due-weekday')}
+                />
               ) : (
-                <div className="form-group">
-                  <label htmlFor="add-due-date">Vencimento (Dia)</label>
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    id="add-due-date"
-                    min="1"
-                    max="31"
-                    placeholder="Ex: 10"
-                    value={form.dueDate}
-                    onChange={set('dueDate')}
-                  />
-                </div>
+                <SettingRow
+                  key="day"
+                  label="Dia do vencimento"
+                  value={form.dueDate ? `Dia ${form.dueDate}` : 'Informar'}
+                  data-edit="due-date"
+                  onClick={() => setEditing('due-date')}
+                />
               )}
               {form.cycle === 'yearly' && (
-                <div className="form-group">
-                  <label htmlFor="add-due-month">Vencimento (Mês)</label>
-                  <select id="add-due-month" value={form.dueMonth} onChange={set('dueMonth')}>
-                    <option value="">Selecione</option>
-                    {MONTHS.map((m, i) => (
-                      <option key={m} value={String(i + 1)}>{m}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            <h2 className="section-heading">Pagamento</h2>
-
-            <div className="form-group">
-              <label htmlFor="add-payment">Método</label>
-              <select id="add-payment" value={form.paymentMethod} onChange={setPayment}>
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group" id="charge-options">
-              <label className="check-row" htmlFor="add-auto">
-                <input id="add-auto" type="checkbox" checked={form.autoCharge} onChange={setFlag('autoCharge')} />
-                <span>Cobrança automática <small className="text-muted">(cartão ou débito: não precisa marcar “Paguei”)</small></span>
-              </label>
-            </div>
-
-            <h2 className="section-heading">Divisão</h2>
-
-            <div className="form-group" id="shared-with">
-              <label htmlFor="add-person">Dividido com</label>
-              {people.length > 0 && (
-                <div className="profile-pills" role="group" aria-label="Pessoas">
-                  {people.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      className={`category-pill${form.sharedWith.includes(p.id) ? ' active' : ''}`}
-                      aria-pressed={form.sharedWith.includes(p.id)}
-                      onClick={() => toggleShared(p.id)}
-                    >
-                      {p.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className="person-add">
-                <input
-                  type="text"
-                  id="add-person"
-                  maxLength={40}
-                  placeholder="Adicionar pessoa"
-                  value={personName}
-                  onChange={(e) => setPersonName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addPerson();
-                    }
-                  }}
+                <SettingRow
+                  key="month"
+                  label="Mês do vencimento"
+                  value={form.dueMonth === '' ? 'Escolher' : MONTHS[Number(form.dueMonth) - 1]}
+                  data-edit="due-month"
+                  onClick={() => setEditing('due-month')}
                 />
-                <button type="button" className="btn-sm" onClick={addPerson}>Adicionar</button>
-              </div>
-              {validShared.length > 0 && parseFloat(form.price) > 0 && (
-                <small className="text-muted" id="add-share-hint">
-                  Sua parte: {brl(parseFloat(form.price) / (validShared.length + 1))} por {cycleInfo.unit}
-                </small>
               )}
-            </div>
+              <SettingRow key="payment" label="Pagamento" value={form.paymentMethod} data-edit="payment" onClick={() => setEditing('payment')} />
+              <SettingRow
+                key="auto"
+                label="Cobrança automática"
+                hint="Cartão ou débito: não precisa marcar “Paguei”"
+                switchId="add-auto"
+                switchChecked={form.autoCharge}
+                onSwitch={setFlag('autoCharge')}
+              />
+            </SettingList>
 
-            <h2 className="section-heading">Avisos</h2>
-
-            <div className="form-group">
-              <label className="check-row" htmlFor="add-muted">
-                <input id="add-muted" type="checkbox" checked={form.muted} onChange={setFlag('muted')} />
-                <span>Não avisar desta assinatura</span>
-              </label>
+            <SectionTitle>Divisão</SectionTitle>
+            <div id="shared-with" role="group" aria-label="Dividido com">
+              {people.map((person) => (
+                <Chip key={person.id} selected={form.sharedWith.includes(person.id)} onClick={() => toggleShared(person.id)}>
+                  {person.name}
+                </Chip>
+              ))}
+              <Chip data-edit="person" onClick={() => setEditing('person')}>+ Adicionar pessoa</Chip>
             </div>
+            {validShared.length > 0 && priceNumber > 0 && (
+              <p className="ds-help" id="add-share-hint">
+                Sua parte: {brl(priceNumber / (validShared.length + 1))} por {cycleInfo.unit}
+              </p>
+            )}
+
+            <SectionTitle>Avisos</SectionTitle>
+            <SettingList>
+              <SettingRow key="muted" label="Não avisar desta assinatura" switchId="add-muted" switchChecked={form.muted} onSwitch={setFlag('muted')} />
+            </SettingList>
 
             {isEdit && (
-              <div className="form-group" id="payment-history">
-                <h2 className="section-heading">Histórico</h2>
+              <div id="payment-history">
+                <SectionTitle>Histórico</SectionTitle>
                 {paymentsNewestFirst(sub).length === 0 ? (
                   <p className="text-muted">Nenhum pagamento registrado.</p>
                 ) : (
@@ -294,16 +236,15 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
               </div>
             )}
 
-            {nameMissing && <p className="text-muted save-hint" id="save-hint">Informe o nome do serviço</p>}
-            <button
-              type="button"
-              className="btn btn-primary"
+            {nameMissing && <p className="ds-help save-hint" id="save-hint">Informe o nome do serviço</p>}
+            <Button
+              className="mt-20"
               disabled={nameMissing}
               aria-describedby={nameMissing ? 'save-hint' : undefined}
               onClick={() => onSave(buildSub(isEdit ? sub : null, form), { source })}
             >
               Salvar Assinatura
-            </button>
+            </Button>
 
             {isEdit && (
               <div className="risk-zone">
@@ -311,6 +252,92 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
               </div>
             )}
           </div>
+
+          {editing === 'name' && (
+            <FieldEditor id="name" title="Nome do serviço" label="Serviço" value={form.name} maxLength={60} onSave={set('name')} onClose={() => setEditing(null)} />
+          )}
+          {editing === 'price' && (
+            <FieldEditor
+              id="price"
+              title={`Valor por ${cycleInfo.unit}`}
+              label="Valor cobrado"
+              prefix="R$"
+              value={moneyToInput(priceNumber)}
+              placeholder="0,00"
+              help={`Quanto é cobrado por ${cycleInfo.unit}, em reais.`}
+              validate={(v) => (parseMoneyInput(v) === null ? 'Informe um valor válido, como 29,90.' : '')}
+              onSave={setPrice}
+              onClose={() => setEditing(null)}
+            />
+          )}
+          {editing === 'cycle' && (
+            <OptionEditor
+              id="cycle"
+              title="Cobrança"
+              options={Object.entries(CYCLES).map(([value, c]) => ({ value, label: c.label }))}
+              value={form.cycle}
+              onSave={set('cycle')}
+              onClose={() => setEditing(null)}
+            />
+          )}
+          {editing === 'due-date' && (
+            <FieldEditor
+              id="due-date"
+              title="Dia do vencimento"
+              label="Dia do mês"
+              inputMode="numeric"
+              maxLength={2}
+              placeholder="Ex: 10"
+              value={form.dueDate}
+              validate={(v) => (v === '' || (/^\d{1,2}$/.test(v) && Number(v) >= 1 && Number(v) <= 31) ? '' : 'Informe um dia de 1 a 31.')}
+              onSave={set('dueDate')}
+              onClose={() => setEditing(null)}
+            />
+          )}
+          {editing === 'due-weekday' && (
+            <OptionEditor
+              id="due-weekday"
+              title="Dia da semana"
+              options={WEEKDAYS.map((label, i) => ({ value: String(i), label }))}
+              value={form.dueWeekday}
+              onSave={set('dueWeekday')}
+              onClose={() => setEditing(null)}
+            />
+          )}
+          {editing === 'due-month' && (
+            <OptionEditor
+              id="due-month"
+              title="Mês do vencimento"
+              options={MONTHS.map((label, i) => ({ value: String(i + 1), label }))}
+              value={form.dueMonth}
+              onSave={set('dueMonth')}
+              onClose={() => setEditing(null)}
+            />
+          )}
+          {editing === 'payment' && (
+            <OptionEditor
+              id="payment"
+              title="Pagamento"
+              options={PAYMENT_METHODS.map((m) => ({ value: m, label: m }))}
+              value={form.paymentMethod}
+              onSave={setPayment}
+              onClose={() => setEditing(null)}
+            />
+          )}
+          {editing === 'person' && (
+            <FieldEditor
+              id="person"
+              title="Adicionar pessoa"
+              label="Nome"
+              maxLength={40}
+              placeholder="Ex: Ana"
+              value=""
+              help="A pessoa passa a dividir esta assinatura com você."
+              validate={(v) => (v.trim() ? '' : 'Informe um nome.')}
+              onSave={addPerson}
+              onClose={() => setEditing(null)}
+            />
+          )}
         </DetailScreen>
       )}
     </>

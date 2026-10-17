@@ -17,12 +17,23 @@ export function Button({ variant = 'primary', size = 'md', href, className, chil
   return <button type="button" className={classes} {...rest}>{children}</button>;
 }
 
-/** Herói editável: o valor em texto grande com lápis; tocar abre o editor (`onEdit`). `size`: title-lg | display. */
-export function EditableHero({ label, value, placeholder = 'Toque para editar', size = 'title-lg', onEdit }) {
+/**
+ * Herói editável: o valor em texto grande com lápis; tocar abre o editor (`onEdit`). `size`: title-lg | display.
+ * `logo`: imagem à esquerda do texto. `suffix`: unidade pequena depois do valor (ex.: "por mês").
+ */
+export function EditableHero({ label, value, placeholder = 'Toque para editar', size = 'title-lg', logo, suffix, onEdit, ...rest }) {
   const empty = !value;
   return (
-    <button type="button" className={cx('ds-hero', `ds-hero-${size}`)} aria-label={`${label}: ${empty ? 'vazio' : value}. Editar`} onClick={onEdit}>
+    <button
+      type="button"
+      className={cx('ds-hero', `ds-hero-${size}`, logo && 'ds-hero-has-logo')}
+      aria-label={`${label}: ${empty ? 'vazio' : value}${suffix ? ` ${suffix}` : ''}. Editar`}
+      onClick={onEdit}
+      {...rest}
+    >
+      {logo}
       <span className={cx('ds-hero-value', empty && 'ds-hero-empty')}>{empty ? placeholder : value}</span>
+      {suffix && <span className="ds-hero-suffix">{suffix}</span>}
       <span className="ds-hero-pencil" aria-hidden="true">✎</span>
     </button>
   );
@@ -34,17 +45,20 @@ export function Switch({ checked, onChange, ...rest }) {
 }
 
 /** Linha de configuração: rótulo, valor e chevron (abre o editor). Com `switchChecked`, vira a variante com switch. */
-export function SettingRow({ label, value, onClick, switchChecked, onSwitch }) {
+export function SettingRow({ label, hint, value, onClick, switchChecked, onSwitch, switchId, ...rest }) {
   if (switchChecked !== undefined) {
     return (
-      <label className="ds-row">
-        <span className="ds-row-label">{label}</span>
-        <Switch checked={switchChecked} onChange={onSwitch} />
+      <label className="ds-row ds-row-switch" htmlFor={switchId}>
+        <span className="ds-row-label">
+          {label}
+          {hint && <span className="ds-row-hint">{hint}</span>}
+        </span>
+        <Switch id={switchId} checked={switchChecked} onChange={onSwitch} {...rest} />
       </label>
     );
   }
   return (
-    <button type="button" className="ds-row" onClick={onClick}>
+    <button type="button" className="ds-row" onClick={onClick} {...rest}>
       <span className="ds-row-label">{label}</span>
       <span className="ds-row-value">{value}</span>
       <span className="ds-row-chevron" aria-hidden="true">›</span>
@@ -95,8 +109,9 @@ export function OptionList({ label, options, value, onChange }) {
 }
 
 /** Chip de filtro ou escolha múltipla (categorias, pessoas). */
-export function Chip({ selected = false, onClick, children }) {
-  return <button type="button" className="ds-chip" aria-pressed={selected} onClick={onClick}>{children}</button>;
+export function Chip({ selected, onClick, children, ...rest }) {
+  // Sem `selected` o chip é um botão comum (ex.: "+ Adicionar pessoa"); com ele, vira alternância (aria-pressed).
+  return <button type="button" className="ds-chip" aria-pressed={selected} onClick={onClick} {...rest}>{children}</button>;
 }
 
 /** Card de item (assinatura): nome, linha de detalhes (`meta`, ex.: badges) e valor à direita. */

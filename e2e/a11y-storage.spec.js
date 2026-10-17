@@ -1,10 +1,11 @@
-import { test, expect, seed, withSubs, sampleSubs } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, editText } from './fixtures.js';
 
 const inside = (page, selector) => page.evaluate((s) => !!document.activeElement?.closest(s), selector);
 
 // Desktop: foco inicial no primeiro campo. Mobile (toque): no ←, para não abrir o teclado sozinho.
 const expectInitialFocus = async (page, field, isMobile) => {
-  if (isMobile) await expect(page.getByRole('button', { name: 'Voltar' }).last()).toBeFocused();
+  // field nulo: tela sem campo para focar (passo 2 do cadastro), o foco inicial é o ← em qualquer aparelho.
+  if (isMobile || !field) await expect(page.getByRole('button', { name: 'Voltar' }).last()).toBeFocused();
   else await expect(page.locator(field)).toBeFocused();
 };
 
@@ -15,7 +16,7 @@ test.describe('foco do modal', () => {
     await card.focus();
     await page.keyboard.press('Enter');
 
-    await expectInitialFocus(page, '#add-name', isMobile);
+    await expectInitialFocus(page, null, isMobile);
     expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden');
 
     for (let i = 0; i < 25; i += 1) {
@@ -39,8 +40,8 @@ test.describe('foco do modal', () => {
     await open.click();
     await expectInitialFocus(page, '#modal-search-input', isMobile);
     await page.getByRole('button', { name: '+ Inserir Dados Manualmente' }).click();
-    await expectInitialFocus(page, '#add-name', isMobile);
-    await page.fill('#add-name', 'Teste Foco');
+    await expectInitialFocus(page, null, isMobile);
+    await editText(page, 'name', 'Teste Foco');
     await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
     await expect(page.locator('#add-modal')).toHaveCount(0);
 
@@ -87,7 +88,7 @@ test.describe('armazenamento persistente', () => {
     for (const name of ['Primeira', 'Segunda']) {
       await page.getByRole('button', { name: /Cadastrar assinatura|Adicionar assinatura/ }).first().click();
       await page.getByRole('button', { name: '+ Inserir Dados Manualmente' }).click();
-      await page.fill('#add-name', name);
+      await editText(page, 'name', name);
       await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
       await expect(page.locator('.sub-card', { hasText: name })).toBeVisible();
     }

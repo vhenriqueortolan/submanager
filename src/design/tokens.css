@@ -75,7 +75,7 @@
   --switch-width: 51px;
   --switch-height: 31px;
   --switch-knob: 27px;
-  --check-size: 22px;
+  --logo-size: 48px; /* logo do serviço no herói */
   --badge-tint: 16%; /* mistura da cor de status com transparente nos fundos de badge e banner */
 
   /* ---------- Movimento ---------- */

@@ -14,6 +14,9 @@
 .ds-hero-title-lg { font: var(--text-title-lg); letter-spacing: var(--letter-spacing-title); }
 .ds-hero-display { font: var(--text-display); letter-spacing: var(--letter-spacing-title); }
 .ds-hero-value { overflow-wrap: anywhere; }
+.ds-hero-has-logo { align-items: center; }
+.ds-hero-logo { flex: none; width: var(--logo-size); height: var(--logo-size); border-radius: var(--radius-control); object-fit: cover; }
+.ds-hero-suffix { flex: none; font: var(--text-body); color: var(--color-text-muted); letter-spacing: 0; }
 .ds-hero-empty { color: var(--color-text-muted); }
 .ds-hero-pencil { flex: none; color: var(--color-text-muted); font: var(--text-body); }
 
@@ -24,6 +27,7 @@
 .ds-row:hover { background: var(--color-surface-raised); }
 .ds-row-label { flex: none; }
 .ds-row-value { min-width: 0; margin-left: auto; text-align: right; color: var(--color-text-muted); overflow-wrap: anywhere; }
+.ds-row-hint { display: block; margin-top: var(--space-1); font: var(--text-caption); color: var(--color-text-muted); }
 .ds-row-chevron { flex: none; color: var(--color-text-muted); }
 
 /* ---------- Campo ---------- */

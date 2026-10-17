@@ -58,7 +58,7 @@ test('exportar gera o backup e importar substitui os dados após confirmação',
   await expect(page.getByRole('status')).toContainText('Backup importado.');
   await page.getByRole('button', { name: 'Voltar' }).click();
   await page.getByRole('button', { name: /^Meu perfil./ }).click();
-  await expect(page.locator('#prof-name')).toHaveValue('Importado');
+  await expect(page.locator('[data-edit="profile-name"]')).toContainText('Importado');
   expect((await readStorage(page)).subs.map((s) => s.name)).toEqual(['Zeta']);
 });
 

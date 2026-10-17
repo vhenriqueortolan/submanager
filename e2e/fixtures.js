@@ -100,3 +100,23 @@ export async function openProfileScreen(page, title) {
   await page.locator('.bottom-nav').getByRole('button', { name: 'Perfil' }).click();
   await page.getByRole('button', { name: new RegExp(`^${title}\\.`) }).click();
 }
+
+// ---------- formulários (folhas de edição do Design System) ----------
+/** Botão (herói ou linha) que abre o editor de um campo: data-edit="name" | "price" | "cycle" | "due-date" ... */
+export const editTrigger = (page, key) => page.locator(`[data-edit="${key}"]`);
+
+/** Abre o editor de texto/valor/dia, digita e confirma com Enter; espera a folha fechar. */
+export async function editText(page, key, text) {
+  await editTrigger(page, key).click();
+  const field = page.locator(`#editor-${key}-field`);
+  await field.fill(text);
+  await field.press('Enter');
+  await page.locator('.ds-sheet').waitFor({ state: 'detached' });
+}
+
+/** Abre o editor de escolha única e toca na opção (o nome visível, ex.: 'Anual'); espera a folha fechar. */
+export async function pickOption(page, key, label) {
+  await editTrigger(page, key).click();
+  await page.locator('.ds-sheet').getByRole('radio', { name: label, exact: true }).click();
+  await page.locator('.ds-sheet').waitFor({ state: 'detached' });
+}

@@ -1,17 +1,15 @@
-import { test, expect, seed, withSubs, readStorage, openProfileScreen } from './fixtures.js';
+import { test, expect, seed, withSubs, readStorage, openProfileScreen, editText } from './fixtures.js';
 
 const tab = (page, name) => page.locator('.bottom-nav').getByRole('button', { name });
 
 async function addSplitNetflix(page) {
   await page.getByRole('button', { name: '+ Cadastrar assinatura' }).click();
   await page.getByRole('button', { name: '+ Inserir Dados Manualmente' }).click();
-  await page.fill('#add-name', 'Netflix');
-  await page.fill('#add-price', '39.9');
-  await page.fill('#add-due-date', '12');
-  await page.fill('#add-person', 'Ana');
-  await page.press('#add-person', 'Enter'); // Enter confirma e não salva a assinatura
-  await page.fill('#add-person', '  bruno ');
-  await page.getByRole('button', { name: 'Adicionar', exact: true }).click();
+  await editText(page, 'name', 'Netflix');
+  await editText(page, 'price', '39.9');
+  await editText(page, 'due-date', '12');
+  await editText(page, 'person', 'Ana'); // Enter confirma e não salva a assinatura
+  await editText(page, 'person', '  bruno ');
   await expect(page.locator('#add-share-hint')).toContainText('13,30');
   await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
 }
@@ -38,8 +36,8 @@ test('sem divisão, não mostra o total dos serviços', async ({ page }) => {
   await seed(page, withSubs([]));
   await page.getByRole('button', { name: '+ Cadastrar assinatura' }).click();
   await page.getByRole('button', { name: '+ Inserir Dados Manualmente' }).click();
-  await page.fill('#add-name', 'Solo');
-  await page.fill('#add-price', '20');
+  await editText(page, 'name', 'Solo');
+  await editText(page, 'price', '20');
   await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
   await expect(page.locator('#total-month')).toContainText('20,00');
   await expect(page.locator('#total-services')).toHaveCount(0);
@@ -49,9 +47,8 @@ test('nome repetido reutiliza a pessoa (sem diferenciar maiúsculas)', async ({ 
   await seed(page, withSubs([], { people: [{ id: 'p1', name: 'Ana' }] }));
   await page.getByRole('button', { name: '+ Cadastrar assinatura' }).click();
   await page.getByRole('button', { name: '+ Inserir Dados Manualmente' }).click();
-  await page.fill('#add-name', 'Spotify');
-  await page.fill('#add-person', 'ANA');
-  await page.press('#add-person', 'Enter');
+  await editText(page, 'name', 'Spotify');
+  await editText(page, 'person', 'ANA');
   await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
   const st = await readStorage(page);
   expect(st.people).toHaveLength(1);

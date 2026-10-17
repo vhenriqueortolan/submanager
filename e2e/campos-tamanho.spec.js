@@ -1,4 +1,4 @@
-import { test, expect, seed, withSubs, sampleSubs, openProfileScreen } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, openProfileScreen, editTrigger } from './fixtures.js';
 
 // Campos com menos de 16px fazem o Safari do iPhone dar zoom ao focar. Vale para toda tela com campos.
 async function expectFieldsAtLeast16px(page) {
@@ -17,8 +17,15 @@ test('cadastro: campos dos passos 1 e 2 têm 16px ou mais', async ({ page }) => 
   await page.getByRole('button', { name: '+ Cadastrar assinatura' }).click();
   expect(await expectFieldsAtLeast16px(page)).toBeGreaterThan(0);
   await page.getByRole('button', { name: '+ Inserir Dados Manualmente' }).click();
-  await expect(page.locator('#add-name')).toBeVisible();
-  expect(await expectFieldsAtLeast16px(page)).toBeGreaterThan(0);
+  await expect(editTrigger(page, 'name')).toBeVisible();
+  // O passo 2 não tem caixas abertas: os campos vivem nas folhas de edição.
+  for (const key of ['name', 'price', 'due-date', 'person']) {
+    await editTrigger(page, key).click();
+    await expect(page.locator('.ds-sheet input')).toBeVisible();
+    expect(await expectFieldsAtLeast16px(page)).toBeGreaterThan(0);
+    await page.getByRole('button', { name: 'Cancelar' }).click();
+    await expect(page.locator('.ds-sheet')).toHaveCount(0);
+  }
 });
 
 for (const title of ['Meu perfil', 'Orçamento', 'Notificações', 'Dados e privacidade']) {
@@ -27,5 +34,11 @@ for (const title of ['Meu perfil', 'Orçamento', 'Notificações', 'Dados e priv
     await openProfileScreen(page, title);
     await expect(page.locator('.detail-screen')).toBeVisible();
     await expectFieldsAtLeast16px(page);
+    const key = { 'Meu perfil': 'profile-name', Orçamento: 'budget' }[title];
+    if (key) {
+      await editTrigger(page, key).click();
+      await expect(page.locator('.ds-sheet input')).toBeVisible();
+      expect(await expectFieldsAtLeast16px(page)).toBeGreaterThan(0);
+    }
   });
 }

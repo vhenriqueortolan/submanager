@@ -1,4 +1,4 @@
-import { test, expect, seed, withSubs, sampleSubs, readStorage } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, readStorage, editText, pickOption, editTrigger } from './fixtures.js';
 
 const ATRASADA = /Atrasada · \d+d/;
 
@@ -10,16 +10,16 @@ async function openManualForm(page) {
 test('cadastra assinatura anual com dia, mês e equivalente mensal', async ({ page }) => {
   await seed(page, withSubs([]));
   await openManualForm(page);
-  await expect(page.locator('#add-cycle')).toHaveValue('monthly');
-  await expect(page.getByLabel('Valor cobrado por mês (R$)')).toBeVisible();
+  await expect(editTrigger(page, 'cycle')).toContainText("Mensal");
+  await expect(editTrigger(page, 'price')).toContainText('por mês');
 
-  await page.fill('#add-name', 'Seguro Anual');
-  await page.selectOption('#add-cycle', 'yearly');
-  await expect(page.getByLabel('Valor cobrado por ano (R$)')).toBeVisible();
-  await page.fill('#add-price', '120');
+  await editText(page, 'name', 'Seguro Anual');
+  await pickOption(page, 'cycle', 'Anual');
+  await expect(editTrigger(page, 'price')).toContainText('por ano');
+  await editText(page, 'price', '120');
   await expect(page.locator('#add-monthly-hint')).toContainText('10,00');
-  await page.fill('#add-due-date', '15');
-  await page.selectOption('#add-due-month', '3');
+  await editText(page, 'due-date', '15');
+  await pickOption(page, 'due-month', 'Março');
   await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
 
   const card = page.locator('.sub-card', { hasText: 'Seguro Anual' });
@@ -30,22 +30,22 @@ test('cadastra assinatura anual com dia, mês e equivalente mensal', async ({ pa
 
   // edição: valores aparecem preenchidos
   await card.click();
-  await expect(page.locator('#add-cycle')).toHaveValue('yearly');
-  await expect(page.locator('#add-price')).toHaveValue('120');
-  await expect(page.locator('#add-due-date')).toHaveValue('15');
-  await expect(page.locator('#add-due-month')).toHaveValue('3');
+  await expect(editTrigger(page, 'cycle')).toContainText("Anual");
+  await expect(editTrigger(page, 'price')).toContainText("120,00");
+  await expect(editTrigger(page, 'due-date')).toContainText("Dia 15");
+  await expect(editTrigger(page, 'due-month')).toContainText("Março");
 });
 
 test('cadastra assinatura semanal com dia da semana', async ({ page }) => {
   await seed(page, withSubs([]));
   await openManualForm(page);
-  await page.fill('#add-name', 'Faxina');
-  await page.selectOption('#add-cycle', 'weekly');
-  await expect(page.locator('#add-due-date')).toHaveCount(0);
-  await expect(page.getByLabel('Dia da semana')).toBeVisible();
-  await page.fill('#add-price', '10');
+  await editText(page, 'name', 'Faxina');
+  await pickOption(page, 'cycle', 'Semanal');
+  await expect(editTrigger(page, 'due-date')).toHaveCount(0);
+  await expect(editTrigger(page, 'due-weekday')).toBeVisible();
+  await editText(page, 'price', '10');
   await expect(page.locator('#add-monthly-hint')).toContainText('43,33');
-  await page.selectOption('#add-due-weekday', '2');
+  await pickOption(page, 'due-weekday', 'Terça');
   await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
 
   const card = page.locator('.sub-card', { hasText: 'Faxina' });
@@ -55,8 +55,8 @@ test('cadastra assinatura semanal com dia da semana', async ({ page }) => {
   await expect(card).not.toContainText(ATRASADA);
 
   await card.click();
-  await expect(page.locator('#add-cycle')).toHaveValue('weekly');
-  await expect(page.locator('#add-due-weekday')).toHaveValue('2');
+  await expect(editTrigger(page, 'cycle')).toContainText("Semanal");
+  await expect(editTrigger(page, 'due-weekday')).toContainText("Terça");
 });
 
 test('trocar o ciclo de uma assinatura atrasada não gera atraso falso', async ({ page }) => {
@@ -65,9 +65,9 @@ test('trocar o ciclo de uma assinatura atrasada não gera atraso falso', async (
   await expect(card).toContainText(ATRASADA);
 
   await card.click();
-  await page.selectOption('#add-cycle', 'yearly');
-  await page.fill('#add-due-date', '1');
-  await page.selectOption('#add-due-month', '1');
+  await pickOption(page, 'cycle', 'Anual');
+  await editText(page, 'due-date', '1');
+  await pickOption(page, 'due-month', 'Janeiro');
   await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
 
   await expect(page.locator('.sub-card', { hasText: 'AtrasadaApp' })).not.toContainText(ATRASADA);
