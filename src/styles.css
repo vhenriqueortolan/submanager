@@ -226,3 +226,12 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .money-field { position: relative; }
 .money-prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
 .money-field input { padding-left: 44px; }
+
+/* ---------- Divisão ---------- */
+.person-item { border-bottom: 1px solid var(--border); }
+.person-item .payment-row { border-bottom: none; }
+.person-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.person-count { font-size: 0.8rem; }
+.person-actions { display: flex; gap: 8px; flex: none; }
+.person-edit { padding: 8px 0; }
+.person-error { font-size: 0.85rem; margin-top: 6px; }

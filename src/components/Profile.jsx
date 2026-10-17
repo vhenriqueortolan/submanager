@@ -10,7 +10,7 @@ import { aboutSummary, budgetSummary, dataSummary, notificationsSummary, profile
 import pkg from '../../package.json';
 
 /** Hub do Perfil: cinco linhas, cada uma abre uma tela de detalhe com uma responsabilidade só. */
-export default function Profile({ state, permission, onEnableNotifications, onSaveProfile, onExport, onImport, onRemovePerson, onSettings, onClearData }) {
+export default function Profile({ state, permission, onEnableNotifications, onSaveProfile, onExport, onImport, onAddPerson, onRenamePerson, onRemovePerson, onSettings, onClearData }) {
   const [screen, setScreen] = useState(null);
   const close = () => setScreen(null);
   const feedbackUrl = buildFeedbackUrl(FEEDBACK_FORM, { version: pkg.version, platform: platformOf(navigator.userAgent) });
@@ -54,6 +54,8 @@ export default function Profile({ state, permission, onEnableNotifications, onSa
           state={state}
           onClose={close}
           onSave={({ budget }) => onSaveProfile({ name: state.name, budget, interests: state.interests })}
+          onAddPerson={onAddPerson}
+          onRenamePerson={onRenamePerson}
           onRemovePerson={onRemovePerson}
         />
       )}

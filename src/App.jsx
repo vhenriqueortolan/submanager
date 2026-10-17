@@ -207,6 +207,8 @@ export default function App() {
             notify('Perfil salvo com sucesso!');
           }}
           onExport={handleExport}
+          onAddPerson={(person) => dispatch({ type: 'addPerson', person })}
+          onRenamePerson={(id, name) => dispatch({ type: 'renamePerson', id, name })}
           onRemovePerson={handleRemovePerson}
           onClearData={handleClearData}
           onSettings={(patch) => dispatch({ type: 'updateSettings', patch })}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { normalizeSettings } from '../lib/settings.js';
-import { removePersonFromState } from '../lib/people.js';
+import { removePersonFromState, renamePerson } from '../lib/people.js';
 import { addPayment, removePayment } from '../lib/payments.js';
 import { clearAllData, defaultState, loadState, saveState, STORAGE_KEY } from '../lib/storage.js';
 
@@ -56,6 +56,11 @@ function reducer(state, action) {
       return state.people.some((p) => p.id === action.person.id)
         ? state
         : { ...state, people: [...state.people, action.person] };
+
+    case 'renamePerson': {
+      const result = renamePerson(state.people, action.id, action.name);
+      return result.people ? { ...state, people: result.people } : state;
+    }
 
     case 'removePerson':
       return removePersonFromState(state, action.id);
