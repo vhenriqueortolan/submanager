@@ -31,7 +31,7 @@ function EmptyHero({ greeting, onAdd }) {
       <div className="empty-icon" aria-hidden="true">📭</div>
       <h2>Nenhuma assinatura ainda</h2>
       <p className="text-muted">
-        Cadastre os serviços que você paga para acompanhar gastos, vencimentos e o seu teto mensal.
+        Cadastre os serviços que você paga para acompanhar gastos, vencimentos e o seu orçamento mensal.
       </p>
       <button type="button" className="btn btn-primary" onClick={onAdd}>+ Cadastrar assinatura</button>
     </div>
