@@ -21,10 +21,13 @@ test('lista mostra quantas assinaturas são divididas com cada pessoa', async ({
 test('adicionar pessoa (botão e Enter) aplica na hora e aparece em "Dividido com" no cadastro', async ({ page }) => {
   await seed(page, withSubs([], { people }));
   await openProfileScreen(page, 'Orçamento');
-  await page.fill('#divisao-add', '  Carla ');
-  await section(page).getByRole('button', { name: 'Adicionar', exact: true }).click();
-  await page.fill('#divisao-add', 'Davi');
-  await page.press('#divisao-add', 'Enter');
+  // Sprint 6: "Adicionar pessoa" abre a folha (nome, país, telefone, e-mail); Pronto ou Enter salvam.
+  await page.locator('#divisao-add').click();
+  await page.fill('#person-name', '  Carla ');
+  await page.getByRole('button', { name: 'Pronto' }).click();
+  await page.locator('#divisao-add').click();
+  await page.fill('#person-name', 'Davi');
+  await page.press('#person-name', 'Enter');
   await expect(section(page)).toContainText('Carla');
   await expect(section(page)).toContainText('Davi');
   expect((await readStorage(page)).people.map((p) => p.name)).toEqual(['Ana', 'Bruno', 'Carla', 'Davi']);
@@ -40,18 +43,23 @@ test('adicionar pessoa (botão e Enter) aplica na hora e aparece em "Dividido co
 test('nome repetido ao adicionar é bloqueado', async ({ page }) => {
   await seed(page, withSubs([], { people }));
   await openProfileScreen(page, 'Orçamento');
-  await page.fill('#divisao-add', 'ana');
-  await page.press('#divisao-add', 'Enter');
-  await expect(section(page).getByRole('alert')).toHaveText('Já existe uma pessoa com esse nome');
+  await page.locator('#divisao-add').click();
+  await page.fill('#person-name', 'ana');
+  const sheet = page.getByRole('dialog', { name: 'Adicionar pessoa' });
+  await expect(sheet).toContainText('Já existe uma pessoa com esse nome');
+  await expect(sheet.getByRole('button', { name: 'Pronto' })).toBeDisabled();
+  await page.press('#person-name', 'Enter'); // Enter também não salva enquanto há erro
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole('button', { name: 'Cancelar' }).click();
   expect((await readStorage(page)).people).toHaveLength(2);
 });
 
 test('renomear reflete nas assinaturas divididas', async ({ page }) => {
   await seed(page, sharedState());
   await openProfileScreen(page, 'Orçamento');
-  await section(page).getByRole('button', { name: 'Renomear Ana' }).click();
-  await page.getByLabel('Novo nome de Ana').fill('Ana Paula');
-  await page.press('[aria-label="Novo nome de Ana"]', 'Enter');
+  await section(page).getByRole('button', { name: 'Editar Ana' }).click();
+  await page.fill('#person-name', 'Ana Paula');
+  await page.press('#person-name', 'Enter');
   await expect(section(page).locator('li').first()).toContainText('Ana Paula');
   await expect(section(page).locator('li').first()).toContainText('Divide 2 assinaturas');
 
@@ -68,11 +76,12 @@ test('renomear reflete nas assinaturas divididas', async ({ page }) => {
 test('renomear para nome de outra pessoa é bloqueado e Cancelar mantém o nome', async ({ page }) => {
   await seed(page, withSubs([], { people }));
   await openProfileScreen(page, 'Orçamento');
-  await section(page).getByRole('button', { name: 'Renomear Ana' }).click();
-  await page.getByLabel('Novo nome de Ana').fill('BRUNO');
-  await section(page).getByRole('button', { name: 'OK' }).click();
-  await expect(section(page).getByRole('alert')).toHaveText('Já existe uma pessoa com esse nome');
-  await section(page).getByRole('button', { name: 'Cancelar' }).click();
+  await section(page).getByRole('button', { name: 'Editar Ana' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Editar pessoa' });
+  await page.fill('#person-name', 'BRUNO');
+  await expect(sheet).toContainText('Já existe uma pessoa com esse nome');
+  await expect(sheet.getByRole('button', { name: 'Pronto' })).toBeDisabled();
+  await sheet.getByRole('button', { name: 'Cancelar' }).click();
   expect((await readStorage(page)).people.map((p) => p.name)).toEqual(['Ana', 'Bruno']);
 });
 

@@ -256,3 +256,12 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .pull-indicator { position: fixed; top: calc(-1 * var(--space-8) + env(safe-area-inset-top)); left: 0; right: 0; height: var(--space-8); display: flex; align-items: center; justify-content: center; z-index: 150; pointer-events: none; }
 .pull-spinner { width: var(--space-6); height: var(--space-6); border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; background: var(--bg); }
 .pull-spinner.spinning { animation: spin 0.8s linear infinite; }
+/* ---------- Contatos da Divisão ---------- */
+.person-open { background: none; border: none; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; flex: 1; width: auto; }
+.person-import { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+.ds-select { min-height: var(--field-height); font: var(--text-body); border-radius: var(--radius-control); }
+.review-list { list-style: none; padding: 0; margin: 0; }
+.review-item { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
+.review-item input[type="checkbox"] { width: var(--space-6); height: var(--space-6); flex: none; padding: 0; margin-top: var(--space-1); }
+.review-item label { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; overflow-wrap: anywhere; }
+.review-detail { font-size: var(--font-size-label); }

@@ -7,7 +7,7 @@ import Historico from '../Historico.jsx';
 import { EditableHero, SettingList, SettingRow } from '../../design/index.jsx';
 import { FieldEditor } from '../../design/Editors.jsx';
 
-export default function Orcamento({ state, onSave, onAddPerson, onRenamePerson, onRemovePerson, onUnpay, onClose }) {
+export default function Orcamento({ state, onSave, onAddPerson, onUpdatePerson, onRemovePerson, onUnpay, onClose }) {
   const [editing, setEditing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   // O valor salva ao confirmar a folha de edição (Pronto ou Enter); não há botão Salvar.
@@ -36,7 +36,7 @@ export default function Orcamento({ state, onSave, onAddPerson, onRenamePerson, 
         people={state.people}
         subs={state.subs}
         onAddPerson={onAddPerson}
-        onRenamePerson={onRenamePerson}
+        onUpdatePerson={onUpdatePerson}
         onRemovePerson={onRemovePerson}
       />
 

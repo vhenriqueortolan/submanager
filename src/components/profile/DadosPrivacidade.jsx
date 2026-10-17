@@ -33,8 +33,8 @@ export default function DadosPrivacidade({ state, onExport, onImport, onClearDat
         <h2 className="section-heading" id="privacy-title">Privacidade</h2>
         <ul className="privacy-list text-muted">
           <li>
-            <strong>Fica no aparelho:</strong> assinaturas, pessoas, pagamentos e preferências. Os nomes das pessoas
-            nunca são enviados.
+            <strong>Fica no aparelho:</strong> assinaturas, pessoas, pagamentos e preferências. Nomes, telefones e e-mails
+            das pessoas nunca são enviados.
           </li>
           <li>
             <strong>Sai do aparelho:</strong> apenas o que você escrever no formulário de feedback, junto com a versão

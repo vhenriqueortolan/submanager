@@ -215,7 +215,7 @@ export default function App() {
     onExport: handleExport,
     onImport: handleImport,
     onAddPerson: (person) => dispatch({ type: 'addPerson', person }),
-    onRenamePerson: (id, name) => dispatch({ type: 'renamePerson', id, name }),
+    onUpdatePerson: (id, input) => dispatch({ type: 'updatePerson', id, input }),
     onRemovePerson: handleRemovePerson,
     onSettings: (patch) => dispatch({ type: 'updateSettings', patch }),
     onClearData: handleClearData,

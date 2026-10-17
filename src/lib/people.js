@@ -93,3 +93,27 @@ export function renamePerson(people, id, rawName) {
   if (people.some((p) => p.id !== id && p.name.toLowerCase() === squeezed.toLowerCase())) return { error: 'duplicate' };
   return { people: people.map((p) => (p.id === id ? { ...p, name: squeezed } : p)) };
 }
+
+/**
+ * Pessoa nova com contato opcional. Devolve `{ person }`, ou `{ error }` ('empty' | 'too-long' | 'duplicate').
+ * `input`: { name, phone?, phoneCountry?, email? }, com o telefone já em formato internacional.
+ */
+export function newPerson(people, input) {
+  const squeezed = String(input?.name ?? '').trim().replace(/\s+/g, ' ');
+  if (!squeezed) return { error: 'empty' };
+  if (squeezed.length > MAX_NAME) return { error: 'too-long' };
+  if (people.some((p) => p.name.toLowerCase() === squeezed.toLowerCase())) return { error: 'duplicate' };
+  return { person: { id: newId(), name: squeezed, ...optionalContact(input) } };
+}
+
+/** Atualiza nome e contato de uma pessoa (mesmas regras de `renamePerson`). Devolve `{ people }` ou `{ error }`. */
+export function updatePerson(people, id, input) {
+  const renamed = renamePerson(people, id, input?.name);
+  if (renamed.error) return renamed;
+  return {
+    people: renamed.people.map((p) => {
+      if (p.id !== id) return p;
+      return { id: p.id, name: p.name, ...optionalContact(input) }; // contato antigo sai: o que vale é o novo
+    }),
+  };
+}

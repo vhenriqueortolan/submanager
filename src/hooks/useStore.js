@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { normalizeSettings } from '../lib/settings.js';
-import { removePersonFromState, renamePerson } from '../lib/people.js';
+import { removePersonFromState, renamePerson, updatePerson } from '../lib/people.js';
 import { addPayment, removePayment } from '../lib/payments.js';
 import { cancelSub, pauseSub, resumeSub } from '../lib/status.js';
 import { applyAllAutoCharges } from '../lib/auto-charges.js';
@@ -72,6 +72,11 @@ function reducer(state, action) {
 
     case 'renamePerson': {
       const result = renamePerson(state.people, action.id, action.name);
+      return result.people ? { ...state, people: result.people } : state;
+    }
+
+    case 'updatePerson': {
+      const result = updatePerson(state.people, action.id, action.input);
       return result.people ? { ...state, people: result.people } : state;
     }
 
