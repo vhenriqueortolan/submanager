@@ -2,11 +2,9 @@ import { test, expect, seed, withSubs, sampleSubs, editText } from './fixtures.j
 
 const inside = (page, selector) => page.evaluate((s) => !!document.activeElement?.closest(s), selector);
 
-// Desktop: foco inicial no primeiro campo. Mobile (toque): no ←, para não abrir o teclado sozinho.
-const expectInitialFocus = async (page, field, isMobile) => {
-  // field nulo: tela sem campo para focar (passo 2 do cadastro), o foco inicial é o ← em qualquer aparelho.
-  if (isMobile || !field) await expect(page.getByRole('button', { name: 'Voltar' }).last()).toBeFocused();
-  else await expect(page.locator(field)).toBeFocused();
+// Sprint 6: telas abrem sem foco em nenhum elemento, em desktop e mobile (nada de teclado aberto sozinho).
+const expectInitialFocus = async (page) => {
+  expect(await inside(page, '[role="dialog"]')).toBe(false);
 };
 
 test.describe('foco do modal', () => {

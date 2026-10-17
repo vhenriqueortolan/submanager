@@ -11,7 +11,7 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Confirma
   const dialogRef = useRef(null);
   const [typed, setTyped] = useState('');
   const locked = !!requireText && !matchesConfirmation(typed, requireText);
-  useFocusTrap(dialogRef);
+  useFocusTrap(dialogRef, undefined, 'cancel');
 
   useEffect(() => {
     const onKey = (e) => {

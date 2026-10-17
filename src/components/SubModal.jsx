@@ -114,7 +114,7 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
   return (
     <>
       {!startsAtDetails && (
-        <DetailScreen id="cadastro-busca" domId="add-modal" title="Buscar serviço" focusFirst onClose={onClose}>
+        <DetailScreen id="cadastro-busca" domId="add-modal" title="Buscar serviço" onClose={onClose}>
           <div id="modal-step-1">
             <input
               type="search"
