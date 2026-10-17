@@ -28,6 +28,8 @@ export default defineConfig({
     : {
         command: `npm run build && npm run preview -- --port ${PORT} --strictPort`,
         url: `http://localhost:${PORT}`,
+        // Habilita a tela de teste do contrato de navegação (src/components/TestScreen.jsx) só neste build.
+        env: { VITE_E2E: '1' },
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
       },

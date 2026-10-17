@@ -191,3 +191,22 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 
 .privacy-list { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
 .confirm-dialog .form-group { margin-top: 12px; }
+
+/* ---------- Telas de detalhe (z-index 200, como .modal-overlay) ---------- */
+.detail-screen { position: fixed; inset: 0; z-index: 200; background: var(--bg); overflow-y: auto; animation: slideIn 0.25s ease; }
+.detail-screen.closing { animation: slideOut 0.25s ease forwards; }
+.detail-header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 8px; max-width: 600px; margin: 0 auto; padding: 14px 12px; background: var(--bg); }
+.detail-header h1 { font-size: 1.2rem; }
+.detail-back { width: 44px; height: 44px; border-radius: 12px; }
+.detail-body { max-width: 600px; margin: 0 auto; padding: 8px 20px 40px; }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes slideOut { from { transform: translateX(0); } to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+    .detail-screen, .detail-screen.closing { animation: none; }
+}
+
+/* Título de seção (não é campo de formulário; .section-title é dos cabeçalhos do Início) */
+.section-heading { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin: 24px 0 8px; }
+
+/* Botão que só existe no build de e2e */
+.e2e-open { position: fixed; top: 0; right: 0; z-index: 150; font-size: 0.7rem; padding: 4px 8px; opacity: 0.6; }

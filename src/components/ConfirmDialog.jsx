@@ -7,7 +7,7 @@ import { matchesConfirmation } from '../lib/storage.js';
  * `requireText`: só habilita a confirmação depois de digitar a palavra. `extraAction`: botão opcional
  * (ex.: exportar backup antes) que não fecha o diálogo.
  */
-export default function ConfirmDialog({ title, message, confirmLabel = 'Confirmar', danger = false, requireText, extraAction, onConfirm, onCancel }) {
+export default function ConfirmDialog({ title, message, confirmLabel = 'Confirmar', cancelLabel = 'Cancelar', danger = false, requireText, extraAction, onConfirm, onCancel }) {
   const dialogRef = useRef(null);
   const [typed, setTyped] = useState('');
   const locked = !!requireText && !matchesConfirmation(typed, requireText);
@@ -59,7 +59,7 @@ export default function ConfirmDialog({ title, message, confirmLabel = 'Confirma
         >
           {confirmLabel}
         </button>
-        <button type="button" className="btn btn-outline btn-ghost" autoFocus onClick={onCancel}>Cancelar</button>
+        <button type="button" className="btn btn-outline btn-ghost" autoFocus onClick={onCancel}>{cancelLabel}</button>
       </div>
     </div>
   );
