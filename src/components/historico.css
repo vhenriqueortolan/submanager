@@ -1,0 +1,24 @@
+/* Tela Histórico. Só variáveis de src/design/tokens.css. */
+.hist-top { margin: var(--space-2) 0 var(--space-4); }
+.hist-month-total { font: var(--text-display); letter-spacing: var(--letter-spacing-title); font-variant-numeric: tabular-nums; }
+.hist-variation { margin-top: var(--space-2); font: var(--text-label); }
+.hist-cards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+@media (max-width: 380px) { .hist-cards { grid-template-columns: 1fr; } }
+.hist-card { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; padding: var(--space-4); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
+.hist-card strong { font: var(--text-body); font-weight: var(--font-weight-title); overflow-wrap: anywhere; }
+.hist-sub { font: var(--text-caption); overflow-wrap: anywhere; }
+.hist-changes { list-style: none; display: grid; gap: var(--space-2); margin-top: var(--space-3); font: var(--text-label); }
+.hist-categories { list-style: none; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
+.hist-categories li { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) var(--space-4); font: var(--text-body); }
+.hist-categories li + li { border-top: 1px solid var(--color-border); }
+.hist-range { margin: 0 0 var(--space-3); }
+.hist-month { margin-bottom: var(--space-5); }
+.hist-month-head { display: flex; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); font: var(--text-title); letter-spacing: var(--letter-spacing-title); font-variant-numeric: tabular-nums; }
+.hist-entries { list-style: none; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
+.hist-entry { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); }
+.hist-entry + .hist-entry { border-top: 1px solid var(--color-border); }
+.hist-entry-main { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.hist-entry-name { font: var(--text-body); font-weight: var(--font-weight-title); overflow-wrap: anywhere; }
+.hist-entry-meta { font: var(--text-caption); }
+.hist-entry-side { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-1); flex: none; }
+.hist-entry-amount { font: var(--text-body); font-variant-numeric: tabular-nums; }

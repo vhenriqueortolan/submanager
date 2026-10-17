@@ -10,6 +10,7 @@ import { sortByUrgency } from '../lib/sort.js';
 import { backupDue } from '../lib/reminder.js';
 import { isActive, statusOf } from '../lib/status.js';
 import { StatusBadge } from '../design/index.jsx';
+import { historyEntries, monthTotal } from '../lib/history.js';
 
 function Hero({ greeting, subs }) {
   // Só as ativas contam: pausadas e canceladas saem do número e dos logos.
@@ -138,7 +139,7 @@ function SubCard({ sub, people, status, now, onEdit, onPay }) {
   );
 }
 
-export default function Home({ state, today, permission, onOpenNotifications, onOpenBudget, onAdd, onEdit, onPay, onExportBackup, onSnoozeBackup }) {
+export default function Home({ state, today, permission, onOpenNotifications, onOpenBudget, onOpenHistory, onAdd, onEdit, onPay, onExportBackup, onSnoozeBackup }) {
   const { name, budget, subs, people } = state;
   const hasSubs = subs.length > 0;
   const greeting = name ? `Olá, ${name}.` : 'Olá.';
@@ -154,6 +155,7 @@ export default function Home({ state, today, permission, onOpenNotifications, on
   const converted = subs.filter(isActive).some((s) => cycleOf(s) !== 'monthly');
 
   const savings = cancelledMonthlySavings(subs, people);
+  const paidThisMonth = useMemo(() => monthTotal(historyEntries(subs), today.slice(0, 7)), [subs, today]);
   const total = monthlyTotal(subs, people);
   const annual = annualProjection(subs, people);
   const anyDivided = subs.filter(isActive).some((s) => sharers(s, people).length > 0);
@@ -189,6 +191,18 @@ export default function Home({ state, today, permission, onOpenNotifications, on
       )}
 
       <BudgetCard onOpen={onOpenBudget} total={total} annual={annual} budget={budget} converted={converted} serviceTotal={serviceTotal} />
+
+      {hasSubs && (
+        <button type="button" className="budget-card budget-card-btn history-card" id="history-card" aria-label={`Histórico e insights. Pago este mês ${brl(paidThisMonth)}`} onClick={onOpenHistory}>
+          <div className="flex space-between">
+            <div>
+              <div className="stat-label">Histórico e insights</div>
+              <div className="text-muted budget-note">Pago este mês (sua parte): {brl(paidThisMonth)}</div>
+            </div>
+            <span className="hub-chevron" aria-hidden="true">›</span>
+          </div>
+        </button>
+      )}
 
       {hasSubs && (
         <section id="subs-section">

@@ -3,6 +3,7 @@ import Orcamento from './Orcamento.jsx';
 import Notificacoes from './Notificacoes.jsx';
 import DadosPrivacidade from './DadosPrivacidade.jsx';
 import Sobre from './Sobre.jsx';
+import Historico from '../Historico.jsx';
 import { FEEDBACK_FORM, buildFeedbackUrl, platformOf } from '../../lib/feedback.js';
 import pkg from '../../../package.json';
 
@@ -14,7 +15,7 @@ export const feedbackUrlFor = () =>
  * que abre Orçamento e Notificações sem trocar de aba.
  */
 export default function ProfileScreens({ screen, onClose, state, permission, handlers }) {
-  const { onEnableNotifications, onSaveProfile, onExport, onImport, onAddPerson, onRenamePerson, onRemovePerson, onSettings, onClearData } = handlers;
+  const { onUnpay, onEnableNotifications, onSaveProfile, onExport, onImport, onAddPerson, onRenamePerson, onRemovePerson, onSettings, onClearData } = handlers;
   switch (screen) {
     case 'meu-perfil':
       return (
@@ -33,8 +34,11 @@ export default function ProfileScreens({ screen, onClose, state, permission, han
           onAddPerson={onAddPerson}
           onRenamePerson={onRenamePerson}
           onRemovePerson={onRemovePerson}
+          onUnpay={onUnpay}
         />
       );
+    case 'historico':
+      return <Historico state={state} origem="portfolio" onUnpay={onUnpay} onClose={onClose} />;
     case 'notificacoes':
       return <Notificacoes state={state} permission={permission} onEnableNotifications={onEnableNotifications} onSettings={onSettings} onClose={onClose} />;
     case 'dados':
