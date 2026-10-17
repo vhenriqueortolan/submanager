@@ -3,6 +3,8 @@ import { normalizeSettings } from '../lib/settings.js';
 import { removePersonFromState, renamePerson } from '../lib/people.js';
 import { addPayment, removePayment } from '../lib/payments.js';
 import { cancelSub, pauseSub, resumeSub } from '../lib/status.js';
+import { applyAllAutoCharges } from '../lib/auto-charges.js';
+import { parseDay } from '../lib/dates.js';
 import { clearAllData, defaultState, loadState, saveState, STORAGE_KEY } from '../lib/storage.js';
 
 function reducer(state, action) {
@@ -45,6 +47,10 @@ function reducer(state, action) {
       if (!op) return state;
       return { ...state, subs: state.subs.map((s) => (s.id === action.id ? op(s, action.day) : s)) };
     }
+
+    // Cobranças automáticas dos ciclos que faltam (idempotente: sem novidade, devolve o mesmo estado).
+    case 'autoCharges':
+      return applyAllAutoCharges(state, parseDay(action.day) ?? new Date());
 
     case 'markPaid':
       return {
