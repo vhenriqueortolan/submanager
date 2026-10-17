@@ -19,6 +19,9 @@ function onPopState() {
 
 if (typeof window !== 'undefined') window.addEventListener('popstate', onPopState);
 
+/** Quantas telas (e folhas) estão abertas agora. */
+export const openScreenCount = () => stack.length;
+
 export const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 export const SCREEN_ANIMATION_MS = 250;
 

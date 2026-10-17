@@ -11,7 +11,10 @@ import Catalog from './design/Catalog.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import Toast from './components/Toast.jsx';
 import { useStore } from './hooks/useStore.js';
-import { useToday } from './hooks/useToday.js';
+import { useTodayState } from './hooks/useToday.js';
+import usePullToRefresh from './hooks/usePullToRefresh.js';
+import PullIndicator from './components/PullIndicator.jsx';
+import { checkForUpdate } from './lib/registerSW.js';
 import { useNotificationPermission } from './hooks/useNotificationPermission.js';
 import { useDueNotifications } from './hooks/useDueNotifications.js';
 import { todayStr } from './lib/dates.js';
@@ -24,7 +27,7 @@ const SAVE_FAILED_MESSAGE = 'Não foi possível salvar os dados neste navegador 
 
 export default function App() {
   const { state, dispatch, saveFailed, resetAll } = useStore();
-  const today = useToday();
+  const [today, refreshToday] = useTodayState();
   const [tab, setTab] = useState('home');
   const [modal, setModal] = useState(null); // null | { mode: 'new', preset? } | { mode: 'edit', sub }
   const [confirm, setConfirm] = useState(null); // null | { title, message, confirmLabel, danger, onConfirm }
@@ -50,6 +53,20 @@ export default function App() {
 
   const onNotified = useCallback((ids) => dispatch({ type: 'markNotified', ids, day: todayStr() }), [dispatch]);
   useDueNotifications(state.onboarded ? state.subs : [], onNotified, permission, state.people, state.settings);
+
+  // Puxar para atualizar (só na tela inicial): procura versão nova; sem ela, recalcula a data, os status e as cobranças.
+  const refreshAll = useCallback(async () => {
+    const outcome = await checkForUpdate();
+    if (outcome === 'reloading') return;
+    if (outcome === 'offline') {
+      notify('Sem conexão');
+      return;
+    }
+    refreshToday();
+    dispatch({ type: 'autoCharges', day: todayStr() });
+    notify('Atualizado');
+  }, [dispatch, notify, refreshToday]);
+  const pull = usePullToRefresh({ enabled: state.onboarded && tab === 'home', onRefresh: refreshAll });
 
   const closeModal = useCallback(() => setModal(null), []);
   const closeConfirm = useCallback(() => setConfirm(null), []);
@@ -223,6 +240,7 @@ export default function App() {
 
   return (
     <>
+      <PullIndicator distance={pull.distance} refreshing={pull.refreshing} />
       {tab === 'home' && (
         <Home
           state={state}
