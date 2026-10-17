@@ -30,6 +30,7 @@ export default function Notificacoes({ state, permission, onEnableNotifications,
   return (
     <DetailScreen id="notificacoes" title="Notificações" onClose={onClose}>
       <div id="notif-section">
+        <h2 className="section-heading">Navegador</h2>
         <div className="notif-row">
           <span className="text-muted notif-status" id="notif-status">{NOTIF_STATUS[permission] ?? NOTIF_STATUS.default}</span>
           {permission === 'default' && (
@@ -37,14 +38,19 @@ export default function Notificacoes({ state, permission, onEnableNotifications,
           )}
         </div>
         {install === 'ios' && (
-          <p className="text-muted" id="notif-ios-hint">
-            No iPhone, instale o app na Tela de Início (veja “Instalar o app” em Sobre) para receber avisos.
-          </p>
+          <p className="text-muted" id="notif-ios-hint">Para receber avisos no iPhone, instale o app. Veja como em Sobre.</p>
         )}
+
+        <h2 className="section-heading">Avisos</h2>
         <div className="switch-list">
           <Switch id="set-enabled" label="Receber avisos" checked={state.settings.enabled} onChange={(v) => onSettings({ enabled: v })} />
           <Switch id="set-today" label="Avisar no dia" checked={state.settings.notifyToday} disabled={!state.settings.enabled} onChange={(v) => onSettings({ notifyToday: v })} />
           <Switch id="set-overdue" label="Avisar atrasadas" checked={state.settings.notifyOverdue} disabled={!state.settings.enabled} onChange={(v) => onSettings({ notifyOverdue: v })} />
+        </div>
+        <p className="text-muted mt-1">Os avisos chegam quando o app está aberto.</p>
+
+        <h2 className="section-heading">Quando avisar</h2>
+        <div className="switch-list">
           <div className="switch-row">
             <label htmlFor="set-advance">Antecedência</label>
             <select
@@ -59,7 +65,6 @@ export default function Notificacoes({ state, permission, onEnableNotifications,
             </select>
           </div>
         </div>
-        <p className="text-muted">Os avisos chegam quando o app está aberto.</p>
       </div>
     </DetailScreen>
   );
