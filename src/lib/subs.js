@@ -17,6 +17,8 @@ export function emptyForm(preset = {}) {
     dueWeekday: '',
     paymentMethod: 'Cartão',
     sharedWith: [],
+    autoCharge: true, // o método padrão é Cartão
+    muted: false,
   };
 }
 
@@ -32,6 +34,8 @@ export function formFromSub(sub) {
     dueWeekday: sub.dueWeekday || '',
     paymentMethod: sub.paymentMethod || 'Cartão',
     sharedWith: Array.isArray(sub.sharedWith) ? sub.sharedWith : [],
+    autoCharge: sub.autoCharge === true,
+    muted: sub.muted === true,
   };
 }
 
@@ -51,6 +55,8 @@ export function buildSub(prev, form, today = todayStr()) {
     ...due,
     paymentMethod: form.paymentMethod || 'Cartão',
     sharedWith: normalizeSharedWith(form.sharedWith),
+    autoCharge: form.autoCharge === true,
+    muted: form.muted === true,
   };
   // Mudou o ciclo ou o vencimento: reinicia o controle para não gerar "atraso" retroativo.
   const before = prev && { ...normalizeDue(prev) };

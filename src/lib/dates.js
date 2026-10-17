@@ -95,8 +95,19 @@ export function dueStatus(sub, now = new Date()) {
   if (created && due < created) return null; // ciclo anterior ao cadastro
 
   const key = cycleKey(due, cycleOf(sub));
-  if (sub.paidCycle && sub.paidCycle >= key) return null; // ciclo já pago
-
   const days = Math.round((startOfDay(now) - due) / 86400000);
+
+  // Cobrança automática: nunca fica atrasada nem precisa de "Paguei"; o dia da cobrança é só informativo.
+  if (sub.autoCharge) return days === 0 ? { type: 'today', days, cycle: key } : null;
+
+  if (sub.paidCycle && sub.paidCycle >= key) return null; // ciclo já pago
   return { type: days === 0 ? 'today' : 'overdue', days, cycle: key };
+}
+
+/** Data da última cobrança (vencimento mais recente <= hoje) desde o cadastro; null se não houver. */
+export function lastCharge(sub, now = new Date()) {
+  const due = lastDue(sub, now);
+  if (!due) return null;
+  const created = parseDay(sub.createdAt);
+  return created && due < created ? null : due;
 }
