@@ -114,3 +114,33 @@ test('aviso de vencimento mostra a sua parte quando dividido', () => {
   const solo = describe({ ...sub, sharedWith: [] }, { type: 'today' }, people).body;
   assert.doesNotMatch(solo, /sua parte/i);
 });
+
+test('renamePerson: renomeia só a pessoa pedida', async () => {
+  const { renamePerson } = await import('./people.js');
+  const r = renamePerson(people, 'a', '  Ana   Maria ');
+  assert.deepEqual(r.people, [{ id: 'a', name: 'Ana Maria' }, { id: 'b', name: 'Bruno' }]);
+});
+
+test('renamePerson: nome repetido (sem diferenciar maiúsculas) é bloqueado', async () => {
+  const { renamePerson } = await import('./people.js');
+  assert.deepEqual(renamePerson(people, 'a', 'bruno'), { error: 'duplicate' });
+});
+
+test('renamePerson: mudar só as maiúsculas do próprio nome é permitido', async () => {
+  const { renamePerson } = await import('./people.js');
+  assert.deepEqual(renamePerson(people, 'a', 'ANA').people[0], { id: 'a', name: 'ANA' });
+});
+
+test('renamePerson: vazio e mais de 40 caracteres são bloqueados', async () => {
+  const { renamePerson } = await import('./people.js');
+  assert.deepEqual(renamePerson(people, 'a', '   '), { error: 'empty' });
+  assert.deepEqual(renamePerson(people, 'a', 'x'.repeat(41)), { error: 'too-long' });
+  assert.equal(renamePerson(people, 'a', 'x'.repeat(40)).people[0].name.length, 40);
+});
+
+test('sharedCount conta as assinaturas divididas com a pessoa', async () => {
+  const { sharedCount } = await import('./people.js');
+  const subs = [{ sharedWith: ['a', 'b'] }, { sharedWith: ['a'] }, {}, { sharedWith: ['b'] }];
+  assert.equal(sharedCount(subs, 'a'), 2);
+  assert.equal(sharedCount(subs, 'zzz'), 0);
+});

@@ -57,3 +57,26 @@ export function normalizePeople(list) {
 export function normalizeSharedWith(list) {
   return [...new Set((Array.isArray(list) ? list : []).filter((id) => typeof id === 'string' && id))];
 }
+
+/** Quantas assinaturas estão divididas com a pessoa. */
+export function sharedCount(subs, personId) {
+  return subs.filter((s) => Array.isArray(s.sharedWith) && s.sharedWith.includes(personId)).length;
+}
+
+export const NAME_ERRORS = {
+  empty: 'Informe um nome',
+  'too-long': `O nome pode ter até ${MAX_NAME} caracteres`,
+  duplicate: 'Já existe uma pessoa com esse nome',
+};
+
+/**
+ * Renomeia uma pessoa. Devolve `{ people }` com a lista nova, ou `{ error }` ('empty' | 'too-long' | 'duplicate').
+ * Outra pessoa com o mesmo nome (sem diferenciar maiúsculas) bloqueia; mudar só as maiúsculas do próprio nome vale.
+ */
+export function renamePerson(people, id, rawName) {
+  const squeezed = String(rawName ?? '').trim().replace(/\s+/g, ' ');
+  if (!squeezed) return { error: 'empty' };
+  if (squeezed.length > MAX_NAME) return { error: 'too-long' };
+  if (people.some((p) => p.id !== id && p.name.toLowerCase() === squeezed.toLowerCase())) return { error: 'duplicate' };
+  return { people: people.map((p) => (p.id === id ? { ...p, name: squeezed } : p)) };
+}

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import DetailScreen from '../DetailScreen.jsx';
+import Divisao from './Divisao.jsx';
 import { moneyToInput, parseMoneyInput } from '../../lib/budget.js';
 
-export default function Orcamento({ state, onSave, onRemovePerson, onClose }) {
+export default function Orcamento({ state, onSave, onAddPerson, onRenamePerson, onRemovePerson, onClose }) {
   const [text, setText] = useState(moneyToInput(state.budget));
   const value = parseMoneyInput(text);
   const dirty = value !== (Number(state.budget) || 0);
@@ -32,23 +33,13 @@ export default function Orcamento({ state, onSave, onRemovePerson, onClose }) {
         Salvar
       </button>
 
-      <h2 className="section-heading">Divisão</h2>
-      <div id="people-section">
-        {state.people.length === 0 ? (
-          <p className="text-muted">Ninguém ainda. Adicione pessoas ao dividir uma assinatura. Os nomes ficam só neste aparelho.</p>
-        ) : (
-          <ul className="payment-list">
-            {state.people.map((p) => (
-              <li key={p.id} className="payment-row">
-                <span>{p.name}</span>
-                <button type="button" className="pay-btn" aria-label={`Remover ${p.name}`} onClick={() => onRemovePerson(p.id)}>
-                  Remover
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <Divisao
+        people={state.people}
+        subs={state.subs}
+        onAddPerson={onAddPerson}
+        onRenamePerson={onRenamePerson}
+        onRemovePerson={onRemovePerson}
+      />
     </DetailScreen>
   );
 }
