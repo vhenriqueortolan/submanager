@@ -32,6 +32,8 @@ function violations(css) {
   const found = [];
   for (const m of body.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) found.push(`cor ${m[0]}`);
   for (const m of body.matchAll(/font-size\s*:\s*[^;]+/g)) found.push(m[0].trim());
+  // Atalho `font` com tamanho literal (font-family e var(--text-*) não contam).
+  for (const m of body.matchAll(/(?<![-\w])font\s*:[^;]*\d(px|rem|em)\b[^;]*/g)) found.push(m[0].trim());
   return found;
 }
 
@@ -54,6 +56,8 @@ test('guardrail: toda exceção ainda existe e ainda tem valor fixo (lista não 
 
 test('detecção: pega cor e font-size em declaração, ignora seletor com #id', () => {
   assert.deepEqual(violations('#add-modal { color: #fff; font-size: 14px }'), ['cor #fff', 'font-size: 14px']);
+  assert.deepEqual(violations('.a { font: 600 14px/1 sans-serif }'), ['font: 600 14px/1 sans-serif']);
+  assert.deepEqual(violations('.a { font: var(--text-body); font-family: var(--font) }'), []);
   assert.deepEqual(violations('/* #fff */ #abc .x { color: var(--text); }'), []);
 });
 
