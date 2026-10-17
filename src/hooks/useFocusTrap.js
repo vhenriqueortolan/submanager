@@ -9,6 +9,10 @@ const FOCUSABLE = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
+// Telas empilhadas (cadastro: busca + detalhes) travam a rolagem juntas; só a última a sair destrava.
+let scrollLocks = 0;
+let savedOverflow = '';
+
 const focusables = (root) => Array.from(root.querySelectorAll(FOCUSABLE));
 
 /**
@@ -25,7 +29,8 @@ export default function useFocusTrap(ref, refocusOn) {
     const root = ref.current;
     if (!root) return undefined;
 
-    const prevOverflow = document.body.style.overflow;
+    if (scrollLocks === 0) savedOverflow = document.body.style.overflow;
+    scrollLocks += 1;
     document.body.style.overflow = 'hidden';
 
     const onKey = (e) => {
@@ -50,7 +55,8 @@ export default function useFocusTrap(ref, refocusOn) {
 
     return () => {
       root.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
+      scrollLocks -= 1;
+      if (scrollLocks === 0) document.body.style.overflow = savedOverflow;
       if (opener && opener !== document.body && document.contains(opener)) opener.focus();
     };
   }, [ref, opener]);

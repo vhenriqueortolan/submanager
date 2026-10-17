@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Logo from './Logo.jsx';
+import DetailScreen from './DetailScreen.jsx';
 import { CATALOG, PAYMENT_METHODS } from '../lib/catalog.js';
 import { buildSub, emptyForm, formFromSub } from '../lib/subs.js';
 import { CYCLES, annualAmount } from '../lib/cycles.js';
@@ -7,7 +8,6 @@ import { paymentsNewestFirst } from '../lib/payments.js';
 import { resolvePerson } from '../lib/people.js';
 import { MONTHS, WEEKDAYS, brl } from '../lib/format.js';
 import { useCompanySearch } from '../hooks/useCompanySearch.js';
-import useFocusTrap from '../hooks/useFocusTrap.js';
 
 const formatDay = (day) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day || '');
@@ -24,27 +24,21 @@ function QuickItem({ app, onPick }) {
 }
 
 /**
- * Modal de cadastro/edição. É montado apenas quando aberto, então cada abertura começa
- * com formulário limpo (sem herdar vencimento/índice da edição anterior).
+ * Cadastro/edição de assinatura como tela de detalhe. É montado apenas quando aberto, então cada abertura começa
+ * com formulário limpo. Cadastro novo: o passo 1 (buscar) é a raiz e o passo 2 (detalhes) empilha sobre ele,
+ * então ← e o Voltar do sistema no passo 2 voltam ao passo 1. Edição ou serviço já escolhido: o passo 2 é a raiz.
  */
 export default function SubModal({ mode, sub, preset, interests, people, onAddPerson, onSave, onDelete, onUnpay, onClose }) {
   const isEdit = mode === 'edit';
-  const [step, setStep] = useState(isEdit || preset ? 2 : 1);
+  const startsAtDetails = isEdit || !!preset;
+  const [step, setStep] = useState(startsAtDetails ? 2 : 1);
   const [form, setForm] = useState(() => (isEdit ? formFromSub(sub) : emptyForm(preset)));
+  const [baseline, setBaseline] = useState(form); // o que a pessoa ainda não mexeu: a base do "Descartar alterações?"
   const [query, setQuery] = useState('');
   const [personName, setPersonName] = useState('');
   const [source, setSource] = useState(preset?.source || 'manual');
   const search = useCompanySearch(step === 1 ? query : '');
-  const dialogRef = useRef(null);
-  useFocusTrap(dialogRef, step);
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
 
   const recommended = useMemo(() => {
     const byInterest = interests.length ? CATALOG.filter((a) => interests.includes(a.category)) : CATALOG;
@@ -64,7 +58,9 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
     setForm((f) => ({ ...f, [field]: checked }));
   };
   const pick = (app) => {
-    setForm(emptyForm(app));
+    const next = emptyForm(app);
+    setForm(next);
+    setBaseline(next);
     setSource(app.source || 'manual');
     setStep(2);
   };
@@ -80,14 +76,14 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
   const validShared = form.sharedWith.filter((id) => people.some((p) => p.id === id));
   const cycleInfo = CYCLES[form.cycle];
   const monthlyHint = form.cycle !== 'monthly' && parseFloat(form.price) > 0 ? annualAmount(form) / 12 : 0;
-  const searching =query.trim().length >= 2;
+  const searching = query.trim().length >= 2;
+  const nameMissing = !form.name.trim();
 
   return (
-    <div className="modal-overlay" id="add-modal" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div ref={dialogRef} className="modal active" role="dialog" aria-modal="true" aria-label={isEdit ? 'Editar assinatura' : 'Nova assinatura'}>
-        {step === 1 && (
+    <>
+      {!startsAtDetails && (
+        <DetailScreen id="cadastro-busca" domId="add-modal" title="Buscar serviço" focusFirst onClose={onClose}>
           <div id="modal-step-1">
-            <h2 className="mb-2">Buscar Serviço</h2>
             <input
               type="search"
               className="search-input modal-search"
@@ -119,13 +115,21 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
             <button type="button" className="btn btn-outline mt-20" onClick={() => pick({ name: query.trim() })}>
               + Inserir Dados Manualmente
             </button>
-            <button type="button" className="btn btn-outline btn-ghost" onClick={onClose}>Cancelar</button>
           </div>
-        )}
+        </DetailScreen>
+      )}
 
-        {step === 2 && (
+      {step === 2 && (
+        <DetailScreen
+          id="cadastro-detalhes"
+          domId={startsAtDetails ? 'add-modal' : undefined}
+          title={isEdit ? 'Editar assinatura' : 'Nova assinatura'}
+          dirty={dirty}
+          focusFirst
+          onClose={startsAtDetails ? onClose : () => setStep(1)}
+        >
           <div id="modal-step-2">
-            <h2 className="mb-2">Detalhes Financeiros</h2>
+            <h2 className="section-heading first">Serviço</h2>
 
             <div className="form-group">
               <label htmlFor="add-name">Serviço</label>
@@ -149,7 +153,7 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
                 id="add-price"
                 step="0.01"
                 min="0"
-                placeholder="0.00"
+                placeholder="0,00"
                 value={form.price}
                 onChange={set('price')}
               />
@@ -195,8 +199,10 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
               )}
             </div>
 
+            <h2 className="section-heading">Pagamento</h2>
+
             <div className="form-group">
-              <label htmlFor="add-payment">Pagamento</label>
+              <label htmlFor="add-payment">Método</label>
               <select id="add-payment" value={form.paymentMethod} onChange={setPayment}>
                 {PAYMENT_METHODS.map((m) => (
                   <option key={m} value={m}>{m}</option>
@@ -209,11 +215,9 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
                 <input id="add-auto" type="checkbox" checked={form.autoCharge} onChange={setFlag('autoCharge')} />
                 <span>Cobrança automática <small className="text-muted">(cartão ou débito: não precisa marcar “Paguei”)</small></span>
               </label>
-              <label className="check-row" htmlFor="add-muted">
-                <input id="add-muted" type="checkbox" checked={form.muted} onChange={setFlag('muted')} />
-                <span>Não avisar desta assinatura</span>
-              </label>
             </div>
+
+            <h2 className="section-heading">Divisão</h2>
 
             <div className="form-group" id="shared-with">
               <label htmlFor="add-person">Dividido com</label>
@@ -256,9 +260,18 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
               )}
             </div>
 
+            <h2 className="section-heading">Avisos</h2>
+
+            <div className="form-group">
+              <label className="check-row" htmlFor="add-muted">
+                <input id="add-muted" type="checkbox" checked={form.muted} onChange={setFlag('muted')} />
+                <span>Não avisar desta assinatura</span>
+              </label>
+            </div>
+
             {isEdit && (
               <div className="form-group" id="payment-history">
-                <label>Histórico de pagamentos</label>
+                <h2 className="section-heading">Histórico</h2>
                 {paymentsNewestFirst(sub).length === 0 ? (
                   <p className="text-muted">Nenhum pagamento registrado.</p>
                 ) : (
@@ -281,25 +294,25 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
               </div>
             )}
 
+            {nameMissing && <p className="text-muted save-hint" id="save-hint">Informe o nome do serviço</p>}
             <button
               type="button"
               className="btn btn-primary"
-              disabled={!form.name.trim()}
+              disabled={nameMissing}
+              aria-describedby={nameMissing ? 'save-hint' : undefined}
               onClick={() => onSave(buildSub(isEdit ? sub : null, form), { source })}
             >
               Salvar Assinatura
             </button>
-            {!isEdit && (
-              <button type="button" className="btn btn-outline btn-ghost" onClick={() => setStep(1)}>← Voltar</button>
-            )}
+
             {isEdit && (
-              <button type="button" className="btn btn-outline btn-danger" onClick={() => onDelete(sub.id)}>
-                Remover Assinatura
-              </button>
+              <div className="risk-zone">
+                <button type="button" className="risk-row" onClick={() => onDelete(sub.id)}>Remover Assinatura</button>
+              </div>
             )}
           </div>
-        )}
-      </div>
-    </div>
+        </DetailScreen>
+      )}
+    </>
   );
 }

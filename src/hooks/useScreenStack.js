@@ -6,7 +6,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  */
 const stack = [];
 let ignorePops = 0; // popstates que nós mesmos causamos ao desmontar uma tela
-let pendingBack = null; // desmontagem adiada: se outra tela montar logo em seguida, reaproveita a entrada
+let pendingCount = 0; // telas desmontadas pelo app (não pelo Voltar) cujas entradas ainda faltam tirar do histórico
+let pendingTimer = null; // a limpeza é adiada: se outra tela montar logo em seguida, reaproveita a entrada
 
 function onPopState() {
   if (ignorePops > 0) {
@@ -61,9 +62,12 @@ export function useScreenHistory({ id, dirty = false, onClose }) {
       },
     };
     entryRef.current = entry;
-    if (pendingBack) {
-      clearTimeout(pendingBack);
-      pendingBack = null;
+    if (pendingCount > 0) {
+      pendingCount -= 1;
+      if (pendingCount === 0) {
+        clearTimeout(pendingTimer);
+        pendingTimer = null;
+      }
     } else {
       window.history.pushState({ screen: id }, '');
     }
@@ -73,10 +77,16 @@ export function useScreenHistory({ id, dirty = false, onClose }) {
       const i = stack.indexOf(entry);
       if (i >= 0) stack.splice(i, 1);
       if (!entry.popped) {
-        pendingBack = setTimeout(() => {
-          pendingBack = null;
-          ignorePops += 1;
-          window.history.back();
+        pendingCount += 1;
+        // Um único go(-n) (e um único popstate ignorado) quando várias telas somem juntas, como ao salvar o cadastro.
+        pendingTimer ??= setTimeout(() => {
+          const n = pendingCount;
+          pendingCount = 0;
+          pendingTimer = null;
+          if (n > 0) {
+            ignorePops += 1;
+            window.history.go(-n);
+          }
         }, 0);
       }
     };

@@ -10,7 +10,7 @@ test('sem assinaturas: hero escondido, mensagem e CTA abrem o cadastro', async (
   await page.getByRole('button', { name: '+ Cadastrar assinatura' }).click();
   await expect(page.locator('#modal-step-1')).toBeVisible();
   await expect(page.locator('#modal-quick-grid .quick-item').first()).toBeVisible();
-  await page.getByRole('button', { name: 'Cancelar' }).click();
+  await page.getByRole('button', { name: 'Voltar' }).click(); // o passo 1 não tem mais Cancelar: ← fecha a tela
   await expect(page.locator('#add-modal')).toHaveCount(0);
 });
 
