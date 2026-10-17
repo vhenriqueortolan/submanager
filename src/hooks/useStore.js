@@ -50,7 +50,7 @@ function reducer(state, action) {
       return {
         ...state,
         subs: state.subs.map((s) =>
-          s.id === action.id ? addPayment(s, action.cycle, action.day, action.paymentId) : s),
+          s.id === action.id ? addPayment(s, action.cycle, action.day, action.paymentId, { people: state.people }) : s),
       };
 
     case 'unmarkPaid':
