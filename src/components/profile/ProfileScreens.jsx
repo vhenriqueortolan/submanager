@@ -15,7 +15,7 @@ export const feedbackUrlFor = () =>
  * que abre Orçamento e Notificações sem trocar de aba.
  */
 export default function ProfileScreens({ screen, onClose, state, permission, handlers }) {
-  const { onUnpay, onEnableNotifications, onSaveProfile, onExport, onImport, onAddPerson, onRenamePerson, onRemovePerson, onSettings, onClearData } = handlers;
+  const { onUnpay, onEnableNotifications, onSaveProfile, onExport, onImport, onAddPerson, onUpdatePerson, onRemovePerson, onSettings, onClearData } = handlers;
   switch (screen) {
     case 'meu-perfil':
       return (
@@ -32,7 +32,7 @@ export default function ProfileScreens({ screen, onClose, state, permission, han
           onClose={onClose}
           onSave={({ budget }) => onSaveProfile({ name: state.name, budget, interests: state.interests })}
           onAddPerson={onAddPerson}
-          onRenamePerson={onRenamePerson}
+          onUpdatePerson={onUpdatePerson}
           onRemovePerson={onRemovePerson}
           onUnpay={onUnpay}
         />
