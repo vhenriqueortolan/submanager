@@ -8,8 +8,12 @@ import { myShare, sharers } from '../lib/people.js';
 import { cycleOf } from '../lib/cycles.js';
 import { sortByUrgency } from '../lib/sort.js';
 import { backupDue } from '../lib/reminder.js';
+import { isActive, statusOf } from '../lib/status.js';
+import { StatusBadge } from '../design/index.jsx';
 
 function Hero({ greeting, subs }) {
+  // Só as ativas contam: pausadas e canceladas saem do número e dos logos.
+  subs = subs.filter(isActive);
   return (
     <div className="hero-card" id="hero-card">
       <div className="hero-title">{greeting}</div>
@@ -82,7 +86,8 @@ function BudgetCard({ total, annual, budget, converted, serviceTotal, onOpen }) 
 function SubCard({ sub, people, status, now, onEdit, onPay }) {
   const due = dueLabel(sub, now);
   const divided = sharers(sub, people).length > 0;
-  const auto = sub.autoCharge === true;
+  const stopped = statusOf(sub); // active | paused | cancelled
+  const auto = sub.autoCharge === true && stopped === 'active';
   const charged = auto ? lastCharge(sub, now) : null;
   return (
     <div
@@ -103,7 +108,8 @@ function SubCard({ sub, people, status, now, onEdit, onPay }) {
           <div className="sub-title">{sub.name}</div>
           <div className="sub-meta">
             <span className="badge">{sub.category}</span>
-            {due && <span className="badge">{due}</span>}
+            {stopped !== 'active' && <StatusBadge status={stopped === 'paused' ? 'paused' : 'cancelled'} />}
+            {stopped === 'active' && due && <span className="badge">{due}</span>}
             {status?.type === 'today' && <span className="badge badge-warn">{auto ? 'Cobrado hoje' : 'Vence hoje'}</span>}
             {status?.type === 'overdue' && <span className="badge badge-danger">Atrasada · {status.days}d</span>}
           </div>
@@ -140,14 +146,16 @@ export default function Home({ state, today, permission, onOpenNotifications, on
   // `today` na dependência: os status são recalculados na virada do dia.
   const items = useMemo(() => {
     const now = parseDay(today) ?? new Date();
-    return sortByUrgency(subs.map((sub) => ({ sub, status: dueStatus(sub, now) })), now);
+    return sortByUrgency(subs.map((sub) => ({ sub, status: isActive(sub) ? dueStatus(sub, now) : null })), now);
   }, [subs, today]);
   const now = useMemo(() => parseDay(today) ?? new Date(), [today]);
-  const converted = subs.some((s) => cycleOf(s) !== 'monthly');
+  const activeItems = items.filter(({ sub }) => isActive(sub));
+  const stoppedItems = items.filter(({ sub }) => !isActive(sub));
+  const converted = subs.filter(isActive).some((s) => cycleOf(s) !== 'monthly');
 
   const total = monthlyTotal(subs, people);
   const annual = annualProjection(subs, people);
-  const anyDivided = subs.some((s) => sharers(s, people).length > 0);
+  const anyDivided = subs.filter(isActive).some((s) => sharers(s, people).length > 0);
   const serviceTotal = anyDivided ? totalServiceMonthly(subs) : null;
 
   return (
@@ -188,10 +196,18 @@ export default function Home({ state, today, permission, onOpenNotifications, on
             <button type="button" className="icon-btn" aria-label="Adicionar assinatura" onClick={onAdd}>+</button>
           </div>
           <div id="subs-list">
-            {items.map(({ sub, status }) => (
+            {activeItems.map(({ sub, status }) => (
               <SubCard key={sub.id} sub={sub} people={people} status={status} now={now} onEdit={onEdit} onPay={onPay} />
             ))}
           </div>
+          {stoppedItems.length > 0 && (
+            <div id="stopped-list">
+              <h3 className="section-title section-title-plain stopped-title">Pausadas e canceladas</h3>
+              {stoppedItems.map(({ sub, status }) => (
+                <SubCard key={sub.id} sub={sub} people={people} status={status} now={now} onEdit={onEdit} onPay={onPay} />
+              ))}
+            </div>
+          )}
         </section>
       )}
     </main>

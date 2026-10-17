@@ -239,3 +239,4 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 /* ---------- Cadastro como tela de detalhe ---------- */
 .section-heading.first { margin-top: 0; }
 .save-hint { margin-bottom: 8px; }
+.stopped-title { margin: 24px 0 12px; }

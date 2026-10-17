@@ -1,4 +1,5 @@
 import { nextDue } from './dates.js';
+import { isActive } from './status.js';
 
 const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
@@ -14,7 +15,7 @@ function upcoming(sub, status, now) {
 
 /**
  * Ordena por urgência: atrasadas (mais dias primeiro) → vence hoje → próximas por
- * vencimento crescente → sem vencimento (por nome). Estável: empates mantêm a ordem original.
+ * vencimento crescente → sem vencimento (por nome) → pausadas e canceladas (por nome). Estável: empates mantêm a ordem original.
  * @param {{sub: object, status: null | {type: string, days: number}}[]} items
  * @returns {typeof items} nova lista
  */
@@ -23,7 +24,9 @@ export function sortByUrgency(items, now = new Date()) {
     const { sub, status } = item;
     let group;
     let order = 0;
-    if (status?.type === 'overdue') {
+    if (!isActive(sub)) {
+      group = 4;
+    } else if (status?.type === 'overdue') {
       group = 0;
       order = -status.days;
     } else if (status?.type === 'today') {
@@ -38,7 +41,7 @@ export function sortByUrgency(items, now = new Date()) {
   keyed.sort((a, b) => {
     if (a.group !== b.group) return a.group - b.group;
     if (a.order !== b.order) return a.order - b.order;
-    if (a.group === 3) {
+    if (a.group >= 3) {
       const byName = (a.item.sub.name || '').localeCompare(b.item.sub.name || '', 'pt-BR', { sensitivity: 'base' });
       if (byName) return byName;
     }
