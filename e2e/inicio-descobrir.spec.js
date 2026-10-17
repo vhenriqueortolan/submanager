@@ -8,7 +8,7 @@ test('card de orçamento no Início abre a tela e ← volta ao Início', async (
   await page.locator('#budget-card').focus();
   await page.keyboard.press('Enter'); // teclado e foco
   await expect(page.getByRole('dialog', { name: 'Orçamento' })).toBeVisible();
-  await expect(page.locator('#prof-budget')).toHaveValue('300');
+  await expect(page.locator('[data-edit="budget"]')).toContainText('R$ 300,00');
   await page.getByRole('button', { name: 'Voltar' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(tab(page, 'Portfólio')).toHaveAttribute('aria-current', 'page');

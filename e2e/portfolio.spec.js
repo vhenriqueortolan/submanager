@@ -1,4 +1,4 @@
-import { test, expect, seed, withSubs, sampleSubs, readStorage } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, readStorage, editText, pickOption } from './fixtures.js';
 
 const ATRASADA = /Atrasada · \d+d/;
 
@@ -54,10 +54,10 @@ test('cadastro manual, edição e remoção com diálogo de confirmação', asyn
   await page.getByRole('button', { name: '+ Cadastrar assinatura' }).click();
   await page.getByRole('button', { name: '+ Inserir Dados Manualmente' }).click();
   await expect(page.getByRole('button', { name: 'Salvar Assinatura' })).toBeDisabled(); // nome obrigatório
-  await page.fill('#add-name', 'Meu Serviço');
-  await page.fill('#add-price', '29.9');
-  await page.fill('#add-due-date', '12');
-  await page.selectOption('#add-payment', 'Boleto');
+  await editText(page, 'name', 'Meu Serviço');
+  await editText(page, 'price', '29.9');
+  await editText(page, 'due-date', '12');
+  await pickOption(page, 'payment', 'Boleto');
   await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
 
   const card = page.locator('.sub-card', { hasText: 'Meu Serviço' });
@@ -69,7 +69,7 @@ test('cadastro manual, edição e remoção com diálogo de confirmação', asyn
 
   // edição preserva o id
   await card.click();
-  await page.fill('#add-price', '35');
+  await editText(page, 'price', '35');
   await page.getByRole('button', { name: 'Salvar Assinatura' }).click();
   const [edited] = (await readStorage(page)).subs;
   expect(edited.id).toBe(sub.id);

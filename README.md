@@ -63,6 +63,7 @@ src/
     catalog.js       categorias e catálogo curado
   hooks/           useStore, useScreenStack (histórico das telas), useToday, useDueNotifications, useCompanySearch, useFocusTrap...
   components/      Home, Discover, Profile (hub) + profile/ (telas), DetailScreen, SubModal (cadastro), ConfirmDialog, Onboarding, BottomNav...
+  design/          Design System: tokens.css (única fonte de cor, fonte e sombra), componentes base e folhas de edição (ver design/README.md)
   App.jsx          composição, abas, modal e diálogo de confirmação
 e2e/               testes Playwright (fixtures com rede simulada)
 .github/workflows/ CI
@@ -108,6 +109,10 @@ As abas (Portfólio, Descobrir, Perfil) são destinos: trocar de aba não empilh
 - **Alteração não salva** + ←/Voltar/Esc pergunta "Descartar alterações?" ("Descartar" ou "Continuar editando"). Campos de texto e número têm **Salvar** na tela; chaves de notificação e ações de lista (pessoas) aplicam na hora.
 - **Ação destrutiva** fica no fim da tela, separada e em vermelho (Zona de risco; Remover Assinatura) e sempre pede confirmação.
 - Com `prefers-reduced-motion`, a troca de tela é instantânea. Código: `src/hooks/useScreenStack.js` e `src/components/DetailScreen.jsx`.
+
+## Formulários e Design System
+
+Dados que quase não mudam (nome, valor, cobrança, vencimento, pagamento) aparecem como **heróis** (texto grande com lápis) e **linhas** com seta; tocar abre uma **folha de edição** com **Pronto** (salva), **Cancelar**, Esc, toque fora ou Voltar do sistema (descartam). Escolhas usam a lista de opções do app, nunca o `select` nativo. Campos têm 16px no mínimo (evita o zoom do iPhone) e, em telas de toque, nenhuma tela abre com o teclado: o foco inicial é o ←. Valores visuais ficam só em `src/design/tokens.css`; o teste `src/lib/design-tokens.test.js` vigia isso. Detalhes e anti-padrões: `src/design/README.md`.
 
 ## Pessoas e divisão
 

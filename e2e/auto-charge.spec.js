@@ -1,4 +1,4 @@
-import { test, expect, seed, withSubs, sampleSubs, readNotifs, readStorage, iso } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, readNotifs, readStorage, iso, editText, pickOption } from './fixtures.js';
 import { browserToday } from './timezone.js';
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -64,19 +64,19 @@ test('cadastro: Cartão marca a cobrança automática; mexer na opção vale mai
   await seed(page, withSubs([]));
   await page.getByRole('button', { name: '+ Cadastrar assinatura' }).click();
   await page.getByRole('button', { name: '+ Inserir Dados Manualmente' }).click();
-  await page.fill('#add-name', 'Streaming');
-  await page.fill('#add-price', '30');
-  await page.fill('#add-due-date', '12');
+  await editText(page, 'name', 'Streaming');
+  await editText(page, 'price', '30');
+  await editText(page, 'due-date', '12');
 
   await expect(page.locator('#add-auto')).toBeChecked();
-  await page.selectOption('#add-payment', 'Pix');
+  await pickOption(page, 'payment', 'Pix');
   await expect(page.locator('#add-auto')).not.toBeChecked();
-  await page.selectOption('#add-payment', 'Cartão');
+  await pickOption(page, 'payment', 'Cartão');
   await expect(page.locator('#add-auto')).toBeChecked();
 
   await page.locator('#add-auto').uncheck(); // decisão do usuário
-  await page.selectOption('#add-payment', 'Pix');
-  await page.selectOption('#add-payment', 'Cartão');
+  await pickOption(page, 'payment', 'Pix');
+  await pickOption(page, 'payment', 'Cartão');
   await expect(page.locator('#add-auto')).not.toBeChecked();
 
   await page.locator('#add-muted').check();

@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import DetailScreen from '../DetailScreen.jsx';
 import { CATEGORIES } from '../../lib/catalog.js';
+import { Button, EditableHero } from '../../design/index.jsx';
+import { FieldEditor } from '../../design/Editors.jsx';
 
 const sameSet = (a, b) => a.length === b.length && a.every((x) => b.includes(x));
 
 export default function MeuPerfil({ state, onSave, onClose }) {
   const [name, setName] = useState(state.name || '');
   const [interests, setInterests] = useState(state.interests);
+  const [editingName, setEditingName] = useState(false);
   const dirty = name.trim() !== (state.name || '') || !sameSet(interests, state.interests);
 
   const toggle = (value) =>
@@ -19,10 +22,7 @@ export default function MeuPerfil({ state, onSave, onClose }) {
 
   return (
     <DetailScreen id="meu-perfil" title="Meu perfil" dirty={dirty} onClose={onClose}>
-      <div className="form-group">
-        <label htmlFor="prof-name">Nome</label>
-        <input type="text" id="prof-name" value={name} onChange={(e) => setName(e.target.value)} />
-      </div>
+      <EditableHero label="Nome" value={name.trim()} placeholder="Seu nome" data-edit="profile-name" onEdit={() => setEditingName(true)} />
 
       <h2 className="section-heading" id="interests-label">Interesses</h2>
       <p className="text-muted mb-2">Usados para sugerir serviços ao cadastrar</p>
@@ -41,7 +41,11 @@ export default function MeuPerfil({ state, onSave, onClose }) {
         ))}
       </div>
 
-      <button type="button" className="btn btn-primary" onClick={save}>Salvar</button>
+      <Button className="mt-20" onClick={save}>Salvar</Button>
+
+      {editingName && (
+        <FieldEditor id="profile-name" title="Seu nome" label="Nome" value={name} maxLength={40} onSave={setName} onClose={() => setEditingName(false)} />
+      )}
     </DetailScreen>
   );
 }
