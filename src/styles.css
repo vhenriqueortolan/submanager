@@ -235,3 +235,10 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .person-actions { display: flex; gap: 8px; flex: none; }
 .person-edit { padding: 8px 0; }
 .person-error { font-size: 0.85rem; margin-top: 6px; }
+
+/* ---------- Dados e privacidade / Sobre ---------- */
+/* <a> é inline e ignora a largura do .btn; vira bloco para ter a mesma largura dos botões */
+.btn-link { display: block; text-align: center; text-decoration: none; }
+.risk-zone { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); }
+.risk-title { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--danger); margin-bottom: 8px; }
+.risk-row { display: block; width: 100%; margin-top: 12px; padding: 14px 16px; text-align: left; color: var(--danger); font-weight: 600; border: 1px solid var(--danger); border-radius: 12px; }

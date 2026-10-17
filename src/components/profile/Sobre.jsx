@@ -14,7 +14,7 @@ export default function Sobre({ feedbackUrl, onClose }) {
     <DetailScreen id="sobre" title="Sobre" onClose={onClose}>
       {install !== 'unavailable' && (
         <div className="form-group" id="install-section">
-          <label>Instalar o app</label>
+          <h2 className="section-heading">Instalar o app</h2>
           {install === 'installed' && <p className="text-muted">App instalado</p>}
           {install === 'prompt' && (
             <button type="button" className="btn btn-outline" onClick={promptInstall}>Instalar app</button>
@@ -32,10 +32,10 @@ export default function Sobre({ feedbackUrl, onClose }) {
       )}
 
       <div className="form-group" id="about-section">
-        <label>Sobre</label>
+        <h2 className="section-heading">Versão</h2>
         <p className="text-muted">Versão <span id="app-version">{pkg.version}</span></p>
         {feedbackUrl && (
-          <a className="btn btn-outline" href={feedbackUrl} target="_blank" rel="noopener">Enviar feedback</a>
+          <a className="btn btn-outline btn-link" href={feedbackUrl} target="_blank" rel="noopener">Enviar feedback</a>
         )}
       </div>
     </DetailScreen>
