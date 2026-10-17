@@ -26,6 +26,7 @@ PWA de gestão de assinaturas. React 19 + Vite 7, deploy na Vercel (merge na `ma
 - Dados: a chave `subDataV5` não muda; mudança de schema é aditiva (campo novo ganha default em `normalizeSub`), para dados e backups antigos continuarem carregando.
 - Datas: sempre locais, via `src/lib/dates.js`; nunca `toISOString()` para obter "hoje" (fuso).
 - Analytics: nunca enviar nome de serviço, valor ou data; no máximo 2 propriedades por evento.
+- Design System: valores visuais (cor, tamanho de fonte, sombra, duração) só em `src/design/tokens.css`; componentes novos usam `var(--...)` e as diretrizes de `src/design/README.md`. O teste `src/lib/design-tokens.test.js` vigia isso; a lista de exceções só encolhe.
 - Dependências: não adicionar novas sem necessidade explícita.
 - Os testes existentes não podem ser alterados, só ampliados.
 - O responsável é iniciante em git/GitHub, CI, Vercel e testes em dispositivo: ao pedir uma ação manual, explique o que é, por que serve e o resultado esperado em cada passo.
