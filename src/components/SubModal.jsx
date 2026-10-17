@@ -51,7 +51,18 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
     return (byInterest.length ? byInterest : CATALOG).slice(0, 8);
   }, [interests]);
 
+  const [autoTouched, setAutoTouched] = useState(isEdit);
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  // Cadastro novo: a cobrança automática acompanha o método (Cartão) até o usuário mexer na opção.
+  const setPayment = (e) => {
+    const paymentMethod = e.target.value;
+    setForm((f) => ({ ...f, paymentMethod, autoCharge: autoTouched ? f.autoCharge : paymentMethod === 'Cartão' }));
+  };
+  const setFlag = (field) => (e) => {
+    const { checked } = e.target;
+    if (field === 'autoCharge') setAutoTouched(true);
+    setForm((f) => ({ ...f, [field]: checked }));
+  };
   const pick = (app) => {
     setForm(emptyForm(app));
     setSource(app.source || 'manual');
@@ -186,11 +197,22 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
 
             <div className="form-group">
               <label htmlFor="add-payment">Pagamento</label>
-              <select id="add-payment" value={form.paymentMethod} onChange={set('paymentMethod')}>
+              <select id="add-payment" value={form.paymentMethod} onChange={setPayment}>
                 {PAYMENT_METHODS.map((m) => (
                   <option key={m} value={m}>{m}</option>
                 ))}
               </select>
+            </div>
+
+            <div className="form-group" id="charge-options">
+              <label className="check-row" htmlFor="add-auto">
+                <input id="add-auto" type="checkbox" checked={form.autoCharge} onChange={setFlag('autoCharge')} />
+                <span>Cobrança automática <small className="text-muted">(cartão ou débito: não precisa marcar “Paguei”)</small></span>
+              </label>
+              <label className="check-row" htmlFor="add-muted">
+                <input id="add-muted" type="checkbox" checked={form.muted} onChange={setFlag('muted')} />
+                <span>Não avisar desta assinatura</span>
+              </label>
             </div>
 
             <div className="form-group" id="shared-with">

@@ -50,7 +50,7 @@ const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
  * @returns {null | {type: 'upcoming', days: number, cycle: string}}
  */
 export function upcomingStatus(sub, now = new Date(), advanceDays = 0) {
-  if (!(advanceDays > 0)) return null;
+  if (!(advanceDays > 0) || sub.muted) return null;
   const next = nextDue(sub, now);
   if (!next) return null;
   const days = Math.round((next - startOfDay(now)) / 86400000);
@@ -69,7 +69,7 @@ export function pendingDue(subs, now = new Date(), settings = DEFAULT_SETTINGS) 
   const today = todayStr(now);
   const out = [];
   for (const sub of subs) {
-    if (sub.lastNotified === today) continue;
+    if (sub.muted || sub.lastNotified === today) continue;
     let st = dueStatus(sub, now);
     if (st) {
       if (st.type === 'today' && !settings.notifyToday) continue;
@@ -101,10 +101,11 @@ function amountText(sub, people) {
 export function describe(sub, st, people = []) {
   if (st.type === 'upcoming') {
     const when = st.days === 1 ? 'amanhã' : `em ${st.days} dias`;
-    return { title: `${sub.name} vence ${when}`, body: `${amountText(sub, people)} · ${sub.paymentMethod}` };
+    const verb = sub.autoCharge ? 'será cobrada' : 'vence';
+    return { title: `${sub.name} ${verb} ${when}`, body: `${amountText(sub, people)} · ${sub.paymentMethod}` };
   }
   if (st.type === 'today') {
-    return { title: `${sub.name} vence hoje`, body: `${amountText(sub, people)} · ${sub.paymentMethod}` };
+    return { title: `${sub.name} ${sub.autoCharge ? 'é cobrada' : 'vence'} hoje`, body: `${amountText(sub, people)} · ${sub.paymentMethod}` };
   }
   return {
     title: `${sub.name} está atrasada`,

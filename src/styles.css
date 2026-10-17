@@ -184,3 +184,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; cursor: pointer; }
 .switch-row input[type="checkbox"] { width: 22px; height: 22px; flex: none; accent-color: var(--text); }
 .switch-row select { width: auto; max-width: 60%; }
+
+.check-row { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; cursor: pointer; font-size: 0.95rem; }
+.check-row input[type="checkbox"] { width: 20px; height: 20px; flex: none; margin-top: 2px; accent-color: var(--text); }
+.charged-note { font-size: 0.75rem; text-align: right; }

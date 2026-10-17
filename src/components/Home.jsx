@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import AppBrand from './AppBrand.jsx';
 import Logo from './Logo.jsx';
 import { brl, dueLabel, priceLabel } from '../lib/format.js';
-import { dueStatus, parseDay } from '../lib/dates.js';
+import { dueStatus, lastCharge, parseDay } from '../lib/dates.js';
 import { annualProjection, monthlyTotal, totalServiceMonthly } from '../lib/totals.js';
 import { myShare, sharers } from '../lib/people.js';
 import { cycleOf } from '../lib/cycles.js';
@@ -82,6 +82,8 @@ function BudgetCard({ total, annual, budget, converted, serviceTotal }) {
 function SubCard({ sub, people, status, now, onEdit, onPay }) {
   const due = dueLabel(sub, now);
   const divided = sharers(sub, people).length > 0;
+  const auto = sub.autoCharge === true;
+  const charged = auto ? lastCharge(sub, now) : null;
   return (
     <div
       className="sub-card"
@@ -102,7 +104,7 @@ function SubCard({ sub, people, status, now, onEdit, onPay }) {
           <div className="sub-meta">
             <span className="badge">{sub.category}</span>
             {due && <span className="badge">{due}</span>}
-            {status?.type === 'today' && <span className="badge badge-warn">Vence hoje</span>}
+            {status?.type === 'today' && <span className="badge badge-warn">{auto ? 'Cobrado hoje' : 'Vence hoje'}</span>}
             {status?.type === 'overdue' && <span className="badge badge-danger">Atrasada · {status.days}d</span>}
           </div>
         </div>
@@ -110,7 +112,10 @@ function SubCard({ sub, people, status, now, onEdit, onPay }) {
       <div className="sub-right">
         <div className="sub-price">{priceLabel(sub)}</div>
         {divided && <div className="sub-share text-muted">Sua parte {brl(myShare(sub, people))}</div>}
-        {status && (
+        {auto && charged && (
+          <div className="charged-note text-muted">Cobrado em {String(charged.getDate()).padStart(2, '0')}/{String(charged.getMonth() + 1).padStart(2, '0')}</div>
+        )}
+        {status && !auto && (
           <button
             type="button"
             className="pay-btn"

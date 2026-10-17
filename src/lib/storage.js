@@ -38,6 +38,8 @@ export function normalizeSub(x, seen = new Set()) {
     lastNotified: parseDay(x.lastNotified) ? x.lastNotified : '',
     payments: normalizePayments(x.payments),
     sharedWith: normalizeSharedWith(x.sharedWith),
+    autoCharge: x.autoCharge === true,
+    muted: x.muted === true,
   };
   // `paidCycle` espelha o último pagamento do histórico; sem histórico, vale o valor legado.
   const lastPaid = lastPaidCycle(sub);
