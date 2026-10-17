@@ -85,7 +85,7 @@ test.describe('iPhone fora da Tela de Início', () => {
   test('avisa para instalar o app', async ({ page }) => {
     await seed(page, withSubs([]));
     await openProfileScreen(page, 'Notificações');
-    await expect(page.locator('#notif-ios-hint')).toContainText('instale o app na Tela de Início');
+    await expect(page.locator('#notif-ios-hint')).toContainText('instale o app. Veja como em Sobre.');
   });
 });
 
@@ -93,4 +93,24 @@ test('fora do iPhone, o aviso de instalar não aparece', async ({ page }) => {
   await seed(page, withSubs([]));
   await openProfileScreen(page, 'Notificações');
   await expect(page.locator('#notif-ios-hint')).toHaveCount(0);
+});
+
+test('Notificações: três blocos e a frase sobre o app aberto aparece uma vez', async ({ page }) => {
+  await seed(page, withSubs([]));
+  await openProfileScreen(page, 'Notificações');
+  await expect(page.locator('.section-heading')).toHaveText(['Navegador', 'Avisos', 'Quando avisar']);
+  await expect(page.getByText('Os avisos chegam quando o app está aberto.')).toHaveCount(1);
+});
+
+test.describe('permissão ainda não pedida', () => {
+  test.use({ notifPermission: 'default' });
+
+  test('Ativar na tela Notificações pede a permissão', async ({ page }) => {
+    await seed(page, withSubs([]));
+    await openProfileScreen(page, 'Notificações');
+    await expect(page.locator('#notif-status')).toHaveText('Ainda não pedidas.');
+    await page.locator('#notif-btn').click();
+    await expect(page.locator('#notif-status')).toHaveText('Ativadas no navegador.');
+    await expect(page.locator('#notif-btn')).toHaveCount(0);
+  });
 });
