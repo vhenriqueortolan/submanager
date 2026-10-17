@@ -1,0 +1,81 @@
+/*
+ * Design System do SubManager: único lugar com valores literais de cor, tamanho, sombra e duração.
+ * Os nomes antigos (--bg, --surface, --text...) seguem valendo; os nomes por função (--color-*) são aliases deles
+ * e viram a referência. Os antigos saem quando a aplicação gradual (D4) terminar.
+ */
+:root {
+  /* ---------- Valores base (nomes legados) ---------- */
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface-hover: #141414;
+  --border: #222222;
+  --border-focus: #444444;
+  --text: #ffffff;
+  --text-muted: #888888;
+  --primary: #ffffff;
+  --primary-invert: #000000;
+  --accent: #0070f3;
+  --warning: #f5a623;
+  --danger: #ff3333;
+  --radius: 16px;
+  --font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* ---------- Cor, por função ---------- */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-hover);
+  --color-border: var(--border);
+  --color-focus: var(--text);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-action: var(--accent);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: #2ecc71;
+
+  /* ---------- Tipografia ---------- */
+  --font-size-display: 56px;   /* número de destaque */
+  --font-size-title-lg: 28px;  /* nome do serviço */
+  --font-size-title: 18px;     /* títulos de seção */
+  --font-size-body: 17px;      /* campos e textos */
+  --font-size-label: 13px;     /* rótulos (muted) */
+  --font-size-caption: 12px;   /* ajuda */
+  --font-weight-body: 500;
+  --font-weight-title: 600;
+  --letter-spacing-title: -0.04em;
+  --letter-spacing-field: -0.01em;
+
+  /* ---------- Espaço ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+
+  /* ---------- Forma ---------- */
+  --radius-control: 12px;
+  --radius-card: 16px;
+  --radius-screen: 24px;
+
+  /* ---------- Toque ---------- */
+  --touch-min: 44px;
+  --field-height: 52px;
+
+  /* ---------- Movimento ---------- */
+  --motion-screen: 250ms;
+
+  /* ---------- Elevação e camadas ---------- */
+  --shadow-overlay: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --z-base: 0;
+  --z-sticky: 1;
+  --z-detail: 200;
+  --z-confirm: 350;
+  --z-toast: 400;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-screen: 0ms; }
+}
