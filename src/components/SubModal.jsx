@@ -116,15 +116,26 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
       {!startsAtDetails && (
         <DetailScreen id="cadastro-busca" domId="add-modal" title="Buscar serviço" onClose={onClose}>
           <div id="modal-step-1">
-            <input
-              type="search"
-              className="search-input modal-search"
-              id="modal-search-input"
-              placeholder="Digite o nome do app..."
-              aria-label="Buscar serviço"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+            <form
+              role="search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                // Enter avança: o primeiro resultado, ou os dados manuais com o que foi digitado.
+                const first = searching && search.status === 'done' ? search.items[0] : null;
+                pick(first ?? { name: query.trim() });
+              }}
+            >
+              <input
+                type="search"
+                className="search-input modal-search"
+                id="modal-search-input"
+                placeholder="Digite o nome do app..."
+                aria-label="Buscar serviço"
+                enterKeyHint="go"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </form>
 
             <h3 className="section-title grid-title" id="modal-grid-title">
               {searching ? 'Resultados' : 'Recomendados para Você'}

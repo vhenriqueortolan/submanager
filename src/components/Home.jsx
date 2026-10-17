@@ -97,7 +97,8 @@ function SubCard({ sub, people, status, now, onEdit, onPay }) {
       tabIndex={0}
       onClick={() => onEdit(sub.id)}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        // Só o próprio cartão: Enter/Espaço num botão de dentro (ex.: Paguei) é do botão.
+        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           onEdit(sub.id);
         }
