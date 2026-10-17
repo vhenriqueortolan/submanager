@@ -27,6 +27,8 @@ h1, h2, h3 { font-weight: 600; letter-spacing: -0.04em; }
 
 .hero-card { background: linear-gradient(145deg, var(--color-surface-raised) 0%, var(--color-bg) 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
 .hero-title { font-size: var(--font-size-body); color: var(--text-muted); margin-bottom: 4px; }
+.hero-greeting { font-size: var(--font-size-body); color: var(--text-muted); margin-bottom: var(--space-3); }
+.orcamento-historico { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border); }
 .hero-count { font-size: var(--font-size-display); letter-spacing: -2px; line-height: 1; margin-bottom: 16px; }
 .hero-logos-flex { display: flex; gap: -10px; margin-left: 10px; }
 .hero-logo-item { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--color-bg); object-fit: cover; margin-left: -10px; background: var(--color-border); }

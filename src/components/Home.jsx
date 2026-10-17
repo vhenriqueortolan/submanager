@@ -16,16 +16,18 @@ function Hero({ greeting, subs }) {
   // Só as ativas contam: pausadas e canceladas saem do número e dos logos.
   subs = subs.filter(isActive);
   return (
-    <div className="hero-card" id="hero-card">
-      <div className="hero-title">{greeting}</div>
-      <div className="hero-count" id="hero-count">{subs.length}</div>
-      <div className="hero-logos-flex">
-        {subs.slice(0, 5).map((s) => (
-          <Logo key={s.id} domain={s.domain} name={s.name} className="hero-logo-item" />
-        ))}
-        {subs.length > 5 && <div className="hero-logo-more">+{subs.length - 5}</div>}
+    <>
+      <div className="hero-greeting" id="hero-greeting">{greeting}</div>
+      <div className="hero-card" id="hero-card">
+        <div className="hero-count" id="hero-count">{subs.length}</div>
+        <div className="hero-logos-flex">
+          {subs.slice(0, 5).map((s) => (
+            <Logo key={s.id} domain={s.domain} name={s.name} className="hero-logo-item" />
+          ))}
+          {subs.length > 5 && <div className="hero-logo-more">+{subs.length - 5}</div>}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
