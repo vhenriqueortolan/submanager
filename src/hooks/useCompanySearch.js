@@ -10,7 +10,6 @@ export function useCompanySearch(query, delay = 500) {
 
   useEffect(() => {
     if (q.length < 2) return undefined;
-    setResult({ status: 'loading', items: [], query: q });
     const ctrl = new AbortController();
     const t = setTimeout(async () => {
       try {
@@ -27,6 +26,6 @@ export function useCompanySearch(query, delay = 500) {
   }, [q, delay]);
 
   if (q.length < 2) return IDLE;
-  if (result.query !== q) return { status: 'loading', items: [] };
+  if (result.query !== q) return { status: 'loading', items: [] }; // enquanto a resposta desta busca não chega
   return result;
 }

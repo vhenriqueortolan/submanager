@@ -17,6 +17,8 @@ import { downloadBackup } from './lib/backup.js';
 import { snoozeUntil } from './lib/reminder.js';
 import { trackEvent } from './lib/analytics.js';
 
+const SAVE_FAILED_MESSAGE = 'Não foi possível salvar os dados neste navegador (armazenamento indisponível ou cheio).';
+
 export default function App() {
   const { state, dispatch, saveFailed, resetAll } = useStore();
   const today = useToday();
@@ -34,9 +36,11 @@ export default function App() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  useEffect(() => {
-    if (saveFailed) notify('Não foi possível salvar os dados neste navegador (armazenamento indisponível ou cheio).');
-  }, [saveFailed, notify]);
+  const [seenSaveFailed, setSeenSaveFailed] = useState(false);
+  if (saveFailed !== seenSaveFailed) {
+    setSeenSaveFailed(saveFailed);
+    if (saveFailed) setToast({ message: SAVE_FAILED_MESSAGE, id: 'save-failed' });
+  }
 
   const onNotified = useCallback((ids) => dispatch({ type: 'markNotified', ids, day: todayStr() }), [dispatch]);
   useDueNotifications(state.onboarded ? state.subs : [], onNotified, permission, state.people, state.settings);
