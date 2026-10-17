@@ -50,6 +50,8 @@ test('digitando APAGAR: apaga, volta ao onboarding e recarregar mantém vazio', 
   const keys = await page.evaluate(() => Object.keys(localStorage));
   expect(keys).toEqual(['outra-chave']);
 
+  // A tela de Dados foi desmontada pelo reset; espera o histórico terminar de voltar antes de recarregar.
+  await page.waitForFunction(() => !history.state?.screen);
   await page.reload();
   await expect(page.locator('#onboarding-fs')).toBeVisible();
   // O app regrava só o estado vazio padrão; nada dos dados antigos volta.
