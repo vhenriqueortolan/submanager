@@ -3,6 +3,7 @@ import { normalizeDue, paidCycleValid } from './cycles.js';
 import { lastPaidCycle, normalizePayments } from './payments.js';
 import { normalizePeople, normalizeSharedWith } from './people.js';
 import { DEFAULT_SETTINGS, normalizeSettings } from './settings.js';
+import { normalizeStatus } from './status.js';
 
 // Mantém a mesma chave das versões anteriores para não perder dados existentes.
 export const STORAGE_KEY = 'subDataV5';
@@ -40,6 +41,7 @@ export function normalizeSub(x, seen = new Set()) {
     sharedWith: normalizeSharedWith(x.sharedWith),
     autoCharge: x.autoCharge === true,
     muted: x.muted === true,
+    ...normalizeStatus(x),
   };
   // `paidCycle` espelha o último pagamento do histórico; sem histórico, vale o valor legado.
   const lastPaid = lastPaidCycle(sub);
