@@ -31,3 +31,11 @@ PWA de gestão de assinaturas. React 19 + Vite 7, deploy na Vercel (merge na `ma
 - Os testes existentes não podem ser alterados, só ampliados.
 - O responsável é iniciante em git/GitHub, CI, Vercel e testes em dispositivo: ao pedir uma ação manual, explique o que é, por que serve e o resultado esperado em cada passo.
 - Exceção: quando uma sprint aprovada muda a navegação ou o layout (ex.: `docs/sprint-4-ux.md`), os testes que dependem do caminho até um elemento podem ser migrados, desde que as mesmas verificações de comportamento continuem valendo. A migração é descrita no corpo do PR.
+
+## Economia de contexto
+
+- Antes de explorar o repositório, use o mapa de estrutura guardado na memória do projeto. Abra só os arquivos que a tarefa toca.
+- Dentro de uma etapa, rode só os testes afetados: `node --test src/lib/<arquivo>.test.js` ou `npx playwright test e2e/<arquivo>.spec.js`. A suíte completa roda uma vez, antes de abrir a PR.
+- Não repita verificação já feita: se a etapa anterior terminou verde e não houve mudança de código depois, não rode de novo.
+- Ao terminar, se criou, moveu ou removeu arquivo relevante, ou mudou uma regra deste arquivo, atualize o mapa na memória.
+- Respostas objetivas: o que foi feito, o arquivo alterado e o próximo passo. Sem narrar cada comando nem repetir conteúdo de arquivo já lido.
