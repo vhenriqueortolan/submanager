@@ -5,7 +5,7 @@ Fonte única de cor, tipografia, espaço, forma, movimento e componentes. O cód
 - `tokens.css`: único lugar com valores literais de cor, tamanho de fonte, sombra e duração.
 - `components.css` e `index.jsx`: componentes base, que só usam variáveis de `tokens.css`.
 - `Catalog.jsx`: catálogo vivo, só no build de e2e (botão "Abrir catálogo").
-- Guardrail: `src/lib/design-tokens.test.js` falha quando um CSS fora de `tokens.css` tem cor hexadecimal ou tamanho de fonte (inclui o atalho `font:`). Arquivos ainda por migrar ficam na lista `EXCECOES` do teste; a lista só encolhe e chega a zero em D5.
+- Guardrail: `src/lib/design-tokens.test.js` falha quando um CSS fora de `tokens.css` tem cor hexadecimal ou tamanho de fonte (inclui o atalho `font:`). A lista de exceções (`EXCECOES`) está zerada desde a Sprint 5: nenhum arquivo está liberado.
 
 ## Regra de ouro
 
