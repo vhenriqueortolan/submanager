@@ -18,7 +18,7 @@ import { snoozeUntil } from './lib/reminder.js';
 import { trackEvent } from './lib/analytics.js';
 
 export default function App() {
-  const { state, dispatch, saveFailed } = useStore();
+  const { state, dispatch, saveFailed, resetAll } = useStore();
   const today = useToday();
   const [tab, setTab] = useState('home');
   const [modal, setModal] = useState(null); // null | { mode: 'new', preset? } | { mode: 'edit', sub }
@@ -91,6 +91,27 @@ export default function App() {
     });
   };
 
+  const handleClearData = () => {
+    setConfirm({
+      title: 'Apagar todos os dados?',
+      message:
+        'Isto apaga neste aparelho todas as assinaturas, pessoas, pagamentos e preferências, e você volta ao início do app. ' +
+        'Não dá para desfazer. Os backups que você já baixou continuam nos seus arquivos, e a permissão de notificação só pode ' +
+        'ser revogada nas configurações do navegador.',
+      confirmLabel: 'Apagar tudo',
+      danger: true,
+      requireText: 'APAGAR',
+      extraAction: { label: 'Exportar backup antes', onClick: handleExport },
+      onConfirm: () => {
+        const ok = resetAll();
+        setConfirm(null);
+        setModal(null);
+        setTab('home');
+        notify(ok ? 'Todos os dados foram apagados.' : 'Não foi possível apagar tudo neste navegador. Limpe os dados do site nas configurações.');
+      },
+    });
+  };
+
   const handleExport = () => {
     downloadBackup(state);
     dispatch({ type: 'backupDone', day: todayStr() });
@@ -138,14 +159,17 @@ export default function App() {
 
   if (!state.onboarded) {
     return (
-      <Onboarding
-        onFinish={({ name, budget, interests, skipped }) => {
-          dispatch({ type: 'completeOnboarding', name, budget, interests });
-          trackEvent('onboarding_completed', { skipped: !!skipped });
-          requestPersistence();
-          setTab('home');
-        }}
-      />
+      <>
+        <Onboarding
+          onFinish={({ name, budget, interests, skipped }) => {
+            dispatch({ type: 'completeOnboarding', name, budget, interests });
+            trackEvent('onboarding_completed', { skipped: !!skipped });
+            requestPersistence();
+            setTab('home');
+          }}
+        />
+        <Toast toast={toast} />
+      </>
     );
   }
 
@@ -179,6 +203,7 @@ export default function App() {
           }}
           onExport={handleExport}
           onRemovePerson={handleRemovePerson}
+          onClearData={handleClearData}
           onSettings={(patch) => dispatch({ type: 'updateSettings', patch })}
           onImport={handleImport}
         />
@@ -207,6 +232,8 @@ export default function App() {
           message={confirm.message}
           confirmLabel={confirm.confirmLabel}
           danger={confirm.danger}
+          requireText={confirm.requireText}
+          extraAction={confirm.extraAction}
           onConfirm={confirm.onConfirm}
           onCancel={closeConfirm}
         />

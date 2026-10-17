@@ -1,8 +1,8 @@
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { normalizeSettings } from '../lib/settings.js';
 import { removePersonFromState } from '../lib/people.js';
 import { addPayment, removePayment } from '../lib/payments.js';
-import { loadState, saveState, STORAGE_KEY } from '../lib/storage.js';
+import { clearAllData, defaultState, loadState, saveState, STORAGE_KEY } from '../lib/storage.js';
 
 function reducer(state, action) {
   switch (action.type) {
@@ -108,5 +108,14 @@ export function useStore() {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  return { state, dispatch, saveFailed };
+  // Apaga o armazenamento e volta ao estado inicial sem regravá-lo (nada fica salvo depois de apagar).
+  const resetAll = useCallback(() => {
+    const ok = clearAllData();
+    const fresh = defaultState();
+    lastSaved.current = JSON.stringify(fresh);
+    dispatch({ type: 'replace', state: fresh });
+    return ok;
+  }, []);
+
+  return { state, dispatch, saveFailed, resetAll };
 }

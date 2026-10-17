@@ -7,6 +7,9 @@ export const FEEDBACK_FORM = {
   fields: { version: 'entry.999524458', platform: 'entry.204667521', comment: '' },
 };
 
+/** E-mail para pedir a exclusão das respostas do formulário (a definir; vazio esconde o link). */
+export const PRIVACY_CONTACT = '';
+
 export function platformOf(userAgent) {
   const ua = userAgent || '';
   if (!ua) return 'Outro';
