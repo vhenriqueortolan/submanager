@@ -7,6 +7,7 @@ import SubModal from './components/SubModal.jsx';
 import ConfirmDialog from './components/ConfirmDialog.jsx';
 import ProfileScreens from './components/profile/ProfileScreens.jsx';
 import TestScreen from './components/TestScreen.jsx';
+import Catalog from './design/Catalog.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import Toast from './components/Toast.jsx';
 import { useStore } from './hooks/useStore.js';
@@ -29,6 +30,7 @@ export default function App() {
   const [confirm, setConfirm] = useState(null); // null | { title, message, confirmLabel, danger, onConfirm }
   const [homeScreen, setHomeScreen] = useState(null); // tela do Perfil aberta a partir do Início
   const [testScreen, setTestScreen] = useState(false); // só no build de e2e
+  const [catalog, setCatalog] = useState(false); // só no build de e2e
   const [toast, setToast] = useState(null);
   const [permission, requestPermission] = useNotificationPermission();
 
@@ -226,6 +228,10 @@ export default function App() {
       {import.meta.env.VITE_E2E && (
         <button type="button" className="e2e-open" onClick={() => setTestScreen(true)}>Abrir tela de teste</button>
       )}
+      {import.meta.env.VITE_E2E && (
+        <button type="button" className="e2e-open e2e-open-catalog" onClick={() => setCatalog(true)}>Abrir catálogo</button>
+      )}
+      {import.meta.env.VITE_E2E && catalog && <Catalog onClose={() => setCatalog(false)} />}
       {import.meta.env.VITE_E2E && testScreen && <TestScreen onClose={() => setTestScreen(false)} />}
 
       {modal && (

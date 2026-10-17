@@ -197,6 +197,7 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 
 /* Botão que só existe no build de e2e */
 .e2e-open { position: fixed; top: 0; right: 0; z-index: 150; font-size: 0.7rem; padding: 4px 8px; opacity: 0.6; }
+.e2e-open-catalog { right: auto; left: 0; }
 
 /* ---------- Hub do Perfil ---------- */
 .hub-greeting { font-size: 1.6rem; margin-bottom: 16px; }
