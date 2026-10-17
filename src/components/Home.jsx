@@ -3,7 +3,7 @@ import AppBrand from './AppBrand.jsx';
 import Logo from './Logo.jsx';
 import { brl, dueLabel, priceLabel } from '../lib/format.js';
 import { dueStatus, lastCharge, parseDay } from '../lib/dates.js';
-import { annualProjection, monthlyTotal, totalServiceMonthly } from '../lib/totals.js';
+import { annualProjection, cancelledMonthlySavings, monthlyTotal, totalServiceMonthly } from '../lib/totals.js';
 import { myShare, sharers } from '../lib/people.js';
 import { cycleOf } from '../lib/cycles.js';
 import { sortByUrgency } from '../lib/sort.js';
@@ -153,6 +153,7 @@ export default function Home({ state, today, permission, onOpenNotifications, on
   const stoppedItems = items.filter(({ sub }) => !isActive(sub));
   const converted = subs.filter(isActive).some((s) => cycleOf(s) !== 'monthly');
 
+  const savings = cancelledMonthlySavings(subs, people);
   const total = monthlyTotal(subs, people);
   const annual = annualProjection(subs, people);
   const anyDivided = subs.filter(isActive).some((s) => sharers(s, people).length > 0);
@@ -203,6 +204,11 @@ export default function Home({ state, today, permission, onOpenNotifications, on
           {stoppedItems.length > 0 && (
             <div id="stopped-list">
               <h3 className="section-title section-title-plain stopped-title">Pausadas e canceladas</h3>
+              {savings > 0 && (
+                <p className="text-muted stopped-savings" id="cancelled-savings">
+                  Canceladas: você deixou de gastar {brl(savings)} por mês.
+                </p>
+              )}
               {stoppedItems.map(({ sub, status }) => (
                 <SubCard key={sub.id} sub={sub} people={people} status={status} now={now} onEdit={onEdit} onPay={onPay} />
               ))}
