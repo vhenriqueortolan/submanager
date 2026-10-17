@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import DetailScreen from '../DetailScreen.jsx';
+import { SettingList, SettingRow } from '../../design/index.jsx';
+import { OptionEditor } from '../../design/Editors.jsx';
 import { ADVANCE_OPTIONS } from '../../lib/settings.js';
 import { installState } from '../../lib/install.js';
 
@@ -21,6 +24,7 @@ function Switch({ id, label, checked, disabled, onChange }) {
 }
 
 export default function Notificacoes({ state, permission, onEnableNotifications, onSettings, onClose }) {
+  const [editingAdvance, setEditingAdvance] = useState(false);
   const install = installState({
     userAgent: navigator.userAgent,
     standalone: window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true,
@@ -50,21 +54,27 @@ export default function Notificacoes({ state, permission, onEnableNotifications,
         <p className="text-muted mt-1">Os avisos chegam quando o app está aberto.</p>
 
         <h2 className="section-heading">Quando avisar</h2>
-        <div className="switch-list">
-          <div className="switch-row">
-            <label htmlFor="set-advance">Antecedência</label>
-            <select
-              id="set-advance"
-              value={state.settings.advanceDays}
-              disabled={!state.settings.enabled}
-              onChange={(e) => onSettings({ advanceDays: parseInt(e.target.value, 10) })}
-            >
-              {ADVANCE_OPTIONS.map((d) => (
-                <option key={d} value={d}>{ADVANCE_LABEL[d]}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <SettingList>
+          <SettingRow
+            key="advance"
+            label="Antecedência"
+            value={ADVANCE_LABEL[state.settings.advanceDays]}
+            id="set-advance"
+            data-edit="advance"
+            disabled={!state.settings.enabled}
+            onClick={() => setEditingAdvance(true)}
+          />
+        </SettingList>
+        {editingAdvance && (
+          <OptionEditor
+            id="advance"
+            title="Antecedência"
+            options={ADVANCE_OPTIONS.map((d) => ({ value: d, label: ADVANCE_LABEL[d] }))}
+            value={state.settings.advanceDays}
+            onSave={(advanceDays) => onSettings({ advanceDays })}
+            onClose={() => setEditingAdvance(false)}
+          />
+        )}
       </div>
     </DetailScreen>
   );

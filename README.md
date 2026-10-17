@@ -57,6 +57,9 @@ src/
     notifications.js regras e envio de notificações (dia, atraso, antecedência)
     totals.js        seu gasto mensal (sua parte), total dos serviços e projeção anual
     sort.js          ordenação da lista por urgência
+    status.js        ativa, pausada ou cancelada (períodos de pausa, reativação reversível)
+    auto-charges.js  cobranças automáticas dos ciclos que faltam, desde o cadastro (idempotente)
+    history.js       histórico: agrupamento, totais, variação, média, maior peso e mudanças de preço
     format.js        moeda, rótulos de preço e de vencimento
     analytics.js     eventos de uso (sem dados financeiros)
     search.js        busca global de serviços (Clearbit) — troque só este arquivo se o provedor mudar
@@ -112,7 +115,15 @@ As abas (Portfólio, Descobrir, Perfil) são destinos: trocar de aba não empilh
 
 ## Formulários e Design System
 
-Dados que quase não mudam (nome, valor, cobrança, vencimento, pagamento) aparecem como **heróis** (texto grande com lápis) e **linhas** com seta; tocar abre uma **folha de edição** com **Pronto** (salva), **Cancelar**, Esc, toque fora ou Voltar do sistema (descartam). Escolhas usam a lista de opções do app, nunca o `select` nativo. Campos têm 16px no mínimo (evita o zoom do iPhone) e, em telas de toque, nenhuma tela abre com o teclado: o foco inicial é o ←. Valores visuais ficam só em `src/design/tokens.css`; o teste `src/lib/design-tokens.test.js` vigia isso. Detalhes e anti-padrões: `src/design/README.md`.
+Dados que quase não mudam (nome, valor, cobrança, vencimento, pagamento) aparecem como **heróis** (texto grande com lápis) e **linhas** com seta; tocar abre uma **folha de edição** com **Pronto** (salva), **Cancelar**, Esc, toque fora ou Voltar do sistema (descartam). Escolhas usam a lista de opções do app, nunca o `select` nativo. Campos têm 16px no mínimo (evita o zoom do iPhone) e, em telas de toque, nenhuma tela abre com o teclado: o foco inicial é o ←. Valores visuais (cor, tamanho de fonte, sombra, duração) ficam só em `src/design/tokens.css`; o teste `src/lib/design-tokens.test.js` vigia isso e a lista de exceções está **zerada**. Únicas cores fora dele: `theme-color` no `index.html` e `background_color` no manifesto, que não aceitam variáveis CSS. Detalhes e anti-padrões: `src/design/README.md`.
+
+## Pausar, cancelar e reativar
+
+Na tela da assinatura, logo abaixo do nome e do valor, o bloco de status mostra o estado (Ativa, Pausada ou Cancelada) e os botões **Pausar** e **Cancelar** (ou **Reativar**). Os três são reversíveis e o aviso traz **Desfazer**; só **Remover** (zona de risco) pede confirmação e apaga o histórico. Pausada e cancelada saem dos totais, das previsões e dos avisos, vão para "Pausadas e canceladas" no Portfólio (a economia mensal das canceladas aparece ali) e não geram cobrança automática enquanto estiverem paradas. Os períodos parados ficam em `pauses` (`from` inclusive, `to` exclusivo) e a data do cancelamento em `cancelledAt`.
+
+## Histórico
+
+Cada pagamento é um registro com `amount`/`price` (preço cheio do dia), `share` (sua parte naquele momento), `kind` (`manual` ou `auto`) e `estimated` (schema 10, aditivo). Ao abrir o app, as cobranças automáticas dos ciclos que faltam são gravadas **desde o cadastro**: ciclos passados com o preço de hoje e marcados como **Estimada**, sem os meses pausados ou depois do cancelamento. Reajustes que o app não registrou não aparecem. Registros antigos de assinatura dividida mostram o valor cheio com "total" e ficam fora dos totais de "sua parte" (a divisão do passado não foi guardada). A tela **Histórico** (card no Portfólio e linha dentro do Orçamento) mostra só fatos: total do mês e variação, média de 6 meses, maior peso, mudanças de preço, gasto por categoria, filtros e lista por mês. O evento de analytics `history_opened` leva só `origem`.
 
 ## Pessoas e divisão
 

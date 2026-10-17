@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { test, expect, seed, withSubs, sampleSubs, readNotifs, readStorage, iso, openProfileScreen } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, readNotifs, readStorage, iso, openProfileScreen, pickOption } from './fixtures.js';
 import { browserToday } from './timezone.js';
 
 
@@ -44,18 +44,20 @@ test('Perfil: chaves e antecedência são salvas e voltam após recarregar', asy
 
   await page.locator('#set-today').uncheck();
   await page.locator('#set-overdue').uncheck();
-  await page.selectOption('#set-advance', '3');
+  await pickOption(page, 'advance', '3 dias antes');
   expect((await readStorage(page)).settings).toEqual({ enabled: true, notifyToday: false, notifyOverdue: false, advanceDays: 3 });
 
   await page.reload();
   await openProfileScreen(page, 'Notificações');
   await expect(page.locator('#set-today')).not.toBeChecked();
-  await expect(page.locator('#set-advance')).toHaveValue('3');
+  await expect(page.locator('#set-advance')).toContainText('3 dias antes');
 
   await page.locator('#set-enabled').uncheck();
   await expect(page.locator('#set-today')).toBeDisabled();
   await expect(page.locator('#set-advance')).toBeDisabled();
-  await expect(page.locator('#set-advance option')).toHaveText(['Não avisar antes', '1 dia antes', '3 dias antes', '7 dias antes']);
+  await page.locator('#set-enabled').check();
+  await page.locator('#set-advance').click();
+  await expect(page.getByRole('dialog', { name: 'Antecedência' }).getByRole('radio')).toHaveText([/^Não avisar antes/, /^1 dia antes/, /^3 dias antes/, /^7 dias antes/]);
 });
 
 test('as preferências entram no backup exportado', async ({ page }) => {
