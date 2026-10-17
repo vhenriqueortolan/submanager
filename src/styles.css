@@ -242,3 +242,8 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .risk-zone { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); }
 .risk-title { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--danger); margin-bottom: 8px; }
 .risk-row { display: block; width: 100%; margin-top: 12px; padding: 14px 16px; text-align: left; color: var(--danger); font-weight: 600; border: 1px solid var(--danger); border-radius: 12px; }
+
+/* ---------- Início: cartão de orçamento clicável e banners ---------- */
+.budget-card-btn { display: block; width: 100%; text-align: left; color: inherit; font: inherit; }
+.budget-card-btn:hover { border-color: var(--border-focus); }
+#backup-banner { border-color: var(--warning); }

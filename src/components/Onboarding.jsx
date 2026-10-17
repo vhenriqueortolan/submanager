@@ -46,14 +46,14 @@ export default function Onboarding({ onFinish }) {
       {step === 2 && (
         <div className="obs-step" id="step-2">
           <h1 className="obs-title">Orçamento.</h1>
-          <p className="text-muted mb-2">Qual o seu teto mensal? Conte só a sua parte, se dividir alguma assinatura. (R$)</p>
+          <p className="text-muted mb-2">Quanto você quer gastar, no máximo, por mês? Conte só a sua parte, se dividir alguma assinatura.</p>
           <input
             type="number"
             inputMode="decimal"
             id="setup-budget"
             className="obs-input"
-            placeholder="0.00"
-            aria-label="Teto mensal em reais"
+            placeholder="0,00"
+            aria-label="Valor máximo por mês (só a sua parte)"
             value={budget}
             onChange={(e) => setBudget(e.target.value)}
           />
