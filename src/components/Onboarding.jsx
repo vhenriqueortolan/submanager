@@ -25,7 +25,7 @@ export default function Onboarding({ onFinish }) {
   return (
     <div id="onboarding-fs">
       {step === 1 && (
-        <div className="obs-step" id="step-1">
+        <form className="obs-step" id="step-1" onSubmit={(e) => { e.preventDefault(); setStep(2); }}>
           <div className="obs-logo"><BrandMark /></div>
           <h1 className="obs-title">Bem-vindo.</h1>
           <p className="text-muted mb-2">Como prefere ser chamado?</p>
@@ -38,13 +38,13 @@ export default function Onboarding({ onFinish }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <button type="button" className="btn btn-primary" onClick={() => setStep(2)}>Continuar</button>
+          <button type="submit" className="btn btn-primary">Continuar</button>
           {skip}
-        </div>
+        </form>
       )}
 
       {step === 2 && (
-        <div className="obs-step" id="step-2">
+        <form className="obs-step" id="step-2" onSubmit={(e) => { e.preventDefault(); setStep(3); }}>
           <h1 className="obs-title">Orçamento.</h1>
           <p className="text-muted mb-2">Quanto você quer gastar, no máximo, por mês? Conte só a sua parte, se dividir alguma assinatura.</p>
           <input
@@ -57,9 +57,9 @@ export default function Onboarding({ onFinish }) {
             value={budget}
             onChange={(e) => setBudget(e.target.value)}
           />
-          <button type="button" className="btn btn-primary" onClick={() => setStep(3)}>Continuar</button>
+          <button type="submit" className="btn btn-primary">Continuar</button>
           {skip}
-        </div>
+        </form>
       )}
 
       {step === 3 && (
