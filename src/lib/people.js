@@ -1,4 +1,5 @@
 import { newId } from './storage.js';
+import { isCountry, isEmail } from './phone.js';
 
 const MAX_NAME = 40;
 const cents = (n) => Math.round(n * 100) / 100;
@@ -49,9 +50,21 @@ export function normalizePeople(list) {
     let id = typeof x.id === 'string' && x.id ? x.id : newId();
     if (seen.has(id)) id = newId();
     seen.add(id);
-    out.push({ id, name });
+    out.push({ id, name, ...optionalContact(x) });
   }
   return out;
+}
+
+/** Telefone (já internacional), país e e-mail são opcionais: só entram na pessoa quando válidos. */
+function optionalContact(x) {
+  const extra = {};
+  const phone = typeof x.phone === 'string' ? x.phone.trim() : '';
+  if (/^\+\d{8,15}$/.test(phone)) {
+    extra.phone = phone;
+    if (isCountry(x.phoneCountry)) extra.phoneCountry = x.phoneCountry;
+  }
+  if (typeof x.email === 'string' && isEmail(x.email)) extra.email = x.email.trim();
+  return extra;
 }
 
 export function normalizeSharedWith(list) {

@@ -144,3 +144,33 @@ test('sharedCount conta as assinaturas divididas com a pessoa', async () => {
   assert.equal(sharedCount(subs, 'a'), 2);
   assert.equal(sharedCount(subs, 'zzz'), 0);
 });
+
+// Sprint 6: contato opcional da pessoa (telefone, país, e-mail). O SCHEMA não muda: campo ausente é só ausente.
+test('normalizePeople mantém telefone, país e e-mail válidos', async () => {
+  const { normalizePeople } = await import('./people.js');
+  const [p] = normalizePeople([{ id: 'x', name: 'Ana', phone: '+5511912345678', phoneCountry: 'BR', email: ' ana@exemplo.com ' }]);
+  assert.deepEqual(p, { id: 'x', name: 'Ana', phone: '+5511912345678', phoneCountry: 'BR', email: 'ana@exemplo.com' });
+});
+
+test('normalizePeople: pessoa antiga (só nome) continua igual, sem campos novos', async () => {
+  const { normalizePeople } = await import('./people.js');
+  assert.deepEqual(normalizePeople([{ id: 'x', name: 'Ana' }]), [{ id: 'x', name: 'Ana' }]);
+});
+
+test('normalizePeople descarta contato inválido e país desconhecido, sem perder a pessoa', async () => {
+  const { normalizePeople } = await import('./people.js');
+  const [p] = normalizePeople([{ id: 'x', name: 'Ana', phone: '123', phoneCountry: 'ZZ', email: 'ana@' }]);
+  assert.deepEqual(p, { id: 'x', name: 'Ana' });
+  const [q] = normalizePeople([{ id: 'y', name: 'Bia', phone: '+5511912345678', phoneCountry: 'ZZ' }]);
+  assert.deepEqual(q, { id: 'y', name: 'Bia', phone: '+5511912345678' });
+});
+
+test('os campos novos sobrevivem ao backup (exportar e importar) e o SCHEMA continua em 10', async () => {
+  const { SCHEMA, defaultState, parseImport } = await import('./storage.js');
+  const state = { ...defaultState(), people: [{ id: 'x', name: 'Ana', phone: '+351912345678', phoneCountry: 'PT', email: 'ana@exemplo.com' }] };
+  const json = JSON.stringify(state);
+  const back = parseImport(json);
+  assert.deepEqual(back.people, state.people);
+  assert.equal(SCHEMA, 10);
+  assert.equal(back.schema, 10);
+});
