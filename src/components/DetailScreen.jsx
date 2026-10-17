@@ -1,21 +1,27 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import useFocusTrap from '../hooks/useFocusTrap.js';
 import { useScreenHistory } from '../hooks/useScreenStack.js';
 
 /**
  * Tela de detalhe: entra pela direita, tem ← no topo e fecha com ←, Esc ou o Voltar do sistema.
- * Com `dirty`, sair pergunta "Descartar alterações?".
+ * Com `dirty`, sair pergunta "Descartar alterações?". `focusFirst`: foco inicial no primeiro campo (formulários);
+ * sem ele, o foco vai para o ←, para não abrir o teclado do celular sem ninguém pedir.
  */
-export default function DetailScreen({ id, title, dirty = false, onClose, children }) {
+export default function DetailScreen({ id, domId, title, dirty = false, focusFirst = false, onClose, children }) {
   const ref = useRef(null);
   const { closing, askDiscard, back, discard, keepEditing } = useScreenHistory({ id, dirty, onClose });
   useFocusTrap(ref);
+
+  useEffect(() => {
+    if (focusFirst) ref.current?.querySelector('.detail-body input, .detail-body select, .detail-body textarea, .detail-body button')?.focus();
+  }, [focusFirst]);
 
   return (
     <>
       <div
         ref={ref}
+        id={domId}
         className={`detail-screen${closing ? ' closing' : ''}`}
         role="dialog"
         aria-modal="true"
