@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import AppBrand from './AppBrand.jsx';
 import { CATEGORIES } from '../lib/catalog.js';
-import { FEEDBACK_FORM, buildFeedbackUrl, platformOf } from '../lib/feedback.js';
+import { FEEDBACK_FORM, PRIVACY_CONTACT, buildFeedbackUrl, platformOf } from '../lib/feedback.js';
 import { installState } from '../lib/install.js';
 import { ADVANCE_OPTIONS } from '../lib/settings.js';
 import { useInstallPrompt } from '../hooks/useInstallPrompt.js';
@@ -32,7 +32,7 @@ function Switch({ id, label, checked, disabled, onChange }) {
  * O formulário inicia sempre a partir do que está salvo (o App remonta este componente
  * quando os valores salvos mudam), então edições não salvas são descartadas ao reabrir a aba.
  */
-export default function Profile({ state, permission, onEnableNotifications, onSave, onExport, onImport, onRemovePerson, onSettings }) {
+export default function Profile({ state, permission, onEnableNotifications, onSave, onExport, onImport, onRemovePerson, onSettings, onClearData }) {
   const [name, setName] = useState(state.name || '');
   const [budget, setBudget] = useState(state.budget > 0 ? String(state.budget) : '');
   const [interests, setInterests] = useState(state.interests);
@@ -155,6 +155,39 @@ export default function Profile({ state, permission, onEnableNotifications, onSa
           />
         </div>
         <p className="text-muted backup-hint">Seus dados ficam salvos só neste navegador. Exporte um backup para guardar ou levar para outro aparelho.</p>
+      </div>
+
+      <div className="form-group" id="data-section">
+        <label>Seus dados</label>
+        <p className="text-muted">
+          Apaga assinaturas, pessoas, pagamentos e preferências deste aparelho. A permissão de notificação só pode ser
+          revogada nas configurações do navegador, e os backups que você já baixou não são apagados pelo app.
+        </p>
+        <button type="button" className="btn btn-outline btn-danger" id="clear-data-btn" onClick={onClearData}>
+          Apagar todos os dados
+        </button>
+      </div>
+
+      <div className="form-group" id="privacy-section">
+        <label>Privacidade</label>
+        <ul className="privacy-list text-muted">
+          <li>
+            <strong>Fica no aparelho:</strong> assinaturas, pessoas, pagamentos e preferências. Os nomes das pessoas
+            nunca são enviados.
+          </li>
+          <li>
+            <strong>Sai do aparelho:</strong> apenas o que você escrever no formulário de feedback, junto com a versão
+            do app e a plataforma. Não envie dados bancários nem números de cartão.
+          </li>
+          <li>
+            <strong>Uso do app:</strong> medimos visitas e eventos de uso sem cookies e sem nomes de serviços, valores
+            ou datas.
+          </li>
+          <li>
+            <strong>Excluir respostas do formulário:</strong>{' '}
+            {PRIVACY_CONTACT ? <a href={`mailto:${PRIVACY_CONTACT}`}>{PRIVACY_CONTACT}</a> : 'o e-mail de contato será informado em breve.'}
+          </li>
+        </ul>
       </div>
 
       {install !== 'unavailable' && (

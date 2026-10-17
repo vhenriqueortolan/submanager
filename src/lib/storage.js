@@ -115,6 +115,34 @@ export async function requestPersistence(manager = globalThis.navigator?.storage
   }
 }
 
+const CORRUPT_SUFFIX = ':corrupt-backup';
+
+/**
+ * Apaga tudo o que o app guardou neste navegador: a chave atual, as legadas e as cópias de
+ * JSON corrompido (`*:corrupt-backup`). Não mexe em nenhuma outra chave.
+ * @returns {boolean} true se removeu tudo
+ */
+export function clearAllData(storage = globalThis.localStorage) {
+  try {
+    const owned = new Set([STORAGE_KEY, ...LEGACY_KEYS]);
+    const keys = [];
+    for (let i = 0; i < storage.length; i += 1) {
+      const k = storage.key(i);
+      if (k !== null && (owned.has(k) || k.endsWith(CORRUPT_SUFFIX))) keys.push(k);
+    }
+    // Coletadas antes de remover: remover durante a varredura muda os índices.
+    for (const k of keys) storage.removeItem(k);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Confirmação por digitação (ex.: "APAGAR"): palavra exata, ignorando só espaços nas pontas. */
+export function matchesConfirmation(input, word) {
+  return typeof input === 'string' && input.trim() === word;
+}
+
 /** @returns {boolean} true se gravou com sucesso */
 export function saveState(state, storage = globalThis.localStorage) {
   try {
