@@ -98,3 +98,7 @@ input.ds-switch:checked::after { background: var(--color-bg); transform: transla
 @keyframes ds-sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
 @keyframes ds-sheet-out { from { transform: translateY(0); } to { transform: translateY(100%); } }
 @media (prefers-reduced-motion: reduce) { .ds-sheet, .ds-sheet.closing { animation: none; } }
+
+/* ---------- Ações lado a lado (bloco de status) ---------- */
+.ds-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.ds-actions > :only-child { grid-column: 1 / -1; }
