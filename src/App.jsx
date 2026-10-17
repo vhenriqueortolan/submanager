@@ -59,6 +59,13 @@ export default function App() {
     trackEvent('notification_permission', { result });
   };
 
+  // Cobranças automáticas dos ciclos que faltam, uma passada depois que a tela inicial já apareceu (e na virada do dia).
+  useEffect(() => {
+    if (!state.onboarded) return undefined;
+    const id = setTimeout(() => dispatch({ type: 'autoCharges', day: today }), 0);
+    return () => clearTimeout(id);
+  }, [state.subs, state.onboarded, today, dispatch]);
+
   const handleSaveSub = (sub, meta = {}) => {
     if (modal?.mode === 'new') {
       trackEvent('subscription_added', { source: meta.source || 'manual', first: state.subs.length === 0 });

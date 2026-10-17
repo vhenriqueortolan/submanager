@@ -251,16 +251,19 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
                     {paymentsNewestFirst(sub).map((p) => (
                       <li key={p.id} className="payment-row">
                         <span>
-                          {formatDay(p.paidAt)} · {p.share === null ? `${brl(p.amount)} total` : brl(p.share)}
+                          {formatDay(p.paidAt)} · {p.share === null ? `${brl(p.amount)} total` : brl(p.share)}{' '}
+                          {p.kind === 'auto' && <StatusBadge status={p.estimated ? 'estimated' : 'automatic'} />}
                         </span>
-                        <button
-                          type="button"
-                          className="pay-btn"
-                          aria-label={`Desmarcar pagamento de ${formatDay(p.paidAt)}`}
-                          onClick={() => onUnpay(sub.id, p.id)}
-                        >
-                          Desmarcar
-                        </button>
+                        {p.kind !== 'auto' && (
+                          <button
+                            type="button"
+                            className="pay-btn"
+                            aria-label={`Desmarcar pagamento de ${formatDay(p.paidAt)}`}
+                            onClick={() => onUnpay(sub.id, p.id)}
+                          >
+                            Desmarcar
+                          </button>
+                        )}
                       </li>
                     ))}
                   </ul>
