@@ -3,6 +3,7 @@ import {
   Banner, Button, Chip, DetailScreen, EditableHero, EmptyState, Field, ItemCard, OptionList,
   SectionTitle, SettingList, SettingRow, StatusBadge,
 } from './index.jsx';
+import { FieldEditor, OptionEditor } from './Editors.jsx';
 
 const CYCLES = [
   { value: 'monthly', label: 'Mensal' },
@@ -13,24 +14,23 @@ const CYCLES = [
 /** Catálogo vivo dos componentes base. Só existe no build de e2e (VITE_E2E); o catálogo para consulta é o artefato do Design System. */
 export default function Catalog({ onClose }) {
   const [name, setName] = useState('Netflix');
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(null); // null | name | value | cycle
+  const [value, setValue] = useState('');
   const [cycle, setCycle] = useState('monthly');
   const [auto, setAuto] = useState(true);
   const [chip, setChip] = useState(false);
-  const [clicks, setClicks] = useState(0);
+  const [, setClicks] = useState(0);
 
   return (
     <DetailScreen id="catalogo" title="Catálogo" onClose={onClose}>
-      <EditableHero label="Serviço" value={name} onEdit={() => setEditing(true)} />
-      <EditableHero label="Valor" value="" placeholder="R$ 0,00" size="display" onEdit={() => setEditing(true)} />
-      {editing && <Field label="Nome do serviço" value={name} onChange={(e) => setName(e.target.value)} />}
+      <EditableHero label="Serviço" value={name} onEdit={() => setEditing('name')} />
+      <EditableHero label="Valor" value={value ? `R$ ${value}` : ''} placeholder="R$ 0,00" size="display" onEdit={() => setEditing('value')} />
 
       <SectionTitle>Plano</SectionTitle>
       <SettingList>
-        <SettingRow key="c" label="Cobrança" value={CYCLES.find((c) => c.value === cycle).label} onClick={() => setClicks((n) => n + 1)} />
+        <SettingRow key="c" label="Cobrança" value={CYCLES.find((c) => c.value === cycle).label} onClick={() => setEditing('cycle')} />
         <SettingRow key="a" label="Cobrança automática" switchChecked={auto} onSwitch={setAuto} />
       </SettingList>
-      <p role="status" id="catalog-clicks">Toques na linha: {clicks}</p>
 
       <OptionList label="Ciclo de cobrança" options={CYCLES} value={cycle} onChange={setCycle} />
       <Field label="Valor mensal" prefix="R$" help="Por mês, em reais." defaultValue="39,90" />
@@ -53,6 +53,15 @@ export default function Catalog({ onClose }) {
         <Button href="#sobre">Link</Button>
       </div>
       <EmptyState icon="📭" title="Nada por aqui" action={<Button variant="secondary">Cadastrar</Button>}>Cadastre sua primeira assinatura.</EmptyState>
+      {editing === 'name' && (
+        <FieldEditor id="name" title="Nome do serviço" label="Serviço" value={name} maxLength={40} validate={(v) => (v.trim() ? '' : 'Informe o nome do serviço')} onSave={(v) => setName(v.trim())} onClose={() => setEditing(null)} />
+      )}
+      {editing === 'value' && (
+        <FieldEditor id="value" title="Valor por mês" label="Valor cobrado" prefix="R$" value={value} help="Por mês, em reais." onSave={setValue} onClose={() => setEditing(null)} />
+      )}
+      {editing === 'cycle' && (
+        <OptionEditor id="cycle" title="Cobrança" options={CYCLES} value={cycle} onSave={setCycle} onClose={() => setEditing(null)} />
+      )}
     </DetailScreen>
   );
 }

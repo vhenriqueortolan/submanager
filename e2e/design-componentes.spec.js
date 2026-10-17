@@ -11,15 +11,67 @@ test('herói editável tem nome acessível com o valor e avisa quando está vazi
   await openCatalog(page);
   await expect(page.getByRole('button', { name: 'Serviço: Netflix. Editar' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Valor: vazio. Editar' })).toContainText('R$ 0,00');
-  await page.getByRole('button', { name: 'Serviço: Netflix. Editar' }).click();
-  await page.getByLabel('Nome do serviço').fill('Disney+');
-  await expect(page.getByRole('button', { name: 'Serviço: Disney+. Editar' })).toBeVisible();
 });
 
-test('linha de configuração abre o editor e a variante com switch alterna', async ({ page }) => {
+test('editor de texto: Pronto salva, Cancelar descarta, valor vazio bloqueia o Pronto', async ({ page }) => {
   await openCatalog(page);
-  await page.getByRole('button', { name: /^Cobrança/ }).click();
-  await expect(page.locator('#catalog-clicks')).toHaveText('Toques na linha: 1');
+  const hero = (nome) => page.getByRole('button', { name: `Serviço: ${nome}. Editar` });
+  await hero('Netflix').click();
+  const sheet = page.getByRole('dialog', { name: 'Nome do serviço' });
+  await expect(sheet.getByLabel('Serviço')).toHaveValue('Netflix');
+  await expect(sheet.getByLabel('Serviço')).toBeFocused();
+
+  await sheet.getByLabel('Serviço').fill('');
+  await expect(sheet.getByRole('button', { name: 'Pronto' })).toBeDisabled();
+  await expect(sheet).toContainText('Informe o nome do serviço');
+
+  await sheet.getByLabel('Serviço').fill('Disney+');
+  await sheet.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(hero('Netflix')).toBeVisible();
+
+  await hero('Netflix').click();
+  await page.getByLabel('Serviço', { exact: true }).fill('Disney+');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog', { name: 'Nome do serviço' })).toHaveCount(0);
+  await expect(hero('Disney+')).toBeVisible();
+  await expect(hero('Disney+')).toBeFocused(); // o foco volta a quem abriu
+});
+
+test('editor: Esc e o ← do sistema fecham só a folha, sem salvar', async ({ page }) => {
+  await openCatalog(page);
+  const sheet = page.getByRole('dialog', { name: 'Nome do serviço' });
+  await page.getByRole('button', { name: 'Serviço: Netflix. Editar' }).click();
+  await page.getByLabel('Serviço', { exact: true }).fill('X');
+  await page.keyboard.press('Escape');
+  await expect(sheet).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Catálogo' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Serviço: Netflix. Editar' }).click();
+  await page.goBack();
+  await expect(sheet).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Catálogo' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Serviço: Netflix. Editar' })).toBeVisible();
+});
+
+test('editor de valor tem prefixo R$ e guarda o texto digitado; linha abre a lista e escolher fecha', async ({ page }) => {
+  await openCatalog(page);
+  await page.getByRole('button', { name: 'Valor: vazio. Editar' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Valor por mês' });
+  await expect(sheet.locator('.ds-input-prefix')).toHaveText('R$');
+  await sheet.getByLabel('Valor cobrado').fill('44,90');
+  await sheet.getByRole('button', { name: 'Pronto' }).click();
+  await expect(page.getByRole('button', { name: 'Valor: R$ 44,90. Editar' })).toBeVisible();
+
+  await page.getByRole('button', { name: /^Cobrança Mensal/ }).click();
+  const lista = page.getByRole('dialog', { name: 'Cobrança' });
+  await lista.getByRole('radio', { name: 'Semanal' }).click();
+  await expect(lista).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Cobrança Semanal/ })).toBeVisible();
+});
+
+test('linha de configuração: a variante com switch alterna', async ({ page }) => {
+  await openCatalog(page);
   const sw = page.getByRole('switch', { name: 'Cobrança automática' });
   await expect(sw).toBeChecked();
   await sw.click();

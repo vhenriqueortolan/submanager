@@ -19,7 +19,7 @@ Valores visuais só em `src/design/tokens.css`. Componente novo usa `var(--...)`
 - **Forma:** `--radius-control` 12 (controles), `--radius-card` 16 (cards), `--radius-screen` 24 (telas e diálogos).
 - **Toque:** `--touch-min` 44px para qualquer alvo; `--field-height` 52px para campos. Campos com 16px ou mais, sempre (abaixo disso o iPhone dá zoom).
 - **Movimento:** `--motion-screen` 250ms para entrar e sair de telas; `--motion-fast` 150ms. Ambos viram 0 com `prefers-reduced-motion`.
-- **Elevação e camadas:** sombra só em toast e overlay (`--shadow-overlay`). `--z-base` 0, `--z-sticky` 1, `--z-detail` 200, `--z-confirm` 350, `--z-toast` 400.
+- **Elevação e camadas:** sombra só em toast e overlay (`--shadow-overlay`). `--z-base` 0, `--z-sticky` 1, `--z-detail` 200, `--z-sheet` 300, `--z-confirm` 350, `--z-toast` 400.
 
 ## Componentes (`import { ... } from '../design/index.jsx'`)
 
@@ -37,6 +37,7 @@ Valores visuais só em `src/design/tokens.css`. Componente novo usa `var(--...)`
 | `StatusBadge` | `automatic`, `estimated`, `late`, `paused`, `cancelled`. Sempre com texto. |
 | `SectionTitle` | Título de seção (não é rótulo de campo). |
 | `EmptyState` | Lista ou tela sem conteúdo, com uma ação opcional. |
+| `FieldEditor`, `OptionEditor`, `EditorSheet` (`Editors.jsx`) | Folha que abre ao tocar num herói ou linha. `FieldEditor`: texto, número ou dinheiro (`prefix="R$"`), com `validate`; Pronto ou Enter salva, Cancelar, Esc, toque fora e o Voltar do sistema descartam. `OptionEditor`: escolher uma opção salva e fecha. |
 | `DetailScreen`, `ConfirmDialog`, `Toast` | Componentes do app, reexportados aqui. |
 
 Exemplo:
@@ -51,6 +52,7 @@ Exemplo:
 
 ## Diretrizes de uso
 
+- **Título de seção sem repetição:** o título de uma seção não vira também rótulo de um campo dentro dela (nada de "Serviço" como título e como rótulo).
 - **Ordem de ações na tela da assinatura:** bloco de status (pausar e cancelar), depois a edição, depois as secundárias, e por último a destrutiva, separada por uma linha (zona de risco).
 - Botões com verbo no infinitivo. Uma ajuda por controle. Valores em R$ com vírgula e "por mês" explícito.
 - Ação destrutiva sempre na zona de risco, com confirmação.

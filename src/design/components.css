@@ -83,3 +83,14 @@ input.ds-switch:checked::after { background: var(--color-bg); transform: transla
 .ds-empty-icon { font: var(--text-title-lg); margin-bottom: var(--space-3); }
 .ds-empty-title { font: var(--text-title); letter-spacing: var(--letter-spacing-title); margin-bottom: var(--space-2); }
 .ds-empty-body { font: var(--text-label); color: var(--color-text-muted); margin-bottom: var(--space-5); }
+
+/* ---------- Folha de edição ---------- */
+.ds-sheet-backdrop { position: fixed; inset: 0; z-index: var(--z-sheet); display: flex; align-items: flex-end; justify-content: center; background: color-mix(in srgb, var(--color-bg) 60%, transparent); }
+.ds-sheet { width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: var(--space-5) var(--space-5) var(--space-6); background: var(--color-bg); border: 1px solid var(--border-focus); border-bottom: none; border-radius: var(--radius-screen) var(--radius-screen) 0 0; box-shadow: var(--shadow-overlay); animation: ds-sheet-in var(--motion-screen) ease; }
+.ds-sheet.closing { animation: ds-sheet-out var(--motion-screen) ease forwards; }
+.ds-sheet-title { margin-bottom: var(--space-3); font: var(--text-title); letter-spacing: var(--letter-spacing-title); }
+.ds-sheet .ds-options, .ds-sheet .ds-field { margin-bottom: var(--space-3); }
+.ds-sheet .ds-btn-ghost { margin-top: var(--space-1); }
+@keyframes ds-sheet-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes ds-sheet-out { from { transform: translateY(0); } to { transform: translateY(100%); } }
+@media (prefers-reduced-motion: reduce) { .ds-sheet, .ds-sheet.closing { animation: none; } }
