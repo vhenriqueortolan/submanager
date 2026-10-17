@@ -199,11 +199,10 @@ export default function App() {
 
       {tab === 'profile' && (
         <Profile
-          key={JSON.stringify([state.name, state.budget, state.interests])}
           state={state}
           permission={permission}
           onEnableNotifications={enableNotifications}
-          onSave={({ name, budget, interests }) => {
+          onSaveProfile={({ name, budget, interests }) => {
             dispatch({ type: 'saveProfile', name, budget, interests });
             notify('Perfil salvo com sucesso!');
           }}

@@ -1,8 +1,7 @@
 import fs from 'node:fs';
-import { test, expect, seed, withSubs, sampleSubs, readNotifs, readStorage, iso } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, readNotifs, readStorage, iso, openProfileScreen } from './fixtures.js';
 import { browserToday } from './timezone.js';
 
-const tab = (page, name) => page.locator('.bottom-nav').getByRole('button', { name });
 
 /** Vence amanhã, cadastrada hoje (sem atraso retroativo). */
 function tomorrowSub() {
@@ -39,7 +38,7 @@ test('"Receber avisos" desligado silencia tudo', async ({ page }) => {
 
 test('Perfil: chaves e antecedência são salvas e voltam após recarregar', async ({ page }) => {
   await seed(page, withSubs([]));
-  await tab(page, 'Perfil').click();
+  await openProfileScreen(page, 'Notificações');
   await expect(page.locator('#notif-section')).toContainText('Os avisos chegam quando o app está aberto.');
   await expect(page.locator('#set-enabled')).toBeChecked();
 
@@ -49,7 +48,7 @@ test('Perfil: chaves e antecedência são salvas e voltam após recarregar', asy
   expect((await readStorage(page)).settings).toEqual({ enabled: true, notifyToday: false, notifyOverdue: false, advanceDays: 3 });
 
   await page.reload();
-  await tab(page, 'Perfil').click();
+  await openProfileScreen(page, 'Notificações');
   await expect(page.locator('#set-today')).not.toBeChecked();
   await expect(page.locator('#set-advance')).toHaveValue('3');
 
@@ -61,7 +60,7 @@ test('Perfil: chaves e antecedência são salvas e voltam após recarregar', asy
 
 test('as preferências entram no backup exportado', async ({ page }) => {
   await seed(page, withSubs(sampleSubs(), { settings: { enabled: true, notifyToday: true, notifyOverdue: false, advanceDays: 7 } }));
-  await tab(page, 'Perfil').click();
+  await openProfileScreen(page, 'Dados e privacidade');
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar' }).click()]);
   const exported = JSON.parse(fs.readFileSync(await download.path(), 'utf8'));
   expect(exported.settings).toEqual({ enabled: true, notifyToday: true, notifyOverdue: false, advanceDays: 7 });
@@ -72,7 +71,7 @@ test.describe('permissão bloqueada', () => {
 
   test('explica como reativar nas configurações do navegador', async ({ page }) => {
     await seed(page, withSubs([]));
-    await tab(page, 'Perfil').click();
+    await openProfileScreen(page, 'Notificações');
     await expect(page.locator('#notif-status')).toContainText('Bloqueadas no navegador');
     await expect(page.locator('#notif-status')).toContainText('configurações do site');
   });
@@ -85,13 +84,13 @@ test.describe('iPhone fora da Tela de Início', () => {
 
   test('avisa para instalar o app', async ({ page }) => {
     await seed(page, withSubs([]));
-    await tab(page, 'Perfil').click();
+    await openProfileScreen(page, 'Notificações');
     await expect(page.locator('#notif-ios-hint')).toContainText('instale o app na Tela de Início');
   });
 });
 
 test('fora do iPhone, o aviso de instalar não aparece', async ({ page }) => {
   await seed(page, withSubs([]));
-  await tab(page, 'Perfil').click();
+  await openProfileScreen(page, 'Notificações');
   await expect(page.locator('#notif-ios-hint')).toHaveCount(0);
 });

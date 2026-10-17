@@ -210,3 +210,19 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 
 /* Botão que só existe no build de e2e */
 .e2e-open { position: fixed; top: 0; right: 0; z-index: 150; font-size: 0.7rem; padding: 4px 8px; opacity: 0.6; }
+
+/* ---------- Hub do Perfil ---------- */
+.hub-greeting { font-size: 1.6rem; margin-bottom: 16px; }
+.hub-list { list-style: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.hub-list li + li { border-top: 1px solid var(--border); }
+.hub-row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px; text-align: left; }
+.hub-row:hover { background: var(--surface-hover); }
+.hub-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hub-title { font-weight: 600; }
+.hub-summary { overflow-wrap: anywhere; }
+.hub-chevron { color: var(--text-muted); font-size: 1.4rem; }
+
+/* Campo de valor com prefixo R$ */
+.money-field { position: relative; }
+.money-prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+.money-field input { padding-left: 44px; }

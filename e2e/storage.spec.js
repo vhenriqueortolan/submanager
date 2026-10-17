@@ -1,7 +1,6 @@
 import fs from 'node:fs';
-import { test, expect, seed, withSubs, sampleSubs, readStorage, STORAGE_KEY } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, readStorage, STORAGE_KEY, openProfileScreen } from './fixtures.js';
 
-const tab = (page, name) => page.locator('.bottom-nav').getByRole('button', { name });
 
 test('JSON corrompido não quebra o app e fica guardado como backup', async ({ page }) => {
   await page.goto('/');
@@ -35,7 +34,7 @@ test('estado parcial é normalizado', async ({ page }) => {
 
 test('exportar gera o backup e importar substitui os dados após confirmação', async ({ page }) => {
   await seed(page, withSubs(sampleSubs()));
-  await tab(page, 'Perfil').click();
+  await openProfileScreen(page, 'Dados e privacidade');
 
   const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar' }).click()]);
   expect(download.suggestedFilename()).toMatch(/^submanager-backup-\d{4}-\d{2}-\d{2}\.json$/);
@@ -57,13 +56,15 @@ test('exportar gera o backup e importar substitui os dados após confirmação',
   await page.setInputFiles('input[type=file]', file);
   await page.getByRole('alertdialog').getByRole('button', { name: 'Substituir' }).click();
   await expect(page.getByRole('status')).toContainText('Backup importado.');
+  await page.getByRole('button', { name: 'Voltar' }).click();
+  await page.getByRole('button', { name: /^Meu perfil./ }).click();
   await expect(page.locator('#prof-name')).toHaveValue('Importado');
   expect((await readStorage(page)).subs.map((s) => s.name)).toEqual(['Zeta']);
 });
 
 test('backup inválido é rejeitado sem alterar os dados', async ({ page }) => {
   await seed(page, withSubs(sampleSubs()));
-  await tab(page, 'Perfil').click();
+  await openProfileScreen(page, 'Dados e privacidade');
   await page.setInputFiles('input[type=file]', { name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('isso não é json') });
   await expect(page.getByRole('status')).toContainText('JSON válido');
   await expect(page.getByRole('alertdialog')).toHaveCount(0);
