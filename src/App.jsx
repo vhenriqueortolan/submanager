@@ -202,6 +202,7 @@ export default function App() {
     onRemovePerson: handleRemovePerson,
     onSettings: (patch) => dispatch({ type: 'updateSettings', patch }),
     onClearData: handleClearData,
+    onUnpay: handleUnpay,
   };
 
   if (!state.onboarded) {
@@ -229,6 +230,7 @@ export default function App() {
           permission={permission}
           onOpenNotifications={() => setHomeScreen('notificacoes')}
           onOpenBudget={() => setHomeScreen('orcamento')}
+          onOpenHistory={() => setHomeScreen('historico')}
           onAdd={() => setModal({ mode: 'new' })}
           onEdit={(id) => setModal({ mode: 'edit', sub: state.subs.find((s) => s.id === id) })}
           onPay={handlePay}

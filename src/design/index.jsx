@@ -139,7 +139,7 @@ export function Banner({ variant = 'offer', title, actions, children }) {
   );
 }
 
-export const STATUS_LABELS = { active: 'Ativa', automatic: 'Automática', estimated: 'Estimada', late: 'Atrasada', paused: 'Pausada', cancelled: 'Cancelada' };
+export const STATUS_LABELS = { paid: 'Paguei', active: 'Ativa', automatic: 'Automática', estimated: 'Estimada', late: 'Atrasada', paused: 'Pausada', cancelled: 'Cancelada' };
 
 /** Badge de status. Sempre tem texto: a cor sozinha não é indicador. */
 export function StatusBadge({ status }) {

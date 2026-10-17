@@ -3,12 +3,14 @@ import DetailScreen from '../DetailScreen.jsx';
 import Divisao from './Divisao.jsx';
 import { moneyToInput, parseMoneyInput } from '../../lib/budget.js';
 import { brl } from '../../lib/format.js';
-import { Button, EditableHero } from '../../design/index.jsx';
+import Historico from '../Historico.jsx';
+import { Button, EditableHero, SettingList, SettingRow } from '../../design/index.jsx';
 import { FieldEditor } from '../../design/Editors.jsx';
 
-export default function Orcamento({ state, onSave, onAddPerson, onRenamePerson, onRemovePerson, onClose }) {
+export default function Orcamento({ state, onSave, onAddPerson, onRenamePerson, onRemovePerson, onUnpay, onClose }) {
   const [text, setText] = useState(moneyToInput(state.budget));
   const [editing, setEditing] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const value = parseMoneyInput(text);
   const dirty = value !== (Number(state.budget) || 0);
 
@@ -26,6 +28,10 @@ export default function Orcamento({ state, onSave, onAddPerson, onRenamePerson, 
       <p className="ds-help" id="prof-budget-help">Valor máximo por mês. Conta só a sua parte.</p>
       <Button className="mt-20" disabled={value === null} onClick={() => onSave({ budget: value })}>Salvar</Button>
 
+      <SettingList>
+        <SettingRow key="history" label="Histórico" value="Pagamentos e insights" data-edit="history" onClick={() => setShowHistory(true)} />
+      </SettingList>
+
       <Divisao
         people={state.people}
         subs={state.subs}
@@ -33,6 +39,8 @@ export default function Orcamento({ state, onSave, onAddPerson, onRenamePerson, 
         onRenamePerson={onRenamePerson}
         onRemovePerson={onRemovePerson}
       />
+
+      {showHistory && <Historico state={state} origem="orcamento" onUnpay={onUnpay} onClose={() => setShowHistory(false)} />}
 
       {editing && (
         <FieldEditor
