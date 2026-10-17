@@ -87,6 +87,7 @@
   --z-base: 0;
   --z-sticky: 1;
   --z-detail: 200;
+  --z-sheet: 300;
   --z-confirm: 350;
   --z-toast: 400;
 }
