@@ -47,7 +47,9 @@ src/
     storage.js       load/save/normalize do localStorage, migração, import e clearAllData
     subs.js          montagem de assinatura a partir do formulário
     payments.js      histórico de pagamentos (pagar, desfazer, paidCycle espelhado)
-    people.js        pessoas, divisão (sua parte) e remoção em cascata
+    people.js        pessoas, divisão (sua parte), renomear e remoção em cascata
+    budget.js        interpreta o valor digitado do orçamento (vírgula ou ponto)
+    profile-summary.js resumos das linhas do hub do Perfil
     settings.js      preferências de aviso (padrões e normalização)
     reminder.js      lembrete de backup (30 dias, "Agora não" por 7 dias)
     feedback.js      formulário de feedback, plataforma e contato de privacidade
@@ -59,8 +61,8 @@ src/
     analytics.js     eventos de uso (sem dados financeiros)
     search.js        busca global de serviços (Clearbit) — troque só este arquivo se o provedor mudar
     catalog.js       categorias e catálogo curado
-  hooks/           useStore, useToday, useDueNotifications, useCompanySearch, useFocusTrap...
-  components/      Home, Discover, Profile, SubModal, ConfirmDialog, Onboarding, BottomNav...
+  hooks/           useStore, useScreenStack (histórico das telas), useToday, useDueNotifications, useCompanySearch, useFocusTrap...
+  components/      Home, Discover, Profile (hub) + profile/ (telas), DetailScreen, SubModal (cadastro), ConfirmDialog, Onboarding, BottomNav...
   App.jsx          composição, abas, modal e diálogo de confirmação
 e2e/               testes Playwright (fixtures com rede simulada)
 .github/workflows/ CI
@@ -98,12 +100,21 @@ A chave de armazenamento (`subDataV5`) é a mesma, então o formato é compatív
 
 Tocar em **✓ Paguei** registra um pagamento (`payments`: `id`, `cycle`, `paidAt`, `amount`) e mostra o aviso **"Pago. Desfazer"** por cerca de 5 segundos. O desfazer remove só o registro indicado, nunca "o último" às cegas. Na edição da assinatura há a lista de pagamentos (mais recentes primeiro) com **Desmarcar**. `paidCycle` continua existindo e espelha o último pagamento; mudar o vencimento reinicia o controle, mas o histórico fica.
 
+## Navegação
+
+As abas (Portfólio, Descobrir, Perfil) são destinos: trocar de aba não empilha nada. O **Perfil** é um hub com cinco linhas (Meu perfil, Orçamento, Notificações, Dados e privacidade, Sobre); cada uma abre uma **tela de detalhe** que entra pela direita, com **←** no topo. O cadastro de assinatura também é uma tela de detalhe (busca e detalhes em dois passos).
+
+- **Voltar do sistema = ←.** Cada tela aberta é uma entrada do histórico do navegador (a URL não muda), então o Voltar do Android/navegador fecha só a tela do topo; no desktop o **Esc** faz o mesmo. Nos dois passos do cadastro, voltar do passo 2 leva ao passo 1.
+- **Alteração não salva** + ←/Voltar/Esc pergunta "Descartar alterações?" ("Descartar" ou "Continuar editando"). Campos de texto e número têm **Salvar** na tela; chaves de notificação e ações de lista (pessoas) aplicam na hora.
+- **Ação destrutiva** fica no fim da tela, separada e em vermelho (Zona de risco; Remover Assinatura) e sempre pede confirmação.
+- Com `prefers-reduced-motion`, a troca de tela é instantânea. Código: `src/hooks/useScreenStack.js` e `src/components/DetailScreen.jsx`.
+
 ## Pessoas e divisão
 
-Em **Dividido com** (cadastro/edição) você escolhe pessoas já cadastradas ou adiciona uma nova (até 40 caracteres; nome repetido, sem diferenciar maiúsculas, reutiliza a pessoa). **Perfil → Pessoas** lista todas e permite remover (com confirmação), tirando a pessoa de todas as assinaturas.
+Em **Dividido com** (cadastro/edição) você escolhe pessoas já cadastradas ou adiciona uma nova (até 40 caracteres; nome repetido, sem diferenciar maiúsculas, reutiliza a pessoa). **Perfil → Orçamento → Divisão** lista as pessoas com a quantidade de assinaturas divididas e permite adicionar, renomear (nome repetido é bloqueado) e remover (com confirmação, tirando a pessoa de todas as assinaturas). Tudo aplica na hora.
 
 - **Sua parte** = preço ÷ (pessoas + você). Sem divisão, é o preço cheio. Ids de pessoas que não existem mais são ignorados.
-- **Seu gasto mensal**, a projeção anual e o **teto mensal (sua parte)** usam a sua parte. Quando há alguma assinatura dividida, a Home mostra também o **Total dos serviços** (preço cheio).
+- **Seu gasto mensal**, a projeção anual e o **orçamento mensal (sua parte)** usam a sua parte. Quando há alguma assinatura dividida, a Home mostra também o **Total dos serviços** (preço cheio).
 - Ex.: R$ 39,90 mensal com 2 pessoas = R$ 13,30; R$ 120 anual com 2 pessoas = R$ 40 por ano.
 - Os nomes ficam só no aparelho e nunca entram em analytics.
 
@@ -118,8 +129,8 @@ Os avisos chegam **enquanto o app está aberto** (ou ao voltar para ele). Avisos
 
 ## Backup, apagar dados e privacidade
 
-- **Backup:** Perfil → Backup dos dados (Exportar/Importar). A Home lembra de exportar quando nunca houve exportação ou a última tem mais de 30 dias (**Agora não** oculta por 7 dias). O arquivo exportado leva a data do backup.
-- **Apagar todos os dados:** Perfil → Seus dados. Exige digitar `APAGAR`, oferece "Exportar backup antes" e remove `subDataV5`, as chaves antigas e as cópias `*:corrupt-backup` (nenhuma outra chave). Depois o app volta ao onboarding. A permissão de notificação só se revoga nas configurações do navegador, e backups já baixados não são apagados pelo app.
+- **Backup:** Perfil → Dados e privacidade → Backup (Exportar/Importar, com o dia do último backup). A Home lembra de exportar quando nunca houve exportação ou a última tem mais de 30 dias (**Agora não** oculta por 7 dias). O arquivo exportado leva a data do backup.
+- **Apagar todos os dados:** Perfil → Dados e privacidade → Zona de risco. Exige digitar `APAGAR`, oferece "Exportar backup antes" e remove `subDataV5`, as chaves antigas e as cópias `*:corrupt-backup` (nenhuma outra chave). Depois o app volta ao onboarding. A permissão de notificação só se revoga nas configurações do navegador, e backups já baixados não são apagados pelo app.
 - **Privacidade:** assinaturas, pessoas, pagamentos e preferências ficam só no aparelho. Sai do aparelho apenas o que a pessoa escrever no formulário de feedback (com versão e plataforma) e as métricas anônimas de uso (sem cookies, sem nomes, valores ou datas). O e-mail para pedir a exclusão das respostas do formulário é a constante `PRIVACY_CONTACT` em `src/lib/feedback.js`.
 
 ## Feedback do beta e QA
