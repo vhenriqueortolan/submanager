@@ -62,7 +62,7 @@ export default function Profile({ state, permission, onEnableNotifications, onSa
       {screen === 'notificacoes' && (
         <Notificacoes state={state} permission={permission} onEnableNotifications={onEnableNotifications} onSettings={onSettings} onClose={close} />
       )}
-      {screen === 'dados' && <DadosPrivacidade onExport={onExport} onImport={onImport} onClearData={onClearData} onClose={close} />}
+      {screen === 'dados' && <DadosPrivacidade state={state} onExport={onExport} onImport={onImport} onClearData={onClearData} onClose={close} />}
       {screen === 'sobre' && <Sobre feedbackUrl={feedbackUrl} onClose={close} />}
     </main>
   );

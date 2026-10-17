@@ -1,14 +1,16 @@
 import { useRef } from 'react';
 import DetailScreen from '../DetailScreen.jsx';
+import { dataSummary } from '../../lib/profile-summary.js';
 import { PRIVACY_CONTACT } from '../../lib/feedback.js';
 
-export default function DadosPrivacidade({ onExport, onImport, onClearData, onClose }) {
+export default function DadosPrivacidade({ state, onExport, onImport, onClearData, onClose }) {
   const fileRef = useRef(null);
 
   return (
     <DetailScreen id="dados" title="Dados e privacidade" onClose={onClose}>
-      <div className="form-group">
-        <label>Backup dos dados</label>
+      <section className="form-group" aria-labelledby="backup-title">
+        <h2 className="section-heading" id="backup-title">Backup</h2>
+        <p className="text-muted mb-2" id="last-backup">{dataSummary(state)}</p>
         <div className="backup-row">
           <button type="button" className="btn btn-outline btn-half" onClick={onExport}>Exportar</button>
           <button type="button" className="btn btn-outline btn-half" onClick={() => fileRef.current?.click()}>Importar</button>
@@ -25,21 +27,10 @@ export default function DadosPrivacidade({ onExport, onImport, onClearData, onCl
           />
         </div>
         <p className="text-muted backup-hint">Seus dados ficam salvos só neste navegador. Exporte um backup para guardar ou levar para outro aparelho.</p>
-      </div>
+      </section>
 
-      <div className="form-group" id="data-section">
-        <label>Seus dados</label>
-        <p className="text-muted">
-          Apaga assinaturas, pessoas, pagamentos e preferências deste aparelho. A permissão de notificação só pode ser
-          revogada nas configurações do navegador, e os backups que você já baixou não são apagados pelo app.
-        </p>
-        <button type="button" className="btn btn-outline btn-danger" id="clear-data-btn" onClick={onClearData}>
-          Apagar todos os dados
-        </button>
-      </div>
-
-      <div className="form-group" id="privacy-section">
-        <label>Privacidade</label>
+      <section className="form-group" id="privacy-section" aria-labelledby="privacy-title">
+        <h2 className="section-heading" id="privacy-title">Privacidade</h2>
         <ul className="privacy-list text-muted">
           <li>
             <strong>Fica no aparelho:</strong> assinaturas, pessoas, pagamentos e preferências. Os nomes das pessoas
@@ -58,7 +49,18 @@ export default function DadosPrivacidade({ onExport, onImport, onClearData, onCl
             {PRIVACY_CONTACT ? <a href={`mailto:${PRIVACY_CONTACT}`}>{PRIVACY_CONTACT}</a> : 'o e-mail de contato será informado em breve.'}
           </li>
         </ul>
-      </div>
+      </section>
+
+      <section className="risk-zone" id="data-section" aria-labelledby="risk-title">
+        <h2 className="risk-title" id="risk-title">Zona de risco</h2>
+        <p className="text-muted">
+          Apaga assinaturas, pessoas, pagamentos e preferências deste aparelho. A permissão de notificação só pode ser
+          revogada nas configurações do navegador, e os backups que você já baixou não são apagados pelo app.
+        </p>
+        <button type="button" className="risk-row" id="clear-data-btn" onClick={onClearData}>
+          Apagar todos os dados
+        </button>
+      </section>
     </DetailScreen>
   );
 }
