@@ -3,6 +3,7 @@ import { DEFAULT_SETTINGS } from './settings.js';
 import { brl, WEEKLY_LABEL } from './format.js';
 import { cycleOf } from './cycles.js';
 import { myShare, sharers } from './people.js';
+import { isActive } from './status.js';
 
 export const notificationsSupported = () => typeof Notification !== 'undefined';
 
@@ -69,7 +70,7 @@ export function pendingDue(subs, now = new Date(), settings = DEFAULT_SETTINGS) 
   const today = todayStr(now);
   const out = [];
   for (const sub of subs) {
-    if (sub.muted || sub.lastNotified === today) continue;
+    if (!isActive(sub) || sub.muted || sub.lastNotified === today) continue; // pausada e cancelada não avisam
     let st = dueStatus(sub, now);
     if (st) {
       if (st.type === 'today' && !settings.notifyToday) continue;

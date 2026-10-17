@@ -1,10 +1,12 @@
 import { annualAmount } from './cycles.js';
 import { sharers } from './people.js';
+import { isActive } from './status.js';
 
 const cents = (n) => Math.round(n * 100) / 100;
-const annualSum = (subs) => subs.reduce((acc, s) => acc + annualAmount(s), 0);
+// Pausadas e canceladas saem de todos os totais e previsões.
+const annualSum = (subs) => subs.filter(isActive).reduce((acc, s) => acc + annualAmount(s), 0);
 const annualShareSum = (subs, people) =>
-  subs.reduce((acc, s) => acc + annualAmount(s) / (sharers(s, people).length + 1), 0);
+  subs.filter(isActive).reduce((acc, s) => acc + annualAmount(s) / (sharers(s, people).length + 1), 0);
 
 /** Seu gasto mensal (sua parte): anuais e semanais convertidas para mês. Sem `people`, o preço cheio. */
 export function monthlyTotal(subs, people = []) {
