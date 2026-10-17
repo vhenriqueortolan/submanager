@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { normalizeSettings } from '../lib/settings.js';
 import { removePersonFromState, renamePerson } from '../lib/people.js';
 import { addPayment, removePayment } from '../lib/payments.js';
+import { cancelSub, pauseSub, resumeSub } from '../lib/status.js';
 import { clearAllData, defaultState, loadState, saveState, STORAGE_KEY } from '../lib/storage.js';
 
 function reducer(state, action) {
@@ -38,6 +39,12 @@ function reducer(state, action) {
 
     case 'deleteSub':
       return { ...state, subs: state.subs.filter((s) => s.id !== action.id) };
+
+    case 'setStatus': {
+      const op = { pause: pauseSub, cancel: cancelSub, resume: resumeSub }[action.op];
+      if (!op) return state;
+      return { ...state, subs: state.subs.map((s) => (s.id === action.id ? op(s, action.day) : s)) };
+    }
 
     case 'markPaid':
       return {

@@ -80,6 +80,21 @@ export default function App() {
     });
   };
 
+  // Pausar, cancelar e reativar são reversíveis: o aviso traz Desfazer, que devolve a assinatura como estava.
+  const handleStatus = (id, op) => {
+    const before = state.subs.find((s) => s.id === id);
+    if (!before) return;
+    dispatch({ type: 'setStatus', id, op, day: todayStr() });
+    const message = { pause: 'Assinatura pausada.', cancel: 'Assinatura cancelada.', resume: 'Assinatura reativada.' }[op];
+    notify(message, {
+      label: 'Desfazer',
+      onClick: () => {
+        dispatch({ type: 'upsertSub', sub: before });
+        notify('Alteração desfeita.');
+      },
+    });
+  };
+
   const handleUnpay = (id, paymentId) => {
     dispatch({ type: 'unmarkPaid', id, paymentId });
     notify('Pagamento removido.');
@@ -245,6 +260,7 @@ export default function App() {
           onSave={handleSaveSub}
           onDelete={handleDeleteSub}
           onUnpay={handleUnpay}
+          onStatus={handleStatus}
           onClose={closeModal}
         />
       )}

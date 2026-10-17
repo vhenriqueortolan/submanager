@@ -240,3 +240,8 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .section-heading.first { margin-top: 0; }
 .save-hint { margin-bottom: 8px; }
 .stopped-title { margin: 24px 0 12px; }
+
+/* Bloco de status da assinatura (logo abaixo do herói) */
+.status-block { margin: 12px 0 8px; }
+.status-line { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.status-note { margin: 0; }

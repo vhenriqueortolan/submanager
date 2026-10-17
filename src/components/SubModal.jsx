@@ -9,7 +9,8 @@ import { resolvePerson } from '../lib/people.js';
 import { MONTHS, WEEKDAYS, brl } from '../lib/format.js';
 import { parseMoneyInput, moneyToInput } from '../lib/budget.js';
 import { useCompanySearch } from '../hooks/useCompanySearch.js';
-import { Button, Chip, EditableHero, SectionTitle, SettingList, SettingRow } from '../design/index.jsx';
+import { Button, Chip, EditableHero, SectionTitle, SettingList, SettingRow, StatusBadge } from '../design/index.jsx';
+import { statusOf, normalizeStatus } from '../lib/status.js';
 import { FieldEditor, OptionEditor } from '../design/Editors.jsx';
 
 const formatDay = (day) => {
@@ -31,7 +32,34 @@ function QuickItem({ app, onPick }) {
  * com formulário limpo. Cadastro novo: o passo 1 (buscar) é a raiz e o passo 2 (detalhes) empilha sobre ele,
  * então ← e o Voltar do sistema no passo 2 voltam ao passo 1. Edição ou serviço já escolhido: o passo 2 é a raiz.
  */
-export default function SubModal({ mode, sub, preset, interests, people, onAddPerson, onSave, onDelete, onUnpay, onClose }) {
+const dayLabel = (day) => (day ? day.split('-').reverse().slice(0, 2).join('/') : '');
+
+/** Estado atual com Pausar/Cancelar (ou Reativar), logo abaixo do herói. Só na edição. */
+function StatusBlock({ sub, onStatus }) {
+  const status = statusOf(sub);
+  const { pauses, cancelledAt } = normalizeStatus(sub);
+  const since = status === 'paused' ? pauses[pauses.length - 1]?.from : cancelledAt;
+  const note = {
+    active: 'Entra nos totais, nas previsões e nos avisos.',
+    paused: `Pausada desde ${dayLabel(since)}. Fica fora dos totais e dos avisos e não gera cobrança automática.`,
+    cancelled: `Cancelada em ${dayLabel(since)}. Fica fora dos totais e dos avisos; o histórico continua.`,
+  }[status];
+  return (
+    <section className="status-block" aria-label="Status da assinatura" id="status-block">
+      <div className="status-line">
+        <StatusBadge status={status} />
+        <span className="ds-help status-note">{note}</span>
+      </div>
+      <div className="ds-actions">
+        {status === 'active' && <Button variant="secondary" aria-label="Pausar assinatura" onClick={() => onStatus(sub.id, 'pause')}>Pausar</Button>}
+        {status !== 'active' && <Button variant="secondary" aria-label="Reativar assinatura" onClick={() => onStatus(sub.id, 'resume')}>Reativar</Button>}
+        {status !== 'cancelled' && <Button variant="secondary" aria-label="Cancelar assinatura" onClick={() => onStatus(sub.id, 'cancel')}>Cancelar</Button>}
+      </div>
+    </section>
+  );
+}
+
+export default function SubModal({ mode, sub, preset, interests, people, onAddPerson, onSave, onDelete, onUnpay, onStatus, onClose }) {
   const isEdit = mode === 'edit';
   const startsAtDetails = isEdit || !!preset;
   const [step, setStep] = useState(startsAtDetails ? 2 : 1);
@@ -150,6 +178,8 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
               onEdit={() => setEditing('price')}
             />
             {monthlyHint > 0 && <p className="ds-help" id="add-monthly-hint">≈ {brl(monthlyHint)} por mês</p>}
+
+            {isEdit && <StatusBlock sub={sub} onStatus={onStatus} />}
 
             <SectionTitle>Plano</SectionTitle>
             <SettingList>
