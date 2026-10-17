@@ -4,18 +4,17 @@ import Divisao from './Divisao.jsx';
 import { moneyToInput, parseMoneyInput } from '../../lib/budget.js';
 import { brl } from '../../lib/format.js';
 import Historico from '../Historico.jsx';
-import { Button, EditableHero, SettingList, SettingRow } from '../../design/index.jsx';
+import { EditableHero, SettingList, SettingRow } from '../../design/index.jsx';
 import { FieldEditor } from '../../design/Editors.jsx';
 
 export default function Orcamento({ state, onSave, onAddPerson, onRenamePerson, onRemovePerson, onUnpay, onClose }) {
-  const [text, setText] = useState(moneyToInput(state.budget));
   const [editing, setEditing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const value = parseMoneyInput(text);
-  const dirty = value !== (Number(state.budget) || 0);
+  // O valor salva ao confirmar a folha de edição (Pronto ou Enter); não há botão Salvar.
+  const value = Number(state.budget) || 0;
 
   return (
-    <DetailScreen id="orcamento" title="Orçamento" dirty={dirty} onClose={onClose}>
+    <DetailScreen id="orcamento" title="Orçamento" onClose={onClose}>
       <EditableHero
         label="Valor máximo"
         value={value > 0 ? brl(value) : ''}
@@ -26,11 +25,12 @@ export default function Orcamento({ state, onSave, onAddPerson, onRenamePerson, 
         onEdit={() => setEditing(true)}
       />
       <p className="ds-help" id="prof-budget-help">Valor máximo por mês. Conta só a sua parte.</p>
-      <Button className="mt-20" disabled={value === null} onClick={() => onSave({ budget: value })}>Salvar</Button>
 
-      <SettingList>
-        <SettingRow key="history" label="Histórico" value="Pagamentos e insights" data-edit="history" onClick={() => setShowHistory(true)} />
-      </SettingList>
+      <div className="orcamento-historico">
+        <SettingList>
+          <SettingRow key="history" label="Histórico" value="Pagamentos e insights" data-edit="history" onClick={() => setShowHistory(true)} />
+        </SettingList>
+      </div>
 
       <Divisao
         people={state.people}
@@ -48,11 +48,11 @@ export default function Orcamento({ state, onSave, onAddPerson, onRenamePerson, 
           title="Valor máximo por mês"
           label="Valor máximo"
           prefix="R$"
-          value={text}
+          value={moneyToInput(state.budget)}
           placeholder="0,00"
           help="Conta só a sua parte."
           validate={(v) => (parseMoneyInput(v) === null ? 'Informe um valor válido, como 300 ou 300,50.' : '')}
-          onSave={setText}
+          onSave={(v) => onSave({ budget: parseMoneyInput(v) })}
           onClose={() => setEditing(false)}
         />
       )}

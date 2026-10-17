@@ -46,8 +46,7 @@ test('salvar mostra toast e sobrevive ao reload', async ({ page }) => {
   await expect(page.locator('[data-edit="profile-name"]')).toHaveCount(0);
 
   await page.getByRole('button', { name: /^Orçamento\./ }).click();
-  await editText(page, 'budget', '800,50');
-  await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+  await editText(page, 'budget', '800,50'); // sem botão Salvar: confirmar a folha já salva
   await expect(page.getByRole('status')).toContainText('Perfil salvo com sucesso!');
 
   await page.reload();
@@ -59,7 +58,7 @@ test('salvar mostra toast e sobrevive ao reload', async ({ page }) => {
   await expect(page.locator('[data-edit="budget"]')).toContainText('R$ 800,50');
 });
 
-test('Orçamento: valor inválido bloqueia o Salvar e vazio zera o teto', async ({ page }) => {
+test('Orçamento: valor inválido bloqueia o Pronto e vazio zera o teto', async ({ page }) => {
   await seed(page, withSubs(sampleSubs()));
   await openProfileScreen(page, 'Orçamento');
   // Valor inválido não chega a virar valor: o Pronto da folha fica bloqueado, com a mensagem de erro.
@@ -71,7 +70,6 @@ test('Orçamento: valor inválido bloqueia o Salvar e vazio zera o teto', async 
   await sheet.getByRole('button', { name: 'Cancelar' }).click();
   await expect(sheet).toHaveCount(0);
   await editText(page, 'budget', '');
-  await page.getByRole('button', { name: 'Salvar', exact: true }).click();
   await page.getByRole('button', { name: 'Voltar' }).click();
   await expect(page.getByRole('button', { name: /^Orçamento\./ })).toHaveAccessibleName('Orçamento. Sem valor definido');
 });
