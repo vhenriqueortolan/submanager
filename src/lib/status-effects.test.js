@@ -48,3 +48,17 @@ test('na lista, pausadas e canceladas vão para o fim, por nome', () => {
   ].map((s) => ({ sub: s, status: dueStatus(s, NOW) }));
   assert.deepEqual(sortByUrgency(items, NOW).map((i) => i.sub.name), ['Hoje', 'Futura', 'Alfa', 'Zeta']);
 });
+
+test('economia mensal: só canceladas, na sua parte, convertendo ciclos', async () => {
+  const { cancelledMonthlySavings } = await import('./totals.js');
+  const people = [{ id: 'p1', name: 'Ana' }];
+  const subs = [
+    cancelSub(sub('Cancelada', 50), '2026-10-01'),
+    cancelSub(sub('Dividida', 60, { sharedWith: ['p1'] }), '2026-10-01'),
+    cancelSub(sub('Anual', 120, { cycle: 'yearly', dueMonth: '3' }), '2026-10-01'),
+    pauseSub(sub('Pausada', 999), '2026-10-01'),
+    sub('Ativa', 999),
+  ];
+  assert.equal(cancelledMonthlySavings(subs, people), 90); // 50 + 30 + 10
+  assert.equal(cancelledMonthlySavings([sub('Ativa', 10)]), 0);
+});

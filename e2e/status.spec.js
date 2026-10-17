@@ -122,3 +122,14 @@ test('remover continua pedindo confirmação, na zona de risco', async ({ page }
   await page.getByRole('button', { name: 'Remover Assinatura' }).click();
   await expect(page.getByRole('alertdialog')).toBeVisible();
 });
+
+test('Portfólio mostra a economia mensal das canceladas, sem contar as pausadas', async ({ page }) => {
+  await seed(page, withSubs(mixedSubs()));
+  await expect(page.locator('#cancelled-savings')).toContainText('R$ 200,00 por mês');
+});
+
+test('sem canceladas, não há frase de economia', async ({ page }) => {
+  await seed(page, withSubs(mixedSubs().filter((s) => s.id !== 'cancelada')));
+  await expect(page.locator('#stopped-list')).toBeVisible();
+  await expect(page.locator('#cancelled-savings')).toHaveCount(0);
+});
