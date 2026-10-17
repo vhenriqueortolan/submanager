@@ -1,6 +1,7 @@
 import { newId } from './storage.js';
 import { todayStr } from './dates.js';
 import { normalizeSharedWith } from './people.js';
+import { statusFields } from './status.js';
 import { DEFAULT_CYCLE, cycleOf, normalizeDue } from './cycles.js';
 
 const DUE_FIELDS = ['cycle', 'dueDate', 'dueMonth', 'dueWeekday'];
@@ -57,6 +58,7 @@ export function buildSub(prev, form, today = todayStr()) {
     sharedWith: normalizeSharedWith(form.sharedWith),
     autoCharge: form.autoCharge === true,
     muted: form.muted === true,
+    ...statusFields(prev ?? {}), // pausar e cancelar não passam pelo formulário
   };
   // Mudou o ciclo ou o vencimento: reinicia o controle para não gerar "atraso" retroativo.
   const before = prev && { ...normalizeDue(prev) };
