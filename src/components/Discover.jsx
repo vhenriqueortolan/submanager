@@ -68,7 +68,7 @@ export default function Discover({ onPick }) {
           <h3 className="section-title">Resultados da Busca</h3>
           {search.status === 'loading' && <div className="spinner" role="progressbar" aria-label="Buscando" />}
           {search.status === 'error' && (
-            <p className="text-muted error-text">Busca indisponível no momento. Você pode adicionar manualmente.</p>
+            <p className="text-muted error-text">Busca indisponível no momento. Você pode inserir os dados manualmente.</p>
           )}
           {search.status === 'done' && search.items.length === 0 && (
             <p className="text-muted">Nenhum app encontrado.</p>
@@ -82,13 +82,13 @@ export default function Discover({ onPick }) {
               className="btn btn-outline"
               onClick={() => onPick({ name: query.trim(), domain: '', category: 'Outros', price: '', source: 'manual' })}
             >
-              + Adicionar “{query.trim()}” manualmente
+              + Inserir dados de “{query.trim()}” manualmente
             </button>
           )}
         </div>
       ) : (
         <div id="discover-categories">
-          <div className="pill-scroll">
+          <div className="pill-scroll" role="group" aria-label="Filtrar por categoria">
             {[TODOS, ...CATEGORIES].map((c) => (
               <button
                 key={c.value}

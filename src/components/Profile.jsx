@@ -1,26 +1,19 @@
 import { useState } from 'react';
 import AppBrand from './AppBrand.jsx';
-import MeuPerfil from './profile/MeuPerfil.jsx';
-import Orcamento from './profile/Orcamento.jsx';
-import Notificacoes from './profile/Notificacoes.jsx';
-import DadosPrivacidade from './profile/DadosPrivacidade.jsx';
-import Sobre from './profile/Sobre.jsx';
-import { FEEDBACK_FORM, buildFeedbackUrl, platformOf } from '../lib/feedback.js';
+import ProfileScreens, { feedbackUrlFor } from './profile/ProfileScreens.jsx';
 import { aboutSummary, budgetSummary, dataSummary, notificationsSummary, profileSummary } from '../lib/profile-summary.js';
 import pkg from '../../package.json';
 
 /** Hub do Perfil: cinco linhas, cada uma abre uma tela de detalhe com uma responsabilidade só. */
-export default function Profile({ state, permission, onEnableNotifications, onSaveProfile, onExport, onImport, onAddPerson, onRenamePerson, onRemovePerson, onSettings, onClearData }) {
+export default function Profile({ state, permission, handlers }) {
   const [screen, setScreen] = useState(null);
-  const close = () => setScreen(null);
-  const feedbackUrl = buildFeedbackUrl(FEEDBACK_FORM, { version: pkg.version, platform: platformOf(navigator.userAgent) });
 
   const rows = [
     { id: 'meu-perfil', title: 'Meu perfil', summary: profileSummary(state) },
     { id: 'orcamento', title: 'Orçamento', summary: budgetSummary(state) },
     { id: 'notificacoes', title: 'Notificações', summary: notificationsSummary(state.settings) },
     { id: 'dados', title: 'Dados e privacidade', summary: dataSummary(state) },
-    { id: 'sobre', title: 'Sobre', summary: aboutSummary(pkg.version, feedbackUrl) },
+    { id: 'sobre', title: 'Sobre', summary: aboutSummary(pkg.version, feedbackUrlFor()) },
   ];
 
   return (
@@ -42,28 +35,7 @@ export default function Profile({ state, permission, onEnableNotifications, onSa
         ))}
       </ul>
 
-      {screen === 'meu-perfil' && (
-        <MeuPerfil
-          state={state}
-          onClose={close}
-          onSave={({ name, interests }) => onSaveProfile({ name, budget: state.budget, interests })}
-        />
-      )}
-      {screen === 'orcamento' && (
-        <Orcamento
-          state={state}
-          onClose={close}
-          onSave={({ budget }) => onSaveProfile({ name: state.name, budget, interests: state.interests })}
-          onAddPerson={onAddPerson}
-          onRenamePerson={onRenamePerson}
-          onRemovePerson={onRemovePerson}
-        />
-      )}
-      {screen === 'notificacoes' && (
-        <Notificacoes state={state} permission={permission} onEnableNotifications={onEnableNotifications} onSettings={onSettings} onClose={close} />
-      )}
-      {screen === 'dados' && <DadosPrivacidade state={state} onExport={onExport} onImport={onImport} onClearData={onClearData} onClose={close} />}
-      {screen === 'sobre' && <Sobre feedbackUrl={feedbackUrl} onClose={close} />}
+      <ProfileScreens screen={screen} onClose={() => setScreen(null)} state={state} permission={permission} handlers={handlers} />
     </main>
   );
 }

@@ -34,19 +34,19 @@ test('com assinaturas: hero, status de vencimento e "Paguei" persistente', async
   await expect(page.locator('.sub-card', { hasText: 'AtrasadaApp' })).toContainText('Atrasada');
 });
 
-test('gasto mensal, teto e projeção anual', async ({ page }) => {
-  await seed(page, withSubs(sampleSubs(), { budget: 240 })); // 4 × R$ 50 = 200 (83% do teto)
+test('gasto mensal, orçamento e projeção anual', async ({ page }) => {
+  await seed(page, withSubs(sampleSubs(), { budget: 240 })); // 4 × R$ 50 = 200 (83% do orçamento)
   await expect(page.locator('#total-month')).toContainText('200,00');
   await expect(page.locator('#budget-status')).toContainText('240,00');
   await expect(page.locator('#annual-projection')).toContainText('2.400,00');
   await expect(page.locator('#budget-alert')).toContainText('Próximo ao limite');
 });
 
-test('sem assinaturas não mostra projeção anual; teto excedido avisa', async ({ page }) => {
+test('sem assinaturas não mostra projeção anual; orçamento excedido avisa', async ({ page }) => {
   await seed(page, withSubs([]));
   await expect(page.locator('#annual-projection')).toHaveCount(0);
   await seed(page, withSubs(sampleSubs(), { budget: 100 }));
-  await expect(page.locator('#budget-alert')).toContainText('Teto excedido');
+  await expect(page.locator('#budget-alert')).toContainText('Orçamento excedido');
 });
 
 test('cadastro manual, edição e remoção com diálogo de confirmação', async ({ page }) => {

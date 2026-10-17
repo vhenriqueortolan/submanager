@@ -30,12 +30,12 @@ test('busca global: resultado abre o cadastro já preenchido', async ({ page }) 
   await expect(page.locator('#add-name')).toHaveValue('Acme Cloud');
 });
 
-test('busca indisponível: mostra aviso e permite adicionar manualmente', async ({ page }) => {
+test('busca indisponível: mostra aviso e permite inserir os dados manualmente', async ({ page }) => {
   await seed(page, withSubs([]));
   await tab(page, 'Descobrir').click();
   await page.fill('#search-api', 'falha total');
   await expect(page.locator('#search-results')).toContainText('Busca indisponível');
-  await page.getByRole('button', { name: /Adicionar “falha total” manualmente/ }).click();
+  await page.getByRole('button', { name: /Inserir dados de “falha total” manualmente/ }).click();
   await expect(page.locator('#add-name')).toHaveValue('falha total');
   await page.keyboard.press('Escape');
   await expect(page.locator('#add-modal')).toHaveCount(0);

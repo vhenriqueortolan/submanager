@@ -36,7 +36,10 @@ test.describe('permissão ainda não pedida', () => {
     await expect(page.locator('#notif-prompt')).toBeVisible();
     expect(await readNotifs(page)).toHaveLength(0);
 
+    // o Ativar do Início abre a tela Notificações; lá fica o único pedido de permissão
     await page.locator('#notif-prompt').getByRole('button', { name: 'Ativar' }).click();
+    await page.locator('#notif-btn').click();
+    await page.getByRole('button', { name: 'Voltar' }).click();
     await expect(page.locator('#notif-prompt')).toHaveCount(0);
     await expect.poll(async () => (await readNotifs(page)).length).toBe(2);
   });

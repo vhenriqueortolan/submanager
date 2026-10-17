@@ -5,6 +5,7 @@ import Discover from './components/Discover.jsx';
 import Profile from './components/Profile.jsx';
 import SubModal from './components/SubModal.jsx';
 import ConfirmDialog from './components/ConfirmDialog.jsx';
+import ProfileScreens from './components/profile/ProfileScreens.jsx';
 import TestScreen from './components/TestScreen.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import Toast from './components/Toast.jsx';
@@ -26,6 +27,7 @@ export default function App() {
   const [tab, setTab] = useState('home');
   const [modal, setModal] = useState(null); // null | { mode: 'new', preset? } | { mode: 'edit', sub }
   const [confirm, setConfirm] = useState(null); // null | { title, message, confirmLabel, danger, onConfirm }
+  const [homeScreen, setHomeScreen] = useState(null); // tela do Perfil aberta a partir do Início
   const [testScreen, setTestScreen] = useState(false); // só no build de e2e
   const [toast, setToast] = useState(null);
   const [permission, requestPermission] = useNotificationPermission();
@@ -163,6 +165,21 @@ export default function App() {
     });
   };
 
+  const profileHandlers = {
+    onEnableNotifications: enableNotifications,
+    onSaveProfile: ({ name, budget, interests }) => {
+      dispatch({ type: 'saveProfile', name, budget, interests });
+      notify('Perfil salvo com sucesso!');
+    },
+    onExport: handleExport,
+    onImport: handleImport,
+    onAddPerson: (person) => dispatch({ type: 'addPerson', person }),
+    onRenamePerson: (id, name) => dispatch({ type: 'renamePerson', id, name }),
+    onRemovePerson: handleRemovePerson,
+    onSettings: (patch) => dispatch({ type: 'updateSettings', patch }),
+    onClearData: handleClearData,
+  };
+
   if (!state.onboarded) {
     return (
       <>
@@ -186,7 +203,8 @@ export default function App() {
           state={state}
           today={today}
           permission={permission}
-          onEnableNotifications={enableNotifications}
+          onOpenNotifications={() => setHomeScreen('notificacoes')}
+          onOpenBudget={() => setHomeScreen('orcamento')}
           onAdd={() => setModal({ mode: 'new' })}
           onEdit={(id) => setModal({ mode: 'edit', sub: state.subs.find((s) => s.id === id) })}
           onPay={handlePay}
@@ -198,25 +216,12 @@ export default function App() {
       {tab === 'discover' && <Discover onPick={(app) => setModal({ mode: 'new', preset: app })} />}
 
       {tab === 'profile' && (
-        <Profile
-          state={state}
-          permission={permission}
-          onEnableNotifications={enableNotifications}
-          onSaveProfile={({ name, budget, interests }) => {
-            dispatch({ type: 'saveProfile', name, budget, interests });
-            notify('Perfil salvo com sucesso!');
-          }}
-          onExport={handleExport}
-          onAddPerson={(person) => dispatch({ type: 'addPerson', person })}
-          onRenamePerson={(id, name) => dispatch({ type: 'renamePerson', id, name })}
-          onRemovePerson={handleRemovePerson}
-          onClearData={handleClearData}
-          onSettings={(patch) => dispatch({ type: 'updateSettings', patch })}
-          onImport={handleImport}
-        />
+        <Profile state={state} permission={permission} handlers={profileHandlers} />
       )}
 
       <BottomNav tab={tab} onChange={setTab} />
+
+      <ProfileScreens screen={homeScreen} onClose={() => setHomeScreen(null)} state={state} permission={permission} handlers={profileHandlers} />
 
       {import.meta.env.VITE_E2E && (
         <button type="button" className="e2e-open" onClick={() => setTestScreen(true)}>Abrir tela de teste</button>
