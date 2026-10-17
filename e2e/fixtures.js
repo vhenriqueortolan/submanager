@@ -94,3 +94,9 @@ export function sampleSubs(now = new Date()) {
 export const withSubs = (subs, extra = {}) => ({
   onboarded: true, name: 'Victor', budget: 500, interests: ['IA', 'Games'], subs, ...extra,
 });
+
+/** Abre a aba Perfil e entra na tela de detalhe de uma linha do hub ("Meu perfil", "Orçamento", ...). */
+export async function openProfileScreen(page, title) {
+  await page.locator('.bottom-nav').getByRole('button', { name: 'Perfil' }).click();
+  await page.getByRole('button', { name: new RegExp(`^${title}\\.`) }).click();
+}

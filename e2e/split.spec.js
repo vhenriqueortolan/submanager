@@ -1,4 +1,4 @@
-import { test, expect, seed, withSubs, readStorage } from './fixtures.js';
+import { test, expect, seed, withSubs, readStorage, openProfileScreen } from './fixtures.js';
 
 const tab = (page, name) => page.locator('.bottom-nav').getByRole('button', { name });
 
@@ -61,7 +61,7 @@ test('nome repetido reutiliza a pessoa (sem diferenciar maiúsculas)', async ({ 
 test('Perfil: remover pessoa pede confirmação e recalcula', async ({ page }) => {
   await seed(page, withSubs([], { budget: 100 }));
   await addSplitNetflix(page);
-  await tab(page, 'Perfil').click();
+  await openProfileScreen(page, 'Orçamento');
   const section = page.locator('#people-section');
   await expect(section).toContainText('Ana');
 
@@ -75,6 +75,7 @@ test('Perfil: remover pessoa pede confirmação e recalcula', async ({ page }) =
   await page.getByRole('alertdialog').getByRole('button', { name: 'Remover' }).click();
   await expect(section).not.toContainText('Ana');
 
+  await page.getByRole('button', { name: 'Voltar' }).click();
   await tab(page, 'Portfólio').click();
   await expect(page.locator('#total-month')).toContainText('19,95'); // 39,90 ÷ 2
 });

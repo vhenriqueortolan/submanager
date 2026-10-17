@@ -1,9 +1,8 @@
-import { test, expect, seed, withSubs, sampleSubs, STORAGE_KEY } from './fixtures.js';
+import { test, expect, seed, withSubs, sampleSubs, STORAGE_KEY, openProfileScreen } from './fixtures.js';
 
-const tab = (page, name) => page.locator('.bottom-nav').getByRole('button', { name });
 
 async function openClearDialog(page) {
-  await tab(page, 'Perfil').click();
+  await openProfileScreen(page, 'Dados e privacidade');
   await page.getByRole('button', { name: 'Apagar todos os dados' }).click();
   return page.getByRole('alertdialog');
 }
@@ -82,7 +81,7 @@ test('"Exportar backup antes" baixa o arquivo e mantém o diálogo aberto', asyn
 
 test('Perfil explica o que fica e o que sai do aparelho', async ({ page }) => {
   await seed(page, withSubs(sampleSubs()));
-  await tab(page, 'Perfil').click();
+  await openProfileScreen(page, 'Dados e privacidade');
   const data = page.locator('#data-section');
   await expect(data).toContainText('configurações do navegador');
   await expect(data).toContainText('backups que você já baixou');
