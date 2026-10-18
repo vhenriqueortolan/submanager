@@ -10,8 +10,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Calcula o que a mudança afeta (scripts/affected-tests.js). Em push na main, tudo. Nenhum job abaixo usa `paths:`:
+  # check obrigatório que nunca roda fica pendente e trava o merge; job pulado por `if` conta como verde.
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    outputs:
+      checks: ${{ steps.select.outputs.checks }}
+      unit: ${{ steps.select.outputs.unit }}
+      e2e: ${{ steps.select.outputs.e2e }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: select
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            node scripts/affected-tests.js --base "$BASE" --head HEAD
+          else
+            node scripts/affected-tests.js --all
+          fi
+
   unit-and-build:
     name: unit-and-build
+    needs: changes
+    if: needs.changes.outputs.checks == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,11 +50,21 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
-      - run: npm test
+      - name: npm test (testes selecionados)
+        env:
+          UNIT: ${{ needs.changes.outputs.unit }}
+        run: |
+          echo "Selecionados: $UNIT"
+          if [ "$UNIT" = "ALL" ]; then npm test
+          elif [ "$UNIT" = "NONE" ]; then echo "Nenhum teste unitário afetado."
+          else node --test $UNIT
+          fi
       - run: npm run build
 
   e2e:
     name: e2e
+    needs: changes
+    if: needs.changes.outputs.e2e != 'NONE'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +74,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - name: npm run test:e2e (specs selecionadas)
+        env:
+          E2E: ${{ needs.changes.outputs.e2e }}
+        run: |
+          echo "Selecionadas: $E2E"
+          if [ "$E2E" = "ALL" ]; then npm run test:e2e
+          else npx playwright test $E2E
+          fi
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
