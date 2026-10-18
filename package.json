@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/feeds/build-feed.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test src/lib/*.test.js",

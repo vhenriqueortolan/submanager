@@ -1,0 +1,52 @@
+[
+  {
+    "dominio": "openai.com",
+    "nome": "ChatGPT Plus",
+    "categoria": "IA",
+    "tipo": "oficial",
+    "feed": "https://openai.com/news/rss.xml",
+    "paginaNovidades": "https://openai.com/news/",
+    "iframe": false,
+    "verificadoEm": "2026-10-18"
+  },
+  {
+    "dominio": "spotify.com",
+    "nome": "Spotify",
+    "categoria": "Streaming",
+    "tipo": "oficial",
+    "feed": "https://newsroom.spotify.com/feed/",
+    "paginaNovidades": "https://newsroom.spotify.com/news/",
+    "iframe": false,
+    "verificadoEm": "2026-10-18"
+  },
+  {
+    "dominio": "xbox.com",
+    "nome": "Xbox Game Pass",
+    "categoria": "Games",
+    "tipo": "oficial",
+    "feed": "https://news.xbox.com/pt-br/feed/",
+    "paginaNovidades": "https://news.xbox.com/pt-br/",
+    "iframe": false,
+    "verificadoEm": "2026-10-18"
+  },
+  {
+    "dominio": "anthropic.com",
+    "nome": "Claude Pro",
+    "categoria": "IA",
+    "tipo": "nenhum",
+    "feed": null,
+    "paginaNovidades": "https://www.anthropic.com/news",
+    "iframe": false,
+    "verificadoEm": "2026-10-18"
+  },
+  {
+    "dominio": "netflix.com",
+    "nome": "Netflix",
+    "categoria": "Streaming",
+    "tipo": "nenhum",
+    "feed": null,
+    "paginaNovidades": null,
+    "iframe": false,
+    "verificadoEm": "2026-10-18"
+  }
+]
