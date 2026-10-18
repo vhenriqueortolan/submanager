@@ -46,8 +46,13 @@ test.describe('permissão ainda não pedida', () => {
 });
 
 test.describe('ciclos anual e semanal', () => {
-  const cycleSubs = () => {
-    const t = browserToday();
+  // Relógio fixo (meio-dia em São Paulo): o texto do aviso depende do dia da semana de "ontem"
+  // ("toda terça", "todo domingo"), então o teste não pode depender do dia em que roda.
+  const QUARTA = '2026-10-21T15:00:00Z'; // ontem foi terça
+  const SEGUNDA = '2026-10-19T15:00:00Z'; // ontem foi domingo (gênero masculino)
+
+  const cycleSubs = (now = new Date(QUARTA)) => {
+    const t = browserToday(now);
     const yesterday = new Date(t); yesterday.setDate(t.getDate() - 1);
     const old = new Date(t); old.setFullYear(t.getFullYear() - 2);
     const base = { domain: '', category: 'IA', price: 50, paymentMethod: 'Pix', paidCycle: '', lastNotified: '', createdAt: iso(old) };
@@ -57,19 +62,24 @@ test.describe('ciclos anual e semanal', () => {
     ];
   };
 
-  test('anual vencendo hoje e semanal atrasada notificam, sem duplicar no mesmo dia', async ({ page }) => {
-    await seed(page, withSubs(cycleSubs()));
-    await expect.poll(async () => (await readNotifs(page)).length).toBe(2);
-    const notifs = await readNotifs(page);
-    expect(notifs.map((n) => n.title).sort()).toEqual(['AnualApp vence hoje', 'SemanalApp está atrasada']);
-    expect(notifs.find((n) => n.title.startsWith('SemanalApp')).body).toMatch(/Venceu há 1 dia \(toda /i);
+  for (const { now, ontem } of [{ now: QUARTA, ontem: 'toda terça' }, { now: SEGUNDA, ontem: 'todo domingo' }]) {
+    test(`anual vencendo hoje e semanal atrasada notificam, sem duplicar no mesmo dia (ontem: ${ontem})`, async ({ page }) => {
+      await page.clock.setFixedTime(new Date(now));
+      await seed(page, withSubs(cycleSubs(new Date(now))));
+      await expect.poll(async () => (await readNotifs(page)).length).toBe(2);
+      const notifs = await readNotifs(page);
+      expect(notifs.map((n) => n.title).sort()).toEqual(['AnualApp vence hoje', 'SemanalApp está atrasada']);
+      // Frase inteira: se o texto do aviso mudar de verdade, o teste falha.
+      expect(notifs.find((n) => n.title.startsWith('SemanalApp')).body).toMatch(new RegExp(`^Venceu há 1 dia \\(${ontem}\\) · R\\$\\s50,00$`, 'i'));
 
-    await page.reload();
-    await page.waitForTimeout(500);
-    expect(await readNotifs(page)).toHaveLength(2);
-  });
+      await page.reload();
+      await page.waitForTimeout(500);
+      expect(await readNotifs(page)).toHaveLength(2);
+    });
+  }
 
   test('"Paguei" interrompe os avisos do ciclo semanal', async ({ page }) => {
+    await page.clock.setFixedTime(new Date(QUARTA));
     await seed(page, withSubs(cycleSubs()));
     await page.locator('.sub-card', { hasText: 'SemanalApp' }).getByRole('button', { name: /Paguei/ }).click();
     await expect(page.locator('.sub-card', { hasText: 'SemanalApp' })).not.toContainText(ATRASADA);
