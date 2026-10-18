@@ -112,3 +112,4 @@ export default function Discover({ onPick }) {
     </main>
   );
 }
+// medição
