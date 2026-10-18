@@ -30,7 +30,7 @@ PWA de gestão de assinaturas. React 19 + Vite 7, deploy na Vercel (merge na `ma
 - Dependências: não adicionar novas sem necessidade explícita.
 - Os testes existentes não podem ser alterados, só ampliados.
 - O responsável é iniciante em git/GitHub, CI, Vercel e testes em dispositivo: ao pedir uma ação manual, explique o que é, por que serve e o resultado esperado em cada passo.
-- Exceção: quando uma sprint aprovada muda a navegação ou o layout (ex.: `docs/sprint-4-ux.md`), os testes que dependem do caminho até um elemento podem ser migrados, desde que as mesmas verificações de comportamento continuem valendo. A migração é descrita no corpo do PR.
+- Exceção: quando uma sprint aprovada muda a navegação ou o layout (ex.: `docs/ponte/sprints/sprint-4-ux.md`), os testes que dependem do caminho até um elemento podem ser migrados, desde que as mesmas verificações de comportamento continuem valendo. A migração é descrita no corpo do PR.
 
 ## Economia de contexto
 
