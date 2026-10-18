@@ -1,5 +1,5 @@
 import { test as base, expect } from '@playwright/test';
-import { browserToday } from './timezone.js';
+import { browserToday, testNow } from './timezone.js';
 
 export const STORAGE_KEY = 'subDataV5';
 
@@ -27,6 +27,7 @@ export const test = base.extend({
   notifPermission: ['granted', { option: true }],
 
   page: async ({ page, notifPermission }, use) => {
+    await page.clock.setFixedTime(testNow()); // relógio do browser = relógio das fixtures
     await page.addInitScript(notificationStub(notifPermission));
 
     await page.route('**/*', (route) => {
@@ -76,7 +77,7 @@ export const readStorage = (page) =>
 export const readNotifs = (page) => page.evaluate(() => window.__notifs || []);
 
 /** Assinaturas de exemplo relativas a hoje: vence hoje, atrasada, paga e futura. */
-export function sampleSubs(now = new Date()) {
+export function sampleSubs(now = testNow()) {
   const t = browserToday(now);
   const yesterday = new Date(t); yesterday.setDate(t.getDate() - 1);
   const threeMonthsAgo = new Date(t); threeMonthsAgo.setMonth(t.getMonth() - 3);
