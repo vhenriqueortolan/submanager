@@ -1,0 +1,33 @@
+name: Novidades diárias
+
+# Todo dia às 09:00 UTC (06:00 em Brasília) pede à Vercel um novo deploy da main. O build lê os feeds e gera
+# public/feeds/novidades.json (scripts/feeds/build-feed.mjs). Não é backend: só dispara o deploy.
+# Também roda à mão: Actions > Novidades diárias > Run workflow.
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: novidades-diario
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Disparar o deploy na Vercel
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
+            echo "Segredo VERCEL_DEPLOY_HOOK não configurado." >&2
+            exit 1
+          fi
+          curl --fail --silent --show-error --max-time 60 -X POST "$VERCEL_DEPLOY_HOOK"
+          echo
+          echo "Deploy pedido à Vercel."
