@@ -1,8 +1,9 @@
 {
   "_ajuda": "Mapa de telas e fluxos para specs e2e. Chave = arquivo de src/ (a tela). Valor = specs que exercitam essa tela. Mudar um arquivo seleciona as specs dele e as das telas que o importam, direta ou indiretamente. Arquivo de src/ sem entrada aqui e sem tela importadora mapeada: roda tudo. Compartilhados (DetailScreen, ConfirmDialog, design/, Toast, BottomNav, Logo, hooks de foco/pilha) ficam com \"ALL\".",
   "_somenteNaSuiteCompleta": ["pinca", "save-failed"],
-  "src/components/Home.jsx": ["portfolio", "portfolio-orcamento-layout", "home-cycles", "payments", "status", "historico", "historico-auto", "historico-schema", "auto-charge", "split", "divisao", "teclado", "inicio-descobrir", "atualizar", "cycles", "navegacao", "foco-telas", "notifications"],
-  "src/components/SubModal.jsx": ["cadastro-tela", "campos-tamanho", "formularios", "cycles", "auto-charge", "status", "payments", "historico", "historico-schema", "split", "divisao", "discover", "detail-screen", "design-componentes", "teclado", "portfolio", "foco-telas"],
+  "src/components/Home.jsx": ["novidades", "portfolio", "portfolio-orcamento-layout", "home-cycles", "payments", "status", "historico", "historico-auto", "historico-schema", "auto-charge", "split", "divisao", "teclado", "inicio-descobrir", "atualizar", "cycles", "navegacao", "foco-telas", "notifications"],
+  "src/components/SubModal.jsx": ["novidades", "cadastro-tela", "campos-tamanho", "formularios", "cycles", "auto-charge", "status", "payments", "historico", "historico-schema", "split", "divisao", "discover", "detail-screen", "design-componentes", "teclado", "portfolio", "foco-telas"],
+  "src/components/Novidades.jsx": ["novidades"],
   "src/components/Discover.jsx": ["discover", "inicio-descobrir", "campos-tamanho", "teclado", "foco-telas"],
   "src/components/Onboarding.jsx": ["onboarding", "teclado", "clear-data", "a11y-storage", "foco-telas"],
   "src/components/Historico.jsx": ["historico", "historico-auto", "historico-schema", "payments", "portfolio-orcamento-layout", "navegacao", "split"],

@@ -9,9 +9,18 @@ import { resolvePerson } from '../lib/people.js';
 import { MONTHS, WEEKDAYS, brl } from '../lib/format.js';
 import { parseMoneyInput, moneyToInput } from '../lib/budget.js';
 import { useCompanySearch } from '../hooks/useCompanySearch.js';
-import { Button, Chip, EditableHero, SectionTitle, SettingList, SettingRow, StatusBadge } from '../design/index.jsx';
+import { Button, Chip, EditableHero, SectionTitle, SettingList, SettingRow, StatusBadge, Subabas } from '../design/index.jsx';
 import { statusOf, normalizeStatus } from '../lib/status.js';
 import { FieldEditor, OptionEditor } from '../design/Editors.jsx';
+import Novidades from './Novidades.jsx';
+import useNovidades from '../hooks/useNovidades.js';
+import { estadoNovidades, solicitarFonte, subabaInicial } from '../lib/novidades.js';
+
+const SUBABAS = [
+  { id: 'novidades', label: 'Novidades' },
+  { id: 'plano', label: 'Plano' },
+  { id: 'historico', label: 'Histórico' },
+];
 
 const formatDay = (day) => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day || '');
@@ -70,6 +79,9 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
   const [source, setSource] = useState(preset?.source || 'manual');
   const search = useCompanySearch(step === 1 ? query : '');
   const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
+  const novidades = useNovidades();
+  const [aba, setAba] = useState(null); // subaba escolhida pela pessoa; até lá vale a padrão do serviço
+  const abaAtual = aba ?? subabaInicial(form.domain, novidades);
 
   const recommended = useMemo(() => {
     const byInterest = interests.length ? CATALOG.filter((a) => interests.includes(a.category)) : CATALOG;
@@ -90,6 +102,8 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
     setForm((f) => ({ ...f, price: n > 0 ? String(n) : '' }));
   };
   const pick = (app) => {
+    // Serviço sem fonte de novidades: só simula o pedido (D-017); nada é enviado, gravado nem mostrado.
+    if (app.domain && estadoNovidades(app.domain, novidades).estado === 'sem-feed') solicitarFonte(app.domain);
     const next = emptyForm(app);
     setForm(next);
     setBaseline(next);
@@ -110,6 +124,8 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
   const monthlyHint = form.cycle !== 'monthly' && priceNumber > 0 ? annualAmount(form) / 12 : 0;
   const searching = query.trim().length >= 2;
   const nameMissing = !form.name.trim();
+  // Painel da subaba aberta (só na edição, que tem subabas); no cadastro novo as seções seguem empilhadas.
+  const painel = (id) => (isEdit ? { role: 'tabpanel', id: 'subaba-painel', 'aria-labelledby': `subaba-aba-${id}` } : {});
 
   return (
     <>
@@ -192,6 +208,16 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
 
             {isEdit && <StatusBlock sub={sub} onStatus={onStatus} />}
 
+            {isEdit && <Subabas label="Seções da assinatura" idBase="subaba" tabs={SUBABAS} value={abaAtual} onChange={setAba} />}
+
+            {isEdit && abaAtual === 'novidades' && (
+              <div {...painel('novidades')}>
+                <Novidades dominio={form.domain} dados={novidades} />
+              </div>
+            )}
+
+            {(!isEdit || abaAtual === 'plano') && (
+            <div {...painel('plano')}>
             <SectionTitle>Plano</SectionTitle>
             <SettingList>
               <SettingRow key="cycle" label="Cobrança" value={cycleInfo.label} data-edit="cycle" onClick={() => setEditing('cycle')} />
@@ -251,8 +277,11 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
             <SettingList>
               <SettingRow key="muted" label="Não avisar desta assinatura" switchId="add-muted" switchChecked={form.muted} onSwitch={setFlag('muted')} />
             </SettingList>
+            </div>
+            )}
 
-            {isEdit && (
+            {isEdit && abaAtual === 'historico' && (
+              <div {...painel('historico')}>
               <div id="payment-history">
                 <SectionTitle>Histórico</SectionTitle>
                 {paymentsNewestFirst(sub).length === 0 ? (
@@ -280,19 +309,25 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
                   </ul>
                 )}
               </div>
+              </div>
             )}
 
-            {nameMissing && <p className="ds-help save-hint" id="save-hint">Informe o nome do serviço</p>}
-            <Button
-              className="mt-20"
-              disabled={nameMissing}
-              aria-describedby={nameMissing ? 'save-hint' : undefined}
-              onClick={() => onSave(buildSub(isEdit ? sub : null, form), { source })}
-            >
-              Salvar Assinatura
-            </Button>
+            {/* Nas subabas Novidades e Histórico o botão só aparece com alteração pendente (nome ou valor mudados no topo). */}
+            {(!isEdit || abaAtual === 'plano' || dirty) && (
+              <>
+                {nameMissing && <p className="ds-help save-hint" id="save-hint">Informe o nome do serviço</p>}
+                <Button
+                  className="mt-20"
+                  disabled={nameMissing}
+                  aria-describedby={nameMissing ? 'save-hint' : undefined}
+                  onClick={() => onSave(buildSub(isEdit ? sub : null, form), { source })}
+                >
+                  Salvar Assinatura
+                </Button>
+              </>
+            )}
 
-            {isEdit && (
+            {isEdit && abaAtual === 'plano' && (
               <div className="risk-zone">
                 <button type="button" className="risk-row" onClick={() => onDelete(sub.id)}>Remover Assinatura</button>
               </div>

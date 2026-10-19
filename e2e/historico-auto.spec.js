@@ -34,6 +34,7 @@ test('o histórico na tela da assinatura mostra as cobranças automáticas, sem 
   await seed(page, withSubs([autoSub()]));
   await expect.poll(async () => (await readStorage(page)).subs[0].payments.length).toBeGreaterThanOrEqual(3);
   await page.locator('.sub-card', { hasText: 'AutoApp' }).click();
+  await page.getByRole('tab', { name: 'Histórico' }).click();
   const rows = page.locator('#payment-history .payment-row');
   await expect(rows.first()).toContainText('R$ 40,00');
   await expect(rows.first()).toContainText('Automática');

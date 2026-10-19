@@ -6,6 +6,35 @@ export const STORAGE_KEY = 'subDataV5';
 /** Resposta falsa da busca global (o teste nunca depende da internet). */
 const CLEARBIT_FIXTURE = [{ name: 'Acme Cloud', domain: 'acme.example' }];
 
+/**
+ * Resposta falsa de /feeds/novidades.json (o teste nunca depende da internet nem do que o build leu).
+ * Um serviço em cada estado: xbox.com (ok, 7 itens), spotify.com (ok, 2 itens), chess.com (ok, fonte de terceiro),
+ * netflix.com (ok, sem itens), openai.com (erro), anthropic.com (sem feed).
+ */
+const novidade = (titulo, data) => ({ titulo, data, url: `https://exemplo.test/${encodeURIComponent(titulo)}` });
+export const NOVIDADES_FIXTURE = {
+  geradoEm: '2026-10-18T09:00:00.000Z',
+  servicos: {
+    'xbox.com': {
+      tipo: 'oficial', fonte: 'news.xbox.com', status: 'ok',
+      itens: [
+        novidade('Xbox novidade 1', '2026-10-16T18:13:02.000Z'), novidade('Xbox novidade 2', '2026-10-15T15:01:53.000Z'),
+        novidade('Xbox novidade 3', '2026-10-14T12:00:00.000Z'), novidade('Xbox novidade 4', '2026-10-13T12:00:00.000Z'),
+        novidade('Xbox novidade 5', '2026-10-12T12:00:00.000Z'), novidade('Xbox novidade 6', '2026-10-11T12:00:00.000Z'),
+        novidade('Xbox novidade 7', '2026-10-10T12:00:00.000Z'),
+      ],
+    },
+    'spotify.com': {
+      tipo: 'oficial', fonte: 'newsroom.spotify.com', status: 'ok',
+      itens: [novidade('Spotify novidade 1', '2026-10-16T04:00:51.000Z'), novidade('Spotify novidade 2', '2026-10-08T12:57:31.000Z')],
+    },
+    'chess.com': { tipo: 'terceiro', fonte: 'rss.exemplo.test', status: 'ok', itens: [novidade('Chess novidade 1', '2026-10-09T10:00:00.000Z')] },
+    'netflix.com': { tipo: 'oficial', fonte: 'about.netflix.com', status: 'ok', itens: [] },
+    'openai.com': { tipo: 'oficial', fonte: 'openai.com', status: 'erro', itens: [] },
+    'anthropic.com': { tipo: 'nenhum', status: 'sem-feed', itens: [] },
+  },
+};
+
 // Registra qualquer notificação disparada, seja por `new Notification` ou por registration.showNotification.
 const notificationStub = (permission) => `
   (() => {
@@ -26,7 +55,10 @@ export const test = base.extend({
   /** 'granted' | 'default' | 'denied' — use com test.use({ notifPermission: 'default' }) */
   notifPermission: ['granted', { option: true }],
 
-  page: async ({ page, notifPermission }, use) => {
+  /** Corpo de /feeds/novidades.json: um objeto, ou 'indisponivel' (404). Troque com test.use({ novidades: ... }). */
+  novidades: [NOVIDADES_FIXTURE, { option: true }],
+
+  page: async ({ page, notifPermission, novidades }, use) => {
     await page.clock.setFixedTime(testNow()); // relógio do browser = relógio das fixtures
     await page.addInitScript(notificationStub(notifPermission));
 
@@ -36,6 +68,10 @@ export const test = base.extend({
         // Script do Vercel Analytics não existe fora da Vercel: responde vazio.
         if (url.pathname.startsWith('/_vercel/')) {
           return route.fulfill({ status: 200, contentType: 'application/javascript', body: '' });
+        }
+        if (url.pathname === '/feeds/novidades.json') {
+          if (novidades === 'indisponivel') return route.fulfill({ status: 404, contentType: 'text/plain', body: 'não encontrado' });
+          return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(novidades) });
         }
         return route.continue();
       }

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import AppBrand from './AppBrand.jsx';
 import Logo from './Logo.jsx';
 import { brl, dueLabel, priceLabel } from '../lib/format.js';
@@ -9,8 +9,10 @@ import { cycleOf } from '../lib/cycles.js';
 import { sortByUrgency } from '../lib/sort.js';
 import { backupDue } from '../lib/reminder.js';
 import { isActive, statusOf } from '../lib/status.js';
-import { StatusBadge } from '../design/index.jsx';
+import { StatusBadge, Subabas } from '../design/index.jsx';
 import { historyEntries, monthTotal } from '../lib/history.js';
+import useNovidades from '../hooks/useNovidades.js';
+import { dataLocal, resumoHome } from '../lib/novidades.js';
 
 function Hero({ greeting, subs }) {
   // Só as ativas contam: pausadas e canceladas saem do número e dos logos.
@@ -164,6 +166,12 @@ export default function Home({ state, today, permission, onOpenNotifications, on
   const anyDivided = subs.filter(isActive).some((s) => sharers(s, people).length > 0);
   const serviceTotal = anyDivided ? totalServiceMonthly(subs) : null;
 
+  // Resumo ao abrir: até 3 novidades das assinaturas ativas. Sem nenhuma, a subaba Novidades não existe.
+  const dadosNovidades = useNovidades();
+  const resumo = useMemo(() => resumoHome(subs, dadosNovidades), [subs, dadosNovidades]);
+  const [aba, setAba] = useState('assinaturas');
+  const abaHome = resumo.length > 0 ? aba : 'assinaturas';
+
   return (
     <main className="container active" id="view-home">
       <AppBrand title="SubManager" />
@@ -207,7 +215,38 @@ export default function Home({ state, today, permission, onOpenNotifications, on
         </button>
       )}
 
-      {hasSubs && (
+      {hasSubs && resumo.length > 0 && (
+        <Subabas
+          label="Seções do início"
+          idBase="home"
+          tabs={[{ id: 'assinaturas', label: 'Assinaturas' }, { id: 'novidades', label: 'Novidades', count: resumo.length }]}
+          value={abaHome}
+          onChange={setAba}
+        />
+      )}
+
+      <div id="home-painel" role={resumo.length > 0 ? 'tabpanel' : undefined} aria-labelledby={resumo.length > 0 ? `home-aba-${abaHome}` : undefined}>
+      {hasSubs && abaHome === 'novidades' && (
+        <section id="home-novidades">
+          <h3 className="section-title section-title-plain mb-2">Novidades das suas assinaturas</h3>
+          <ul className="resumo-lista">
+            {resumo.map((n) => (
+              <li key={n.url}>
+                <a className="resumo-item" href={n.url} target="_blank" rel="noopener noreferrer" aria-label={`${n.servico}: ${n.titulo}`}>
+                  <Logo domain={n.dominio} name={n.servico} className="resumo-logo" />
+                  <span className="resumo-texto">
+                    <span className="resumo-servico">{n.servico}</span>
+                    <span className="resumo-titulo">{n.titulo}</span>
+                    <span className="resumo-data">{dataLocal(n.data)}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {hasSubs && abaHome === 'assinaturas' && (
         <section id="subs-section">
           <div className="flex space-between mb-2">
             <h3 className="section-title section-title-plain">Assinaturas Ativas</h3>
@@ -233,6 +272,7 @@ export default function Home({ state, today, permission, onOpenNotifications, on
           )}
         </section>
       )}
+      </div>
     </main>
   );
 }

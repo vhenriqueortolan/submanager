@@ -28,6 +28,7 @@ test('histórico na edição lista o pagamento e permite desmarcar', async ({ pa
   await expect(page.getByRole('status')).toContainText('Pago.');
 
   await atrasada.click();
+  await page.getByRole('tab', { name: 'Histórico' }).click();
   const history = page.locator('#payment-history');
   await expect(history.locator('.payment-row')).toHaveCount(1);
   await expect(history).toContainText(/\d{2}\/\d{2}\/\d{4} · R\$\s50,00/);
