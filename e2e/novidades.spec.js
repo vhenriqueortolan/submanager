@@ -12,8 +12,17 @@ const abrir = async (page, domain, name, extra = {}) => {
   await page.locator('.sub-card', { hasText: name }).click();
   await expect(page.getByRole('dialog', { name: 'Editar assinatura' })).toBeVisible();
 };
-const aba = (page, nome) => page.getByRole('tab', { name: nome, exact: true });
+const aba = (page, nome) => page.getByRole('tablist', { name: 'Seções da assinatura' }).getByRole('tab', { name: nome, exact: true });
 const painel = (page) => page.locator('#novidades');
+
+// Novidades já vistas ficam em chave própria. Antes desta data, as novidades da fixture contam como não lidas.
+const VISTAS_KEY = 'subNovidadesVistasV1';
+const lerVistas = (page) => page.evaluate((k) => JSON.parse(localStorage.getItem(k) || 'null'), VISTAS_KEY);
+const semearVistas = async (page, vistas) => {
+  await page.evaluate(([k, v]) => localStorage.setItem(k, JSON.stringify(v)), [VISTAS_KEY, vistas]);
+  await page.reload();
+};
+const VISTAS_ANTIGAS = { 'xbox.com': '2026-10-14T12:00:00.000Z', 'spotify.com': '2026-10-08T12:57:31.000Z' }; // Xbox: 2 novas; Spotify: 1 nova
 
 test('serviço com fonte abre em Novidades: 5 itens com data local, fonte oficial e botão Abrir novidade', async ({ page }) => {
   await abrir(page, 'xbox.com', 'Xbox Game Pass');
@@ -138,6 +147,7 @@ test('cadastro novo continua em uma tela só, sem subabas', async ({ page }) => 
 // ---------- Home ----------
 test('Home: com serviços com feed, a subaba Novidades mostra a contagem e até 3 itens, do mais novo ao mais antigo', async ({ page }) => {
   await seed(page, withSubs([sub('xbox.com', 'Xbox Game Pass'), sub('spotify.com', 'Spotify'), sub('anthropic.com', 'Claude Pro')]));
+  await semearVistas(page, VISTAS_ANTIGAS);
   const tab = page.getByRole('tab', { name: /Novidades/ });
   await expect(tab).toContainText('3');
   await expect(page.getByRole('tab', { name: 'Assinaturas' })).toHaveAttribute('aria-selected', 'true');
@@ -172,9 +182,91 @@ test('Home: serviço com erro ou sem itens não gera subaba', async ({ page }) =
 test('Home: assinatura pausada não entra no resumo', async ({ page }) => {
   const pausada = { ...sub('xbox.com', 'Xbox Game Pass'), status: 'paused', pauses: [{ from: '2026-10-01', to: '' }] };
   await seed(page, withSubs([pausada, sub('spotify.com', 'Spotify')]));
+  await semearVistas(page, { 'spotify.com': '2026-10-01T00:00:00.000Z' });
   await expect(page.getByRole('tab', { name: /Novidades/ })).toContainText('2');
   await page.getByRole('tab', { name: /Novidades/ }).click();
   await expect(page.locator('#home-novidades')).not.toContainText('Xbox novidade');
+});
+
+// ---------- Não lidas ----------
+test('primeira vez: nada conta como novo e a base das vistas é gravada', async ({ page }) => {
+  await seed(page, withSubs([sub('xbox.com', 'Xbox Game Pass'), sub('spotify.com', 'Spotify')]));
+  await expect(page.getByRole('tab', { name: /Novidades/ })).toBeVisible();
+  await expect(page.locator('.ds-tab-count')).toHaveCount(0);
+  await expect.poll(() => lerVistas(page)).toMatchObject({ 'xbox.com': '2026-10-16T18:13:02.000Z', 'spotify.com': '2026-10-16T04:00:51.000Z' });
+  await page.getByRole('tab', { name: /Novidades/ }).click();
+  await expect(page.locator('.novidade-nova')).toHaveCount(0);
+});
+
+test('Home: itens novos trazem o rótulo Nova; os já vistos, não', async ({ page }) => {
+  await seed(page, withSubs([sub('xbox.com', 'Xbox Game Pass'), sub('spotify.com', 'Spotify')]));
+  await semearVistas(page, { 'xbox.com': '2026-10-15T15:01:53.000Z', 'spotify.com': '2026-10-08T12:57:31.000Z' }); // Xbox: 1 nova (a 1); Spotify: 1 nova
+  await expect(page.getByRole('tab', { name: /Novidades/ })).toContainText('2');
+  await page.getByRole('tab', { name: /Novidades/ }).click();
+  const itens = page.locator('#home-novidades .resumo-item');
+  await expect(itens).toHaveCount(3);
+  await expect(itens.nth(0)).toContainText('Nova'); // Xbox novidade 1
+  await expect(itens.nth(1)).toContainText('Nova'); // Spotify novidade 1
+  await expect(itens.nth(2)).not.toContainText('Nova'); // Xbox novidade 2, já vista
+  await expect(itens.nth(0)).toHaveAccessibleName(/^Nova. Xbox Game Pass: Xbox novidade 1/);
+});
+
+test('ler no detalhe da assinatura reduz a contagem da Home e continua assim depois de recarregar', async ({ page }) => {
+  await seed(page, withSubs([sub('xbox.com', 'Xbox Game Pass'), sub('spotify.com', 'Spotify')]));
+  await semearVistas(page, VISTAS_ANTIGAS); // Xbox 2 + Spotify 1
+  await expect(page.getByRole('tab', { name: /Novidades/ })).toContainText('3');
+  await page.locator('.sub-card', { hasText: 'Xbox Game Pass' }).click();
+  await expect(painel(page).locator('.novidade-nova')).toHaveCount(2); // as Nova aparecem enquanto a subaba está aberta
+  await page.getByRole('button', { name: 'Voltar' }).click();
+  await expect(page.getByRole('dialog', { name: 'Editar assinatura' })).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: /Novidades/ })).toContainText('1');
+  expect((await lerVistas(page))['xbox.com']).toBe('2026-10-16T18:13:02.000Z');
+  await page.reload();
+  await expect(page.getByRole('tab', { name: /Novidades/ })).toContainText('1');
+});
+
+test('lendo todas, a contagem some mas a subaba Novidades continua', async ({ page }) => {
+  await seed(page, withSubs([sub('xbox.com', 'Xbox Game Pass')]));
+  await semearVistas(page, { 'xbox.com': '2026-10-01T00:00:00.000Z' });
+  await expect(page.getByRole('tab', { name: /Novidades/ })).toContainText('7');
+  await page.locator('.sub-card', { hasText: 'Xbox Game Pass' }).click();
+  await page.getByRole('button', { name: 'Voltar' }).click();
+  await expect(page.getByRole('dialog', { name: 'Editar assinatura' })).toHaveCount(0);
+  await expect(page.getByRole('tablist', { name: 'Seções do início' }).getByRole('tab', { name: 'Novidades', exact: true })).toBeVisible();
+  await expect(page.locator('.ds-tab-count')).toHaveCount(0);
+});
+
+test('no detalhe, as marcas Nova somem ao sair da subaba e voltar', async ({ page }) => {
+  await seed(page, withSubs([sub('xbox.com', 'Xbox Game Pass')]));
+  await semearVistas(page, { 'xbox.com': '2026-10-14T12:00:00.000Z' });
+  await page.locator('.sub-card', { hasText: 'Xbox Game Pass' }).click();
+  await expect(painel(page).locator('.novidade-nova')).toHaveCount(2);
+  await aba(page, 'Plano').click();
+  await aba(page, 'Novidades').click();
+  await expect(painel(page).locator('.novidade-nova')).toHaveCount(0);
+});
+
+test('tocar numa novidade da Home marca o serviço como visto até aquela novidade', async ({ page }) => {
+  await seed(page, withSubs([sub('xbox.com', 'Xbox Game Pass'), sub('spotify.com', 'Spotify')]));
+  await semearVistas(page, VISTAS_ANTIGAS); // 3 não lidas
+  await page.getByRole('tab', { name: /Novidades/ }).click();
+  const [popup] = await Promise.all([
+    page.context().waitForEvent('page'),
+    page.locator('#home-novidades .resumo-item', { hasText: 'Spotify novidade 1' }).click(),
+  ]);
+  await popup.close();
+  await expect(page.getByRole('tab', { name: /Novidades/ })).toContainText('2');
+  expect((await lerVistas(page))['spotify.com']).toBe('2026-10-16T04:00:51.000Z');
+  expect((await lerVistas(page))['xbox.com']).toBe('2026-10-14T12:00:00.000Z');
+});
+
+test('serviço com erro ou sem itens não gera contagem nem registro de vistas', async ({ page }) => {
+  await seed(page, withSubs([sub('openai.com', 'ChatGPT Plus'), sub('netflix.com', 'Netflix')]));
+  await expect.poll(() => lerVistas(page)).not.toBeNull(); // a base dos serviços com itens é gravada
+  const vistas = await lerVistas(page);
+  expect(vistas).not.toHaveProperty('openai.com');
+  expect(vistas).not.toHaveProperty('netflix.com');
+  await expect(page.getByRole('tablist')).toHaveCount(0);
 });
 
 // ---------- Pedido de fonte simulado ----------

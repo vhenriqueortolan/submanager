@@ -180,7 +180,7 @@ export function Subabas({ label, idBase, tabs, value, onChange }) {
           onKeyDown={(e) => move(e, i)}
         >
           {t.label}
-          {t.count > 0 && <span className="ds-tab-count" aria-label={`${t.count} ${t.count === 1 ? 'novidade' : 'novidades'}`}>{t.count}</span>}
+          {t.count > 0 && <span className="ds-tab-count" aria-label={`${t.count} ${t.count === 1 ? 'nova' : 'novas'}`}>{t.count > 99 ? '99+' : t.count}</span>}
         </button>
       ))}
     </div>

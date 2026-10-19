@@ -14,7 +14,9 @@ import { statusOf, normalizeStatus } from '../lib/status.js';
 import { FieldEditor, OptionEditor } from '../design/Editors.jsx';
 import Novidades from './Novidades.jsx';
 import useNovidades from '../hooks/useNovidades.js';
+import useNovidadesVistas from '../hooks/useNovidadesVistas.js';
 import { estadoNovidades, solicitarFonte, subabaInicial } from '../lib/novidades.js';
+import { naoLidasDoServico } from '../lib/novidades-vistas.js';
 
 const SUBABAS = [
   { id: 'novidades', label: 'Novidades' },
@@ -80,6 +82,8 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
   const search = useCompanySearch(step === 1 ? query : '');
   const dirty = JSON.stringify(form) !== JSON.stringify(baseline);
   const novidades = useNovidades();
+  const { vistas, marcar } = useNovidadesVistas(novidades);
+  const naoLidas = naoLidasDoServico(form.domain, novidades, vistas);
   const [aba, setAba] = useState(null); // subaba escolhida pela pessoa; até lá vale a padrão do serviço
   const abaAtual = aba ?? subabaInicial(form.domain, novidades);
 
@@ -208,11 +212,11 @@ export default function SubModal({ mode, sub, preset, interests, people, onAddPe
 
             {isEdit && <StatusBlock sub={sub} onStatus={onStatus} />}
 
-            {isEdit && <Subabas label="Seções da assinatura" idBase="subaba" tabs={SUBABAS} value={abaAtual} onChange={setAba} />}
+            {isEdit && <Subabas label="Seções da assinatura" idBase="subaba" tabs={SUBABAS.map((t) => (t.id === 'novidades' ? { ...t, count: naoLidas } : t))} value={abaAtual} onChange={setAba} />}
 
             {isEdit && abaAtual === 'novidades' && (
               <div {...painel('novidades')}>
-                <Novidades dominio={form.domain} dados={novidades} />
+                <Novidades dominio={form.domain} dados={novidades} vistas={vistas} marcar={marcar} />
               </div>
             )}
 
