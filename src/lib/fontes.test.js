@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { CATALOG } from './catalog.js';
 
 const fontes = JSON.parse(readFileSync(new URL('../../scripts/feeds/fontes.json', import.meta.url), 'utf8'));
-const CAMPOS = ['dominio', 'nome', 'categoria', 'tipo', 'feed', 'paginaNovidades', 'iframe', 'verificadoEm'];
+const CAMPOS = ['dominio', 'nome', 'categoria', 'tipo', 'feed', 'paginaNovidades', 'verificadoEm'];
 const ehUrl = (u) => { try { return new URL(u).protocol === 'https:'; } catch { return false; } };
 
 test('registro tem as cinco fontes previstas', () => {
@@ -18,7 +18,6 @@ test('cada fonte tem exatamente os campos e valores permitidos', () => {
     assert.ok(['oficial', 'terceiro', 'nenhum'].includes(f.tipo), `${f.dominio}: tipo`);
     assert.ok(f.feed === null || ehUrl(f.feed), `${f.dominio}: feed`);
     assert.ok(f.paginaNovidades === null || ehUrl(f.paginaNovidades), `${f.dominio}: paginaNovidades`);
-    assert.ok([true, false, null].includes(f.iframe), `${f.dominio}: iframe`);
     assert.match(f.verificadoEm, /^\d{4}-\d{2}-\d{2}$/, `${f.dominio}: verificadoEm`);
     assert.ok(!Number.isNaN(new Date(f.verificadoEm).getTime()), `${f.dominio}: data válida`);
     assert.ok(f.nome && f.categoria && f.dominio, `${f.dominio}: textos`);
