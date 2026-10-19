@@ -250,7 +250,6 @@ input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
 .status-line { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .status-note { margin: 0; }
 .stopped-savings { margin: -4px 0 12px; font-size: var(--font-size-label); }
-.history-card { margin-top: -14px; margin-bottom: 24px; }
 
 /* ---------- Novidades dos serviços ---------- */
 .novidades-fonte { margin: 0 0 var(--space-3); }

@@ -51,21 +51,6 @@ test('Descobrir: o filtro de categorias tem rótulo acessível', async ({ page }
   await expect(page.getByRole('group', { name: 'Filtrar por categoria' })).toBeVisible();
 });
 
-test('o banner de backup usa a cor de alerta e o de notificação é neutro', async ({ page }) => {
-  await seed(page, withSubs(sampleSubs()));
-  const color = (sel) => page.locator(sel).evaluate((el) => getComputedStyle(el).borderTopColor);
-  const warning = await page.evaluate(() => {
-    const probe = document.createElement('div');
-    probe.style.borderTop = '1px solid var(--warning)';
-    document.body.append(probe);
-    const c = getComputedStyle(probe).borderTopColor;
-    probe.remove();
-    return c;
-  });
-  await expect(page.locator('#backup-banner')).toBeVisible();
-  expect(await color('#backup-banner')).toBe(warning);
-});
-
 test('onboarding: o campo de valor tem o novo rótulo', async ({ page }) => {
   await page.goto('/');
   await page.fill('#setup-name', 'Ana');

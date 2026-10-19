@@ -28,7 +28,7 @@ test('histórico na edição lista o pagamento e permite desmarcar', async ({ pa
   await expect(page.getByRole('status')).toContainText('Pago.');
 
   await atrasada.click();
-  await page.getByRole('tab', { name: 'Histórico' }).click();
+  await page.getByRole('tablist', { name: 'Seções da assinatura' }).getByRole('tab', { name: 'Histórico' }).click();
   const history = page.locator('#payment-history');
   await expect(history.locator('.payment-row')).toHaveCount(1);
   await expect(history).toContainText(/\d{2}\/\d{2}\/\d{4} · R\$\s50,00/);
@@ -38,31 +38,18 @@ test('histórico na edição lista o pagamento e permite desmarcar', async ({ pa
   expect((await readStorage(page)).subs.find((s) => s.id === 'atrasada').paidCycle).toBe('');
 });
 
-test('banner de backup: aparece, "Agora não" oculta, exportar zera', async ({ page }) => {
-  await seed(page, withSubs(sampleSubs()));
-  const banner = page.locator('#backup-banner');
-  await expect(banner).toBeVisible();
-
-  await banner.getByRole('button', { name: 'Agora não' }).click();
-  await expect(banner).toHaveCount(0);
-  await page.reload();
-  await expect(page.locator('#backup-banner')).toHaveCount(0);
-  expect((await readStorage(page)).backupSnoozeUntil).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-
-  // Sem soneca, o banner volta e some depois de exportar.
-  await seed(page, withSubs(sampleSubs()));
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.locator('#backup-banner').getByRole('button', { name: 'Exportar backup' }).click(),
-  ]);
-  expect(download.suggestedFilename()).toMatch(/^submanager-backup-/);
-  await expect(page.locator('#backup-banner')).toHaveCount(0);
-  expect((await readStorage(page)).lastBackupAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-});
-
 test('sem assinaturas, o banner de backup não aparece', async ({ page }) => {
   await seed(page, withSubs([]));
   await expect(page.locator('#backup-banner')).toHaveCount(0);
+});
+
+// O aviso de backup foi removido do Início (o backup continua em Dados e privacidade).
+test('com assinaturas e sem backup, o Início não mostra aviso de backup', async ({ page }) => {
+  await seed(page, withSubs(sampleSubs()));
+  await expect(page.locator('#subs-list .sub-card').first()).toBeVisible();
+  await expect(page.locator('#backup-banner')).toHaveCount(0);
+  await expect(page.getByText('Faça um backup dos seus dados')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Agora não' })).toHaveCount(0);
 });
 
 test('dados antigos (schema 8, sem payments) carregam e ganham os campos novos', async ({ page }) => {
