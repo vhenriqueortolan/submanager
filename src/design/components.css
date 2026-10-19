@@ -82,6 +82,12 @@ input.ds-switch:checked::after { background: var(--color-bg); transform: transla
 /* ---------- Título de seção ---------- */
 .ds-section-title { margin: var(--space-6) 0 var(--space-3); font: var(--text-title); letter-spacing: var(--letter-spacing-title); color: var(--color-text); }
 
+/* ---------- Subabas ---------- */
+.ds-tabs { display: flex; gap: var(--space-1); padding: var(--space-1); margin: var(--space-4) 0; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-control); overflow-x: auto; }
+.ds-tab { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: var(--touch-min); padding: 0 var(--space-4); border-radius: var(--space-2); color: var(--color-text-muted); font: var(--text-label); font-weight: var(--font-weight-title); white-space: nowrap; cursor: pointer; }
+.ds-tab[aria-selected="true"] { background: var(--color-surface-raised); color: var(--color-text); box-shadow: inset 0 0 0 1px var(--border-focus); }
+.ds-tab-count { min-width: var(--space-5); padding: 0 var(--space-2); border-radius: var(--radius-control); background: var(--color-action); color: var(--color-text); font: var(--text-caption); font-weight: var(--font-weight-title); text-align: center; }
+
 /* ---------- Estado vazio ---------- */
 .ds-empty { padding: var(--space-7) var(--space-6); text-align: center; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-card); }
 .ds-empty-icon { font: var(--text-title-lg); margin-bottom: var(--space-3); }

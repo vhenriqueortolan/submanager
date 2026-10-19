@@ -8,6 +8,8 @@ import { normalizeStatus } from './status.js';
 // Mantém a mesma chave das versões anteriores para não perder dados existentes.
 export const STORAGE_KEY = 'subDataV5';
 export const LEGACY_KEYS = ['subDataV4', 'subDataV3', 'subDataV2', 'subDataV1'];
+// Outras chaves do app, separadas de subDataV5: novidades já vistas (igual a VISTAS_KEY em novidades-vistas.js, conferido em teste).
+export const EXTRA_KEYS = ['subNovidadesVistasV1'];
 export const SCHEMA = 10;
 
 export function newId() {
@@ -120,13 +122,13 @@ export async function requestPersistence(manager = globalThis.navigator?.storage
 const CORRUPT_SUFFIX = ':corrupt-backup';
 
 /**
- * Apaga tudo o que o app guardou neste navegador: a chave atual, as legadas e as cópias de
+ * Apaga tudo o que o app guardou neste navegador: a chave atual, as legadas, as extras (novidades vistas) e as cópias de
  * JSON corrompido (`*:corrupt-backup`). Não mexe em nenhuma outra chave.
  * @returns {boolean} true se removeu tudo
  */
 export function clearAllData(storage = globalThis.localStorage) {
   try {
-    const owned = new Set([STORAGE_KEY, ...LEGACY_KEYS]);
+    const owned = new Set([STORAGE_KEY, ...LEGACY_KEYS, ...EXTRA_KEYS]);
     const keys = [];
     for (let i = 0; i < storage.length; i += 1) {
       const k = storage.key(i);

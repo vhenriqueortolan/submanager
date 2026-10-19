@@ -85,7 +85,10 @@ test('edição: seções, ← fecha a tela e Remover Assinatura fica no fim, em 
   await seed(page, withSubs(sampleSubs()));
   await page.locator('.sub-card', { hasText: 'HojeApp' }).click();
   await expect(page.getByRole('dialog', { name: 'Editar assinatura' })).toBeVisible();
-  await expect(page.locator('#modal-step-2 .ds-section-title')).toHaveText(['Plano', 'Divisão', 'Avisos', 'Histórico']);
+  await expect(page.locator('#modal-step-2 .ds-section-title')).toHaveText(['Plano', 'Divisão', 'Avisos']);
+  await page.getByRole('tab', { name: 'Histórico' }).click();
+  await expect(page.locator('#modal-step-2 .ds-section-title')).toHaveText(['Histórico']);
+  await page.getByRole('tab', { name: 'Plano' }).click();
 
   const save = await page.getByRole('button', { name: 'Salvar Assinatura' }).boundingBox();
   const remove = page.getByRole('button', { name: 'Remover Assinatura' });

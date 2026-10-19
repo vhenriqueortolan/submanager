@@ -151,6 +151,42 @@ export function SectionTitle({ as: Tag = 'h2', children }) {
   return <Tag className="ds-section-title">{children}</Tag>;
 }
 
+/**
+ * Subabas: troca de seção dentro de uma tela. `tabs`: [{ id, label, count? }]; `count` mostra uma contagem ao lado do nome.
+ * Cada aba é um botão (Tab percorre na ordem visual); ← e → também movem a seleção. O painel é do chamador:
+ * `role="tabpanel"`, `id={`${idBase}-painel`}` e `aria-labelledby={`${idBase}-aba-${value}`}`.
+ */
+export function Subabas({ label, idBase, tabs, value, onChange }) {
+  const move = (e, i) => {
+    const passo = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    if (!passo) return;
+    e.preventDefault();
+    const alvo = tabs[(i + passo + tabs.length) % tabs.length];
+    onChange(alvo.id);
+    document.getElementById(`${idBase}-aba-${alvo.id}`)?.focus();
+  };
+  return (
+    <div className="ds-tabs" role="tablist" aria-label={label}>
+      {tabs.map((t, i) => (
+        <button
+          key={t.id}
+          type="button"
+          role="tab"
+          id={`${idBase}-aba-${t.id}`}
+          className="ds-tab"
+          aria-selected={t.id === value}
+          aria-controls={`${idBase}-painel`}
+          onClick={() => onChange(t.id)}
+          onKeyDown={(e) => move(e, i)}
+        >
+          {t.label}
+          {t.count > 0 && <span className="ds-tab-count" aria-label={`${t.count} ${t.count === 1 ? 'nova' : 'novas'}`}>{t.count > 99 ? '99+' : t.count}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** Estado vazio: ícone, título, texto e uma ação opcional. */
 export function EmptyState({ icon, title, action, children }) {
   return (
