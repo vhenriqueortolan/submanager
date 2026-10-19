@@ -20,7 +20,6 @@ import { useDueNotifications } from './hooks/useDueNotifications.js';
 import { todayStr } from './lib/dates.js';
 import { newId, parseImport, requestPersistence } from './lib/storage.js';
 import { downloadBackup } from './lib/backup.js';
-import { snoozeUntil } from './lib/reminder.js';
 import { trackEvent } from './lib/analytics.js';
 
 const SAVE_FAILED_MESSAGE = 'Não foi possível salvar os dados neste navegador (armazenamento indisponível ou cheio).';
@@ -248,12 +247,10 @@ export default function App() {
           permission={permission}
           onOpenNotifications={() => setHomeScreen('notificacoes')}
           onOpenBudget={() => setHomeScreen('orcamento')}
-          onOpenHistory={() => setHomeScreen('historico')}
           onAdd={() => setModal({ mode: 'new' })}
           onEdit={(id) => setModal({ mode: 'edit', sub: state.subs.find((s) => s.id === id) })}
           onPay={handlePay}
-          onExportBackup={handleExport}
-          onSnoozeBackup={() => dispatch({ type: 'snoozeBackup', until: snoozeUntil(today) })}
+          onUnpay={handleUnpay}
         />
       )}
 

@@ -63,7 +63,7 @@ test('Perfil: chaves e antecedência são salvas e voltam após recarregar', asy
 test('as preferências entram no backup exportado', async ({ page }) => {
   await seed(page, withSubs(sampleSubs(), { settings: { enabled: true, notifyToday: true, notifyOverdue: false, advanceDays: 7 } }));
   await openProfileScreen(page, 'Dados e privacidade');
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar', exact: true }).click()]);
   const exported = JSON.parse(fs.readFileSync(await download.path(), 'utf8'));
   expect(exported.settings).toEqual({ enabled: true, notifyToday: true, notifyOverdue: false, advanceDays: 7 });
 });

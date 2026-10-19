@@ -7,10 +7,9 @@ import { annualProjection, cancelledMonthlySavings, monthlyTotal, totalServiceMo
 import { myShare, sharers } from '../lib/people.js';
 import { cycleOf } from '../lib/cycles.js';
 import { sortByUrgency } from '../lib/sort.js';
-import { backupDue } from '../lib/reminder.js';
 import { isActive, statusOf } from '../lib/status.js';
 import { StatusBadge, Subabas } from '../design/index.jsx';
-import { historyEntries, monthTotal } from '../lib/history.js';
+import Historico from './Historico.jsx';
 import useNovidades from '../hooks/useNovidades.js';
 import useNovidadesVistas from '../hooks/useNovidadesVistas.js';
 import { chaveDoServico, dataLocal, resumoHome } from '../lib/novidades.js';
@@ -146,7 +145,7 @@ function SubCard({ sub, people, status, now, onEdit, onPay }) {
   );
 }
 
-export default function Home({ state, today, permission, onOpenNotifications, onOpenBudget, onOpenHistory, onAdd, onEdit, onPay, onExportBackup, onSnoozeBackup }) {
+export default function Home({ state, today, permission, onOpenNotifications, onOpenBudget, onAdd, onEdit, onPay, onUnpay }) {
   const { name, budget, subs, people } = state;
   const hasSubs = subs.length > 0;
   const greeting = name ? `Olá, ${name}.` : 'Olá.';
@@ -162,7 +161,6 @@ export default function Home({ state, today, permission, onOpenNotifications, on
   const converted = subs.filter(isActive).some((s) => cycleOf(s) !== 'monthly');
 
   const savings = cancelledMonthlySavings(subs, people);
-  const paidThisMonth = useMemo(() => monthTotal(historyEntries(subs), today.slice(0, 7)), [subs, today]);
   const total = monthlyTotal(subs, people);
   const annual = annualProjection(subs, people);
   const anyDivided = subs.filter(isActive).some((s) => sharers(s, people).length > 0);
@@ -174,7 +172,7 @@ export default function Home({ state, today, permission, onOpenNotifications, on
   const { vistas, marcar } = useNovidadesVistas(dadosNovidades);
   const naoLidas = contarNaoLidas(subs, dadosNovidades, vistas);
   const [aba, setAba] = useState('assinaturas');
-  const abaHome = resumo.length > 0 ? aba : 'assinaturas';
+  const abaHome = aba === 'novidades' && resumo.length === 0 ? 'assinaturas' : aba;
 
   return (
     <main className="container active" id="view-home">
@@ -192,44 +190,25 @@ export default function Home({ state, today, permission, onOpenNotifications, on
         </div>
       )}
 
-      {backupDue(state, today) && (
-        <div className="notif-card" id="backup-banner">
-          <div>
-            <div className="notif-title">Faça um backup dos seus dados</div>
-            <div className="text-muted notif-sub">Eles ficam só neste aparelho. Um backup evita perdê-los se o navegador limpar o armazenamento.</div>
-          </div>
-          <div className="banner-actions">
-            <button type="button" className="btn-sm" onClick={onExportBackup}>Exportar backup</button>
-            <button type="button" className="btn-sm btn-sm-ghost" onClick={onSnoozeBackup}>Agora não</button>
-          </div>
-        </div>
-      )}
-
       <BudgetCard onOpen={onOpenBudget} total={total} annual={annual} budget={budget} converted={converted} serviceTotal={serviceTotal} />
 
       {hasSubs && (
-        <button type="button" className="budget-card budget-card-btn history-card" id="history-card" aria-label={`Histórico e insights. Pago este mês ${brl(paidThisMonth)}`} onClick={onOpenHistory}>
-          <div className="flex space-between">
-            <div>
-              <div className="stat-label">Histórico e insights</div>
-              <div className="text-muted budget-note">Pago este mês (sua parte): {brl(paidThisMonth)}</div>
-            </div>
-            <span className="hub-chevron" aria-hidden="true">›</span>
-          </div>
-        </button>
-      )}
-
-      {hasSubs && resumo.length > 0 && (
         <Subabas
           label="Seções do início"
           idBase="home"
-          tabs={[{ id: 'assinaturas', label: 'Assinaturas' }, { id: 'novidades', label: 'Novidades', count: naoLidas }]}
+          tabs={[
+            { id: 'assinaturas', label: 'Assinaturas' },
+            ...(resumo.length > 0 ? [{ id: 'novidades', label: 'Novidades', count: naoLidas }] : []),
+            { id: 'historico', label: 'Histórico' },
+          ]}
           value={abaHome}
           onChange={setAba}
         />
       )}
 
-      <div id="home-painel" role={resumo.length > 0 ? 'tabpanel' : undefined} aria-labelledby={resumo.length > 0 ? `home-aba-${abaHome}` : undefined}>
+      <div id="home-painel" role={hasSubs ? 'tabpanel' : undefined} aria-labelledby={hasSubs ? `home-aba-${abaHome}` : undefined}>
+      {hasSubs && abaHome === 'historico' && <Historico state={state} origem="portfolio" onUnpay={onUnpay} embutido />}
+
       {hasSubs && abaHome === 'novidades' && (
         <section id="home-novidades">
           <h3 className="section-title section-title-plain mb-2">Novidades das suas assinaturas</h3>

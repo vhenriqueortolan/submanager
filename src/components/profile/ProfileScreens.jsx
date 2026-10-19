@@ -3,7 +3,6 @@ import Orcamento from './Orcamento.jsx';
 import Notificacoes from './Notificacoes.jsx';
 import DadosPrivacidade from './DadosPrivacidade.jsx';
 import Sobre from './Sobre.jsx';
-import Historico from '../Historico.jsx';
 import { FEEDBACK_FORM, buildFeedbackUrl, platformOf } from '../../lib/feedback.js';
 import pkg from '../../../package.json';
 
@@ -37,8 +36,6 @@ export default function ProfileScreens({ screen, onClose, state, permission, han
           onUnpay={onUnpay}
         />
       );
-    case 'historico':
-      return <Historico state={state} origem="portfolio" onUnpay={onUnpay} onClose={onClose} />;
     case 'notificacoes':
       return <Notificacoes state={state} permission={permission} onEnableNotifications={onEnableNotifications} onSettings={onSettings} onClose={onClose} />;
     case 'dados':

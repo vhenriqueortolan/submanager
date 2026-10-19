@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import DetailScreen from '../DetailScreen.jsx';
 import { dataSummary } from '../../lib/profile-summary.js';
 import { PRIVACY_CONTACT } from '../../lib/feedback.js';
+import { downloadCsv } from '../../lib/csv.js';
 
 export default function DadosPrivacidade({ state, onExport, onImport, onClearData, onClose }) {
   const fileRef = useRef(null);
@@ -27,6 +28,12 @@ export default function DadosPrivacidade({ state, onExport, onImport, onClearDat
           />
         </div>
         <p className="text-muted backup-hint">Seus dados ficam salvos só neste navegador. Exporte um backup para guardar ou levar para outro aparelho.</p>
+      </section>
+
+      <section className="form-group" aria-labelledby="csv-title">
+        <h2 className="section-heading" id="csv-title">Planilha</h2>
+        <button type="button" className="btn btn-outline" id="export-csv" onClick={() => downloadCsv(state.subs)}>Exportar assinaturas (CSV)</button>
+        <p className="text-muted backup-hint">Gera um arquivo para abrir no Excel ou no Google Planilhas. Não serve para importar de volta: para isso, use o backup.</p>
       </section>
 
       <section className="form-group" id="privacy-section" aria-labelledby="privacy-title">

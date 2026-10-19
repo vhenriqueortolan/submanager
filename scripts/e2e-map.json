@@ -16,7 +16,7 @@
   "src/components/profile/ContactReview.jsx": ["divisao", "contatos", "foco-telas"],
   "src/components/profile/MeuPerfil.jsx": ["profile", "foco-telas"],
   "src/components/profile/Notificacoes.jsx": ["notification-settings", "profile", "inicio-descobrir", "notifications"],
-  "src/components/profile/DadosPrivacidade.jsx": ["dados-sobre", "clear-data", "storage", "payments", "profile"],
+  "src/components/profile/DadosPrivacidade.jsx": ["csv", "dados-sobre", "clear-data", "storage", "payments", "profile"],
   "src/components/profile/Sobre.jsx": ["profile", "dados-sobre"],
   "src/components/DetailScreen.jsx": "ALL",
   "src/components/ConfirmDialog.jsx": "ALL",

@@ -59,9 +59,10 @@ function Entry({ e, onUnpay }) {
 
 /**
  * Histórico e insights: só fatos sobre o que foi pago (sua parte), sem recomendação de corte.
- * `origem`: de onde a tela foi aberta (portfolio | orcamento), a única propriedade do evento de analytics.
+ * `origem`: de onde foi aberto (portfolio | orcamento), a única propriedade do evento de analytics.
+ * `embutido`: vira o conteúdo de uma aba (Início), sem tela de detalhe nem ←.
  */
-export default function Historico({ state, origem, onUnpay, onClose }) {
+export default function Historico({ state, origem, onUnpay, onClose, embutido = false }) {
   const today = useMemo(() => todayStr(), []);
   const [period, setPeriod] = useState('month');
   const [category, setCategory] = useState('');
@@ -95,8 +96,8 @@ export default function Historico({ state, origem, onUnpay, onClose }) {
     setShown(PAGE);
   };
 
-  return (
-    <DetailScreen id="historico" title="Histórico" onClose={onClose}>
+  const conteudo = (
+    <>
       <section aria-label="Este mês" className="hist-top">
         <p className="stat-label">Pago em {monthTitle(thisMonth)} (sua parte)</p>
         <p className="hist-month-total" id="hist-month-total">{brl(monthTotal(all, thisMonth))}</p>
@@ -194,6 +195,14 @@ export default function Historico({ state, origem, onUnpay, onClose }) {
           )}
         </div>
       )}
+    </>
+  );
+
+  return embutido ? (
+    <div id="historico-aba">{conteudo}</div>
+  ) : (
+    <DetailScreen id="historico" title="Histórico" onClose={onClose}>
+      {conteudo}
     </DetailScreen>
   );
 }

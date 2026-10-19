@@ -21,14 +21,15 @@ function subsWithHistory() {
   ];
 }
 
+// O Histórico do Portfólio é a aba Histórico do Início (antes era um cartão que abria a tela).
 const openFromCard = async (page) => {
-  await page.locator('#history-card').click();
-  await expect(page.getByRole('dialog', { name: 'Histórico' })).toBeVisible();
+  await page.getByRole('tab', { name: 'Histórico' }).click();
+  await expect(page.locator('#hist-month-total')).toBeVisible();
 };
 
-test('o card do Portfólio mostra o pago no mês e abre a tela com o total e a variação', async ({ page }) => {
+test('a aba Histórico do Portfólio mostra o pago no mês, o total e a variação', async ({ page }) => {
   await seed(page, withSubs(subsWithHistory()));
-  await expect(page.locator('#history-card')).toContainText('R$ 80,00'); // 50 + 30 neste mês
+  await expect(page.locator('#history-card')).toHaveCount(0); // o cartão deu lugar à aba
   await openFromCard(page);
   await expect(page.locator('#hist-month-total')).toHaveText(/R\$\s*80,00/);
   await expect(page.locator('.hist-variation')).toContainText('Subiu');
@@ -123,8 +124,10 @@ test('a tela Orçamento tem a linha Histórico, que abre a mesma tela por cima',
 
 test('o Voltar do sistema fecha só o Histórico', async ({ page }) => {
   await seed(page, withSubs(subsWithHistory()));
-  await openFromCard(page);
+  await page.locator('#budget-card').click();
+  await page.locator('[data-edit="history"]').click();
+  await expect(page.getByRole('dialog', { name: 'Histórico' })).toBeVisible();
   await page.goBack();
   await expect(page.getByRole('dialog', { name: 'Histórico' })).toHaveCount(0);
-  await expect(page.locator('#history-card')).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Orçamento' })).toBeVisible(); // o Orçamento continua aberto por baixo
 });

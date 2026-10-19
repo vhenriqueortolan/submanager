@@ -20,7 +20,7 @@ test('Backup mostra "Último backup em DD/MM" depois de exportar', async ({ page
   await seed(page, withSubs(sampleSubs()));
   await openProfileScreen(page, 'Dados e privacidade');
   await expect(page.locator('#last-backup')).toHaveText('Nenhum backup ainda');
-  await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar' }).click()]);
+  await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar', exact: true }).click()]);
   const t = browserToday();
   await expect(page.locator('#last-backup')).toHaveText(`Último backup em ${pad(t.getDate())}/${pad(t.getMonth() + 1)}`);
   await page.getByRole('button', { name: 'Voltar' }).click();

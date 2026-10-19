@@ -145,6 +145,15 @@ test('cadastro novo continua em uma tela só, sem subabas', async ({ page }) => 
 });
 
 // ---------- Home ----------
+test('Home: as três subabas aparecem na ordem Assinaturas, Novidades, Histórico', async ({ page }) => {
+  await seed(page, withSubs([sub('xbox.com', 'Xbox Game Pass')]));
+  await expect(page.getByRole('tab')).toHaveText(['Assinaturas', 'Novidades', 'Histórico']);
+  await page.getByRole('tab', { name: 'Histórico' }).click();
+  await expect(page.locator('#hist-month-total')).toBeVisible();
+  await expect(page.locator('#subs-section')).toHaveCount(0);
+  await expect(page.locator('#budget-card')).toBeVisible(); // o orçamento continua acima das abas
+});
+
 test('Home: com serviços com feed, a subaba Novidades mostra a contagem e até 3 itens, do mais novo ao mais antigo', async ({ page }) => {
   await seed(page, withSubs([sub('xbox.com', 'Xbox Game Pass'), sub('spotify.com', 'Spotify'), sub('anthropic.com', 'Claude Pro')]));
   await semearVistas(page, VISTAS_ANTIGAS);
@@ -167,9 +176,9 @@ test('Home: com serviços com feed, a subaba Novidades mostra a contagem e até 
   await expect(page.locator('#subs-section')).toBeVisible();
 });
 
-test('Home: sem serviço com feed, a subaba Novidades não existe', async ({ page }) => {
+test('Home: sem serviço com feed, a subaba Novidades não existe; Assinaturas e Histórico continuam', async ({ page }) => {
   await seed(page, withSubs(sampleSubs()));
-  await expect(page.getByRole('tablist')).toHaveCount(0);
+  await expect(page.getByRole('tab')).toHaveText(['Assinaturas', 'Histórico']);
   await expect(page.getByRole('tab', { name: /Novidades/ })).toHaveCount(0);
   await expect(page.locator('#subs-section')).toBeVisible();
 });
@@ -266,7 +275,7 @@ test('serviço com erro ou sem itens não gera contagem nem registro de vistas',
   const vistas = await lerVistas(page);
   expect(vistas).not.toHaveProperty('openai.com');
   expect(vistas).not.toHaveProperty('netflix.com');
-  await expect(page.getByRole('tablist')).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: /Novidades/ })).toHaveCount(0);
 });
 
 // ---------- Pedido de fonte simulado ----------

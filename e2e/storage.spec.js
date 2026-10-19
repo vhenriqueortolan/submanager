@@ -36,7 +36,7 @@ test('exportar gera o backup e importar substitui os dados após confirmação',
   await seed(page, withSubs(sampleSubs()));
   await openProfileScreen(page, 'Dados e privacidade');
 
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Exportar', exact: true }).click()]);
   expect(download.suggestedFilename()).toMatch(/^submanager-backup-\d{4}-\d{2}-\d{2}\.json$/);
   const exported = JSON.parse(fs.readFileSync(await download.path(), 'utf8'));
   expect(exported.subs).toHaveLength(4);
